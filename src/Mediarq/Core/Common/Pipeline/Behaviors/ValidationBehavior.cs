@@ -2,6 +2,7 @@
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Results;
+using System.ComponentModel.DataAnnotations;
 
 namespace Mediarq.Core.Common.Pipeline.Behaviors;
 
@@ -23,32 +24,39 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             .SelectMany(v => v.Errors)
             .ToList();
 
-        if(failures.Any())
+        // Aucune erreur → continuer le pipeline
+        if (!failures.Any())
+            return next();
+
+        // Extraire toutes les erreurs individuelles
+        var propertyErrors = failures
+            .Select(e => new Error(
+                $"Validation.{typeof(TRequest).Name}.{e.PropertyName}",
+                e.ErrorMessage,
+                ErrorType.Validation))
+            .ToArray();
+
+        // Créer un objet ValidationError global
+        var validationError = new ValidationError(propertyErrors);
+
+        // Si TResponse est un Result (non générique)
+        if (typeof(TResponse) == typeof(Result))
+            return Task.FromResult((TResponse)(object)Result.Failure(validationError));
+
+        // Si TResponse est un Result<T>
+        if (typeof(TResponse).IsGenericType &&
+            typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
         {
-            var errors = failures
-                .Select(f => new ValidationPropertyError(f.PropertyName, f.ErrorMessage))
-                .Select(ve => Result.Failure(new Error($"Validation.{typeof(TRequest)}", ve.ToString(), ErrorType.Validation)))
-                .ToList();
+            var valueType = typeof(TResponse).GetGenericArguments()[0];
+            var method = typeof(Result<>)
+                .MakeGenericType(valueType)
+                .GetMethod(nameof(Result<object>.ValidationFailure));
 
-            var resultType = typeof(TResponse);
-
-            if(resultType == typeof(TResponse))
-                return Task.FromResult((TResponse)(object)Result.Failure(ValidationError.FromResults(errors)));
-
-            if(typeof(TResponse).IsGenericType && typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
-            {
-                var valueType = typeof(TResponse).GetGenericArguments()[0];
-                var method = typeof(Result)
-                    .GetMethod(nameof(Result.Failure), new[] { typeof(IEnumerable<ValidationError>) })
-                    .MakeGenericMethod(valueType);
-                var genericResult = method.Invoke(null, new[] { errors });
-
-                return Task.FromResult((TResponse) genericResult);
-            }
-
-            throw new InvalidOperationException("Validation failed and TResponse is not a Result type");
+            var genericResult = method!.Invoke(null, new object[] { validationError });
+            return Task.FromResult((TResponse)genericResult!);
         }
 
-        return next();
+        // Sinon, type non supporté
+        throw new InvalidOperationException($"Validation failed but TResponse type '{typeof(TResponse).Name}' is not a supported Result type.");
     }
 }
