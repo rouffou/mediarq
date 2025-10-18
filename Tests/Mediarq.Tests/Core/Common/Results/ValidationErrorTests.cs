@@ -8,48 +8,71 @@ namespace Mediarq.Tests.Core.Common.Results
 
     public class ValidationErrorTests
     {
-        private readonly ValidationError _testClass;
-        private Error[] _errors;
-
-        public ValidationErrorTests()
-        {
-            _errors = new[] { new Error("TestValue1429113625", "TestValue1142359139", ErrorType.Validation), new Error("TestValue2018436828", "TestValue966419306", ErrorType.Failure), new Error("TestValue1192515544", "TestValue1534665964", ErrorType.Problem) };
-            _testClass = new ValidationError(_errors);
-        }
-
         [Fact]
-        public void CanConstruct()
-        {
-            // Act
-            var instance = new ValidationError(_errors);
-
-            // Assert
-            instance.Should().NotBeNull();
-        }
-
-        [Fact]
-        public void CanCallFromResults()
+        public void Should_Contain_All_Inner_Errors()
         {
             // Arrange
-            var results = new[] { Result.Success(), Result.Success(), Result.Success() };
+            var innerErrors = new List<Error>
+            {
+                Error.Failure("Field1", "Error message 1"),
+                Error.Failure("Field2", "Error message 2"),
+                Error.Failure("Field3", "Error message 3")
+            };
 
             // Act
-            var result = ValidationError.FromResults(results);
+            var validationError = new ValidationError(innerErrors.ToArray());
 
             // Assert
-            //throw new NotImplementedException("Create or modify test");
+            validationError.Errors.Should().NotBeNull();
+            validationError.Errors.Should().HaveCount(3);
+            validationError.Errors.Should().BeEquivalentTo(innerErrors);
         }
 
         [Fact]
-        public void CannotCallFromResultsWithNullResults()
+        public void Should_Handle_Empty_Result()
         {
-            FluentActions.Invoking(() => ValidationError.FromResults(default)).Should().Throw<ArgumentNullException>().WithParameterName("results");
+            // Arrange
+            var results = Array.Empty<Result>();
+            // Act
+            var validationError = ValidationError.FromResults(results);
+            // Assert
+            validationError.Errors.Should().NotBeNull();
+            validationError.Errors.Should().BeEmpty();
         }
 
         [Fact]
-        public void ErrorsIsInitializedCorrectly()
+        public void Should_Create_ValidationError_From_Results()
         {
-            _testClass.Errors.Should().BeSameAs(_errors);
+            // Arrange
+            var results = new List<Result>
+            {
+                Result.Success(),
+                Result.Failure(Error.Failure("Field1", "Error message 1")),
+                Result.Failure(Error.Failure("Field2", "Error message 2")),
+                Result.Success(),
+                Result.Failure(Error.Failure("Field3", "Error message 3"))
+            };
+            
+            // Act
+            var validationError = ValidationError.FromResults(results);
+
+            // Assert
+            validationError.Errors.Should().NotBeNull();
+            validationError.Errors.Should().HaveCount(3);
+            validationError.Errors.Should().Contain(e => e.Code == "Field1" && e.Message == "Error message 1");
+            validationError.Errors.Should().Contain(e => e.Code == "Field2" && e.Message == "Error message 2");
+            validationError.Errors.Should().Contain(e => e.Code == "Field3" && e.Message == "Error message 3");
+        }
+
+        [Fact]
+        public void Constructor_Should_Throw_ArgumentNullException_When_Errors_Is_Null()
+        {            
+            // Act
+            Action act = () => new ValidationError(null);
+            
+            // Assert
+            act.Should().Throw<ArgumentNullException>()
+                .WithMessage("*errors*");
         }
     }
 }
