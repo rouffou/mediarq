@@ -8,6 +8,9 @@ public sealed record ValidationError : Error
             "One or More validation errors occurred",
             ErrorType.Validation)
     {
+        if(errors is null)
+            throw new ArgumentNullException(nameof(errors));
+
         Errors = errors;
     }
 

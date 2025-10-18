@@ -12,6 +12,9 @@ public record ValidationResult
 
     public ValidationResult(IEnumerable<ValidationPropertyError> errors)
     {
+        if (errors is null)
+            throw new ArgumentNullException(nameof(errors));
+
         Errors.AddRange(errors);
     }
 
