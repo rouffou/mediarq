@@ -1,0 +1,6 @@
+@Mediarq.Samples_HostAddress = http://localhost:5204
+
+GET {{Mediarq.Samples_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
