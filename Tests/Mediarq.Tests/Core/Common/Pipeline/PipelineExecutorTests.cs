@@ -4,29 +4,28 @@ using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Results;
+using Mediarq.Tests.Data;
 using Moq;
 
 namespace Mediarq.Tests.Core.Common.Pipeline;
 public class PipelineExecutorTests
 {
-    public record TestRequest : ICommand<Result<string>>;
-
     [Fact]
     public async Task ExecuteAsync_Should_Invoke_Behaviors_In_Correct_Order()
     {
         // Arrange
         var log = new List<string>();
 
-        var mockBehavior1 = new Mock<IPipelineBehavior<TestRequest, Result<string>>>();
-        var mockBehavior2 = new Mock<IPipelineBehavior<TestRequest, Result<string>>>();
-        var mockBehavior3 = new Mock<IPipelineBehavior<TestRequest, Result<string>>>();
+        var mockBehavior1 = new Mock<IPipelineBehavior<TestCommandWithValue, Result<string>>>();
+        var mockBehavior2 = new Mock<IPipelineBehavior<TestCommandWithValue, Result<string>>>();
+        var mockBehavior3 = new Mock<IPipelineBehavior<TestCommandWithValue, Result<string>>>();
 
         // Behavior 1
         mockBehavior1
-            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestRequest, Result<string>>>(),
+            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                  It.IsAny<Func<Task<Result<string>>>>(),
                                  It.IsAny<CancellationToken>()))
-            .Returns(async (IMutableRequestContext<TestRequest, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
+            .Returns(async (IMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
             {
                 log.Add("Before 1");
                 var result = await next();
@@ -36,10 +35,10 @@ public class PipelineExecutorTests
 
         // Behavior 2
         mockBehavior2
-            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestRequest, Result<string>>>(),
+            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                  It.IsAny<Func<Task<Result<string>>>>(),
                                  It.IsAny<CancellationToken>()))
-            .Returns(async (IMutableRequestContext<TestRequest, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
+            .Returns(async (IMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
             {
                 log.Add("Before 2");
                 var result = await next();
@@ -49,10 +48,10 @@ public class PipelineExecutorTests
 
         // Behavior 3
         mockBehavior3
-            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestRequest, Result<string>>>(),
+            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                  It.IsAny<Func<Task<Result<string>>>>(),
                                  It.IsAny<CancellationToken>()))
-            .Returns(async (IMutableRequestContext<TestRequest, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
+            .Returns(async (IMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
             {
                 log.Add("Before 3");
                 var result = await next();
@@ -69,10 +68,10 @@ public class PipelineExecutorTests
 
         // Simule la factory qui renvoie nos mocks
         ServiceFactory factory = type =>
-            type == typeof(IEnumerable<IPipelineBehavior<TestRequest, Result<string>>>) ? behaviors : null!;
+            type == typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>) ? behaviors : null!;
 
         var executor = new PipelineExecutor(factory);
-        var context = new RequestContext<TestRequest, Result<string>>(new TestRequest(), Guid.NewGuid().ToString());
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
 
         // Act
         var result = await executor.ExecuteAsync(context, _ =>
@@ -95,13 +94,13 @@ public class PipelineExecutorTests
         );
 
         // Vérifie que chaque behavior a bien été appelé une seule fois
-        mockBehavior1.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestRequest, Result<string>>>(),
+        mockBehavior1.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                            It.IsAny<Func<Task<Result<string>>>>(),
                                            It.IsAny<CancellationToken>()), Times.Once);
-        mockBehavior2.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestRequest, Result<string>>>(),
+        mockBehavior2.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                            It.IsAny<Func<Task<Result<string>>>>(),
                                            It.IsAny<CancellationToken>()), Times.Once);
-        mockBehavior3.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestRequest, Result<string>>>(),
+        mockBehavior3.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                            It.IsAny<Func<Task<Result<string>>>>(),
                                            It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -110,11 +109,11 @@ public class PipelineExecutorTests
     public async Task ExecuteAsync_Should_Throw_When_Context_Is_Null()
     {
         // Arrange
-        var executor = new PipelineExecutor(_ => Enumerable.Empty<IPipelineBehavior<TestRequest, Result<string>>>());
+        var executor = new PipelineExecutor(_ => Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
 
         // Act
         var act = async () =>
-            await executor.ExecuteAsync<TestRequest, Result<string>>(
+            await executor.ExecuteAsync<TestCommandWithValue, Result<string>>(
                 null!,
                 _ => Task.FromResult(Result.Success("OK")));
 
@@ -127,12 +126,12 @@ public class PipelineExecutorTests
     public async Task ExecuteAsync_Should_Throw_When_HandlerDelegate_Is_Null()
     {
         // Arrange
-        var executor = new PipelineExecutor(_ => Enumerable.Empty<IPipelineBehavior<TestRequest, Result<string>>>());
-        var context = new RequestContext<TestRequest, Result<string>>(new TestRequest(), Guid.NewGuid().ToString());
+        var executor = new PipelineExecutor(_ => Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
 
         // Act
         var act = async () =>
-            await executor.ExecuteAsync<TestRequest, Result<string>>(
+            await executor.ExecuteAsync<TestCommandWithValue, Result<string>>(
                 context,
                 null!);
 
@@ -146,9 +145,9 @@ public class PipelineExecutorTests
     {
         // Arrange
         bool handlerCalled = false;
-        ServiceFactory factory = _ => Enumerable.Empty<IPipelineBehavior<TestRequest, Result<string>>>();
+        ServiceFactory factory = _ => Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>();
         var executor = new PipelineExecutor(factory);
-        var context = new RequestContext<TestRequest, Result<string>>(new TestRequest(), Guid.NewGuid().ToString());
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
 
         // Act
         var result = await executor.ExecuteAsync(context, _ =>

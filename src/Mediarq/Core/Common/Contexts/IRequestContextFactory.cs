@@ -4,6 +4,6 @@ namespace Mediarq.Core.Common.Contexts;
 
 public interface IRequestContextFactory
 {
-    object Create<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
+    object Create<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : ICommandOrQuery<TResponse>;
 }

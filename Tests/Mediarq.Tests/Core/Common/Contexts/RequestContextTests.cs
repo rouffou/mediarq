@@ -2,8 +2,6 @@ using FluentAssertions;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Results;
-using TRequest = Mediarq.Tests.Core.Common.Pipeline.PipelineExecutorTests.TestRequest;
-using TResponse = Mediarq.Core.Common.Results.Result<string>;
 
 namespace Mediarq.Tests.Core.Common.Contexts;
 
