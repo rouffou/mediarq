@@ -6,6 +6,8 @@ public static class TypeResponseExtensions
 {
     public static Type GetResponseType(this object request)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         var requestType = request.GetType();
 
         var iFace = requestType.GetInterfaces()
