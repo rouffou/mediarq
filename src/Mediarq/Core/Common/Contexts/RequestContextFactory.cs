@@ -12,14 +12,15 @@ public class RequestContextFactory : IRequestContextFactory
 
     public RequestContextFactory(IUserContext userContext, IClock clock)
     {
+        ArgumentNullException.ThrowIfNull(userContext);
+        ArgumentNullException.ThrowIfNull(clock);
         _userContext = userContext;
         _clock = clock;
     }
 
-    public object Create<TRequest, TResponse>(TRequest request,  CancellationToken cancellationToken) where TRequest : ICommandOrQuery<TResponse>
+    public object Create<TRequest, TResponse>(TRequest request,  CancellationToken cancellationToken = default) where TRequest : ICommandOrQuery<TResponse>
     {
-        if (request is null)
-            throw new ArgumentNullException(nameof(request));
+        ArgumentNullException.ThrowIfNull(request);
 
         var concreteRequestType = request.GetType();   // ex: CreateUserCommand
         var responseType = request.GetResponseType();  // ex: Result<Guid>

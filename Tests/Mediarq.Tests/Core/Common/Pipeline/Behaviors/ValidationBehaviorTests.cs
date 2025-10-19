@@ -19,12 +19,12 @@ namespace Mediarq.Core.Tests.Common.Pipeline.Behaviors;
 public class ValidationBehaviorTests
 {
     private readonly Mock<IMutableRequestContext<TestCommand, Result>> _mockContextResult;
-    private readonly Mock<IMutableRequestContext<TestCommandWithValue, Result<Guid>>> _mockContextResultT;
+    private readonly Mock<IMutableRequestContext<TestCommandWithValue, Result<string>>> _mockContextResultT;
 
     public ValidationBehaviorTests()
     {
         _mockContextResult = new Mock<IMutableRequestContext<TestCommand, Result>>();
-        _mockContextResultT = new Mock<IMutableRequestContext<TestCommandWithValue, Result<Guid>>>();
+        _mockContextResultT = new Mock<IMutableRequestContext<TestCommandWithValue, Result<string>>>();
     }
 
     [Fact]
@@ -128,13 +128,13 @@ public class ValidationBehaviorTests
                 })
             });
 
-        var behavior = new ValidationBehavior<TestCommandWithValue, Result<Guid>>(new[] { mockValidator.Object });
+        var behavior = new ValidationBehavior<TestCommandWithValue, Result<string>>(new[] { mockValidator.Object });
         var command = new TestCommandWithValue("BadName");
         _mockContextResultT.SetupGet(c => c.Request).Returns(command);
 
         // Act
         var response = await behavior.Handle(_mockContextResultT.Object, () =>
-            Task.FromResult(Result.Success(Guid.NewGuid())));
+            Task.FromResult(Result.Success(Guid.NewGuid().ToString())));
 
         // Assert
         response.Should().NotBeNull();

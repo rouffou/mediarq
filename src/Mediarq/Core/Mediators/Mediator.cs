@@ -15,6 +15,10 @@ public class Mediator: IMediator
         IRequestContextFactory requestContextFactory,
         IPipelineExecutor pipelineExecutor)
     {
+        ArgumentNullException.ThrowIfNull(serviceFactory);
+        ArgumentNullException.ThrowIfNull(requestContextFactory);
+        ArgumentNullException.ThrowIfNull(pipelineExecutor);
+
         _serviceFactory = serviceFactory;
         _requestContextFactory = requestContextFactory;
         _pipelineExecutor = pipelineExecutor;
@@ -22,11 +26,8 @@ public class Mediator: IMediator
 
     public Task<TResponse> Send<TResponse>(ICommandOrQuery<TResponse> request, CancellationToken cancellationToken = default)
     {
-        if(request is null)
-            throw new ArgumentNullException(nameof(request));
-
-        var requestContext = _requestContextFactory.Create<ICommandOrQuery<TResponse>, TResponse>(request, cancellationToken);
-        
+        ArgumentNullException.ThrowIfNull(request);
+                
         var handlerType = typeof(IRequestHandler<,>)
             .MakeGenericType(request.GetType(), typeof(TResponse));
 
@@ -41,6 +42,8 @@ public class Mediator: IMediator
 
         try
         {
+            var requestContext = _requestContextFactory.Create<ICommandOrQuery<TResponse>, TResponse>(request, cancellationToken);
+
             var executeMethod = typeof(IPipelineExecutor)
                 .GetMethod("ExecuteAsync")!
                 .MakeGenericMethod(request.GetType(), typeof(TResponse));
