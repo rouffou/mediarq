@@ -20,6 +20,9 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
 
     public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> request, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(next);
+
         var stopWatch = Stopwatch.StartNew();
         var response = await next();
         stopWatch.Stop();

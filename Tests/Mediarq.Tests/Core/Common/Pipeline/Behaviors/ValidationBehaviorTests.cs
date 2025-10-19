@@ -14,161 +14,160 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Mediarq.Core.Tests.Common.Pipeline.Behaviors
+namespace Mediarq.Core.Tests.Common.Pipeline.Behaviors;
+
+public class ValidationBehaviorTests
 {
-    public class ValidationBehaviorTests
+    private readonly Mock<IMutableRequestContext<TestCommand, Result>> _mockContextResult;
+    private readonly Mock<IMutableRequestContext<TestCommandWithValue, Result<Guid>>> _mockContextResultT;
+
+    public ValidationBehaviorTests()
     {
-        private readonly Mock<IMutableRequestContext<TestCommand, Result>> _mockContextResult;
-        private readonly Mock<IMutableRequestContext<TestCommandWithValue, Result<Guid>>> _mockContextResultT;
+        _mockContextResult = new Mock<IMutableRequestContext<TestCommand, Result>>();
+        _mockContextResultT = new Mock<IMutableRequestContext<TestCommandWithValue, Result<Guid>>>();
+    }
 
-        public ValidationBehaviorTests()
+    [Fact]
+    public async Task Handle_Should_CallNext_When_NoValidators()
+    {
+        // Arrange
+        var nextCalled = false;
+        var validators = Enumerable.Empty<IValidator<TestCommand>>();
+        var behavior = new ValidationBehavior<TestCommand, Result>(validators);
+        var command = new TestCommand("OK");
+
+        _mockContextResult.SetupGet(c => c.Request).Returns(command);
+
+        // Act
+        var response = await behavior.Handle(_mockContextResult.Object, () =>
         {
-            _mockContextResult = new Mock<IMutableRequestContext<TestCommand, Result>>();
-            _mockContextResultT = new Mock<IMutableRequestContext<TestCommandWithValue, Result<Guid>>>();
-        }
+            nextCalled = true;
+            return Task.FromResult(Result.Success());
+        });
 
-        [Fact]
-        public async Task Handle_Should_CallNext_When_NoValidators()
-        {
-            // Arrange
-            var nextCalled = false;
-            var validators = Enumerable.Empty<IValidator<TestCommand>>();
-            var behavior = new ValidationBehavior<TestCommand, Result>(validators);
-            var command = new TestCommand("OK");
+        // Assert
+        nextCalled.Should().BeTrue();
+        response.Should().NotBeNull();
+        response.IsSuccess.Should().BeTrue();
+    }
 
-            _mockContextResult.SetupGet(c => c.Request).Returns(command);
-
-            // Act
-            var response = await behavior.Handle(_mockContextResult.Object, () =>
+    [Fact]
+    public async Task Handle_Should_CallNext_When_ValidatorsReturnValid()
+    {
+        // Arrange
+        var nextCalled = false;
+        var mockValidator = new Mock<IValidator<TestCommand>>();
+        mockValidator
+            .Setup(v => v.Validate(It.IsAny<TestCommand>()))
+            .Returns(new[]
             {
-                nextCalled = true;
-                return Task.FromResult(Result.Success());
+                ValidationResult.Success()
             });
 
-            // Assert
-            nextCalled.Should().BeTrue();
-            response.Should().NotBeNull();
-            response.IsSuccess.Should().BeTrue();
-        }
+        var behavior = new ValidationBehavior<TestCommand, Result>(new[] { mockValidator.Object });
+        var command = new TestCommand("Valid");
+        _mockContextResult.SetupGet(c => c.Request).Returns(command);
 
-        [Fact]
-        public async Task Handle_Should_CallNext_When_ValidatorsReturnValid()
+        // Act
+        var response = await behavior.Handle(_mockContextResult.Object, () =>
         {
-            // Arrange
-            var nextCalled = false;
-            var mockValidator = new Mock<IValidator<TestCommand>>();
-            mockValidator
-                .Setup(v => v.Validate(It.IsAny<TestCommand>()))
-                .Returns(new[]
-                {
-                    ValidationResult.Success()
-                });
+            nextCalled = true;
+            return Task.FromResult(Result.Success());
+        });
 
-            var behavior = new ValidationBehavior<TestCommand, Result>(new[] { mockValidator.Object });
-            var command = new TestCommand("Valid");
-            _mockContextResult.SetupGet(c => c.Request).Returns(command);
+        // Assert
+        nextCalled.Should().BeTrue();
+        response.IsSuccess.Should().BeTrue();
+        response.Error.Should().BeEquivalentTo(Error.None);
+    }
 
-            // Act
-            var response = await behavior.Handle(_mockContextResult.Object, () =>
+    [Fact]
+    public async Task Handle_Should_ReturnFailure_When_ValidationFails_For_Result()
+    {
+        // Arrange
+        var mockValidator = new Mock<IValidator<TestCommand>>();
+        mockValidator
+            .Setup(v => v.Validate(It.IsAny<TestCommand>()))
+            .Returns(new[]
             {
-                nextCalled = true;
-                return Task.FromResult(Result.Success());
+                ValidationResult.Failure(new[]
+                {
+                    new ValidationPropertyError("Name", "Name is required")
+                })
             });
 
-            // Assert
-            nextCalled.Should().BeTrue();
-            response.IsSuccess.Should().BeTrue();
-            response.Error.Should().BeEquivalentTo(Error.None);
-        }
+        var behavior = new ValidationBehavior<TestCommand, Result>(new[] { mockValidator.Object });
+        var command = new TestCommand(string.Empty);
+        _mockContextResult.SetupGet(c => c.Request).Returns(command);
 
-        [Fact]
-        public async Task Handle_Should_ReturnFailure_When_ValidationFails_For_Result()
-        {
-            // Arrange
-            var mockValidator = new Mock<IValidator<TestCommand>>();
-            mockValidator
-                .Setup(v => v.Validate(It.IsAny<TestCommand>()))
-                .Returns(new[]
+        // Act
+        var response = await behavior.Handle(_mockContextResult.Object, () =>
+            Task.FromResult(Result.Success()));
+
+        // Assert
+        response.Should().NotBeNull();
+        response.IsFailure.Should().BeTrue();
+        response.Error.Should().BeOfType<ValidationError>();
+        var validationError = (ValidationError)response.Error;
+        validationError.Errors.Should().ContainSingle()
+            .Which.Message.Should().Contain("Name is required");
+    }
+
+    [Fact]
+    public async Task Handle_Should_ReturnFailure_When_ValidationFails_For_ResultT()
+    {
+        // Arrange
+        var mockValidator = new Mock<IValidator<TestCommandWithValue>>();
+        mockValidator
+            .Setup(v => v.Validate(It.IsAny<TestCommandWithValue>()))
+            .Returns(new[]
+            {
+                ValidationResult.Failure(new[]
                 {
-                    ValidationResult.Failure(new[]
-                    {
-                        new ValidationPropertyError("Name", "Name is required")
-                    })
-                });
+                    new ValidationPropertyError("Name", "Invalid Name")
+                })
+            });
 
-            var behavior = new ValidationBehavior<TestCommand, Result>(new[] { mockValidator.Object });
-            var command = new TestCommand(string.Empty);
-            _mockContextResult.SetupGet(c => c.Request).Returns(command);
+        var behavior = new ValidationBehavior<TestCommandWithValue, Result<Guid>>(new[] { mockValidator.Object });
+        var command = new TestCommandWithValue("BadName");
+        _mockContextResultT.SetupGet(c => c.Request).Returns(command);
 
-            // Act
-            var response = await behavior.Handle(_mockContextResult.Object, () =>
-                Task.FromResult(Result.Success()));
+        // Act
+        var response = await behavior.Handle(_mockContextResultT.Object, () =>
+            Task.FromResult(Result.Success(Guid.NewGuid())));
 
-            // Assert
-            response.Should().NotBeNull();
-            response.IsFailure.Should().BeTrue();
-            response.Error.Should().BeOfType<ValidationError>();
-            var validationError = (ValidationError)response.Error;
-            validationError.Errors.Should().ContainSingle()
-                .Which.Message.Should().Contain("Name is required");
-        }
+        // Assert
+        response.Should().NotBeNull();
+        response.IsFailure.Should().BeTrue();
+        response.Error.Should().BeOfType<ValidationError>();
+    }
 
-        [Fact]
-        public async Task Handle_Should_ReturnFailure_When_ValidationFails_For_ResultT()
-        {
-            // Arrange
-            var mockValidator = new Mock<IValidator<TestCommandWithValue>>();
-            mockValidator
-                .Setup(v => v.Validate(It.IsAny<TestCommandWithValue>()))
-                .Returns(new[]
+    [Fact]
+    public async Task Handle_Should_Throw_When_TResponse_NotAResultType()
+    {
+        // Arrange
+        var mockValidator = new Mock<IValidator<TestCommandWithVReturnUnsupported>>();
+        mockValidator
+            .Setup(v => v.Validate(It.IsAny<TestCommandWithVReturnUnsupported>()))
+            .Returns(new[]
+            {
+                ValidationResult.Failure(new[]
                 {
-                    ValidationResult.Failure(new[]
-                    {
-                        new ValidationPropertyError("Name", "Invalid Name")
-                    })
-                });
+                    new ValidationPropertyError("Field", "Error")
+                })
+            });
 
-            var behavior = new ValidationBehavior<TestCommandWithValue, Result<Guid>>(new[] { mockValidator.Object });
-            var command = new TestCommandWithValue("BadName");
-            _mockContextResultT.SetupGet(c => c.Request).Returns(command);
+        var behavior = new ValidationBehavior<TestCommandWithVReturnUnsupported, string>(new[] { mockValidator.Object });
+        var command = new TestCommandWithVReturnUnsupported("Test");
+        var mockContext = new Mock<IMutableRequestContext<TestCommandWithVReturnUnsupported, string>>();
+        mockContext.SetupGet(c => c.Request).Returns(command);
 
-            // Act
-            var response = await behavior.Handle(_mockContextResultT.Object, () =>
-                Task.FromResult(Result.Success(Guid.NewGuid())));
+        // Act
+        var act = async () => await behavior.Handle(mockContext.Object, () => Task.FromResult("OK"));
 
-            // Assert
-            response.Should().NotBeNull();
-            response.IsFailure.Should().BeTrue();
-            response.Error.Should().BeOfType<ValidationError>();
-        }
-
-        [Fact]
-        public async Task Handle_Should_Throw_When_TResponse_NotAResultType()
-        {
-            // Arrange
-            var mockValidator = new Mock<IValidator<TestCommandWithVReturnUnsupported>>();
-            mockValidator
-                .Setup(v => v.Validate(It.IsAny<TestCommandWithVReturnUnsupported>()))
-                .Returns(new[]
-                {
-                    ValidationResult.Failure(new[]
-                    {
-                        new ValidationPropertyError("Field", "Error")
-                    })
-                });
-
-            var behavior = new ValidationBehavior<TestCommandWithVReturnUnsupported, string>(new[] { mockValidator.Object });
-            var command = new TestCommandWithVReturnUnsupported("Test");
-            var mockContext = new Mock<IMutableRequestContext<TestCommandWithVReturnUnsupported, string>>();
-            mockContext.SetupGet(c => c.Request).Returns(command);
-
-            // Act
-            var act = async () => await behavior.Handle(mockContext.Object, () => Task.FromResult("OK"));
-
-            // Assert
-            await act.Should()
-                .ThrowAsync<InvalidOperationException>()
-                .WithMessage("*not a supported Result type*");
-        }
+        // Assert
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("*not a supported Result type*");
     }
 }

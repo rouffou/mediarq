@@ -16,6 +16,9 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 
     public Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> request, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(next);
+
         _logger.LogInformation("Handling {RequestType} with RequestId {RequestId} started at {StartedAt}", typeof(TRequest).Name, request.RequestId, request.StartedAt);
 
         var response = next();

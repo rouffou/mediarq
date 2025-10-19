@@ -18,6 +18,9 @@ public class PipelineExecutor : IPipelineExecutor
         CancellationToken cancellationToken = default)
         where TRequest : ICommandOrQuery<TResponse>
     {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(handlerDelegate);
+
         var behaviors = _serviceFactory(typeof(IEnumerable<IPipelineBehavior<TRequest, TResponse>>))
             as IEnumerable<IPipelineBehavior<TRequest, TResponse>>
             ?? Enumerable.Empty<IPipelineBehavior<TRequest, TResponse>>();

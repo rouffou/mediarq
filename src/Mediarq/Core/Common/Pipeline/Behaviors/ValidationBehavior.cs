@@ -18,6 +18,9 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
     public Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(next);
+
         var failures = _validators
             .SelectMany(v => v.Validate(context.Request))
             .Where(r => !r.IsValid)

@@ -39,10 +39,18 @@ public record RequestContext<TRequest, TResponse>
         CancellationToken = cancellationToken;
     }
 
-    public void AddItem(string key, object value) => _items[key] = value;
+    public void AddItem(string key, object value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(value);
+        _items[key] = value;
+    }
 
     public bool TryGetItem<T>(string key, out T value)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(_items);
+
         if (_items.TryGetValue(key, out var obj) && obj is T casted)
         {
             value = casted;
