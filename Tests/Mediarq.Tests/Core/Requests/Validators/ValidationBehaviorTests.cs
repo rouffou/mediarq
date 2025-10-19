@@ -14,15 +14,15 @@ public class ValidationBehaviorTests
     public async Task Handle_InvalidRequest_ShouldReturnFailureResult()
     {
         // Arrange
-        var validatorMock = new Mock<IValidator<DummyCommand>>();
+        var validatorMock = new Mock<IValidator<TestCommand>>();
         validatorMock
-            .Setup(v => v.Validate(It.IsAny<DummyCommand>()))
+            .Setup(v => v.Validate(It.IsAny<TestCommand>()))
             .Returns(new[] { ValidationResult.Failure(new[] { new ValidationPropertyError("ValidationError", "Invalid data") }) });
         
-        var validationBehavior = new ValidationBehavior<DummyCommand, Result>(new[] { validatorMock.Object });
+        var validationBehavior = new ValidationBehavior<TestCommand, Result>(new[] { validatorMock.Object });
         
-        var requestContextMock = new Mock<IMutableRequestContext<DummyCommand, Result>>();
-        requestContextMock.SetupGet(r => r.Request).Returns(new DummyCommand());
+        var requestContextMock = new Mock<IMutableRequestContext<TestCommand, Result>>();
+        requestContextMock.SetupGet(r => r.Request).Returns(new TestCommand("test"));
 
         // Act
         var result = await validationBehavior.Handle(requestContextMock.Object, () => Task.FromResult(Result.Success()));
@@ -39,15 +39,15 @@ public class ValidationBehaviorTests
     public async Task Handle_ValidRequest_ShouldProceedToNextBehavior()
     {
         // Arrange
-        var validatorMock = new Mock<IValidator<DummyCommand>>();
+        var validatorMock = new Mock<IValidator<TestCommand>>();
         validatorMock
-            .Setup(v => v.Validate(It.IsAny<DummyCommand>()))
+            .Setup(v => v.Validate(It.IsAny<TestCommand>()))
             .Returns(Array.Empty<ValidationResult>());
         
-        var validationBehavior = new ValidationBehavior<DummyCommand, Result>(new[] { validatorMock.Object });
+        var validationBehavior = new ValidationBehavior<TestCommand, Result>(new[] { validatorMock.Object });
         
-        var requestContextMock = new Mock<IMutableRequestContext<DummyCommand, Result>>();
-        requestContextMock.SetupGet(r => r.Request).Returns(new DummyCommand());
+        var requestContextMock = new Mock<IMutableRequestContext<TestCommand, Result>>();
+        requestContextMock.SetupGet(r => r.Request).Returns(new TestCommand("test"));
         
         // Act
         var result = await validationBehavior.Handle(requestContextMock.Object, () => Task.FromResult(Result.Success()));

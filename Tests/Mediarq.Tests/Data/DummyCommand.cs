@@ -4,4 +4,6 @@ using System.Windows.Input;
 
 namespace Mediarq.Tests.Data;
 
-public record DummyCommand : ICommand<Result>;
+public record TestCommand(string Name) : ICommand<Result>;
+public record TestCommandWithValue(string Name) : ICommand<Result<Guid>>;
+public record TestCommandWithVReturnUnsupported(string Name) : ICommand<string>;
