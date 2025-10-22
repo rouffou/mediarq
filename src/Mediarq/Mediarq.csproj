@@ -18,11 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EditorConfigFiles Remove="C:\Users\nicol\source\repos\Mediarq\Mediarq\.editorconfig" />
+    <EditorConfigFiles Remove="C:\Users\nicol\source\repos\Mediarq\src\Mediarq\.editorconfig" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="C:\Users\nicol\source\repos\Mediarq\Mediarq\.editorconfig" />
+    <None Include="C:\Users\nicol\source\repos\Mediarq\src\Mediarq\.editorconfig" />
   </ItemGroup>
 
 </Project>

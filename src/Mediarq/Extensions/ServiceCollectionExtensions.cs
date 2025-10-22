@@ -10,7 +10,6 @@ using Mediarq.Core.Common.User;
 using Mediarq.Core.Mediators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Reflection;
 
 namespace Mediarq.Extensions;
 
@@ -18,15 +17,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMediarq(
         this IServiceCollection services,
-        bool isHttp,
-        params Assembly[] assemblies)
+        bool isHttp)
     {
-        if (services is null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
-        services.AddScoped<ServiceFactory>(sp => sp.GetService!);
+        services.AddScoped<ServiceFactory>(sp => sp.GetService);
         services.AddScoped<IMediator, Mediator>();
 
         services.TryAddSingleton<IClock, SystemClock>();

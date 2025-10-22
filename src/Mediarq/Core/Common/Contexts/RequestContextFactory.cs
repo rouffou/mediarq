@@ -5,35 +5,40 @@ using Mediarq.Core.Common.User;
 
 namespace Mediarq.Core.Common.Contexts;
 
-public class RequestContextFactory : IRequestContextFactory
-{
+/// <summary>
+/// Represents a factory for creating request contexts.
+/// </summary>
+public class RequestContextFactory : IRequestContextFactory {
     private readonly IUserContext _userContext;
     private readonly IClock _clock;
 
-    public RequestContextFactory(IUserContext userContext, IClock clock)
-    {
+    /// <summary>
+    /// The constructor for RequestContextFactory.
+    /// </summary>
+    /// <param name="userContext">The user context to get information about the user.</param>
+    /// <param name="clock">The clock to get the right time.</param>
+    public RequestContextFactory(IUserContext userContext, IClock clock) {
         ArgumentNullException.ThrowIfNull(userContext);
         ArgumentNullException.ThrowIfNull(clock);
         _userContext = userContext;
         _clock = clock;
     }
 
-    public object Create<TRequest, TResponse>(TRequest request,  CancellationToken cancellationToken = default) where TRequest : ICommandOrQuery<TResponse>
-    {
+    /// <see cref="IRequestContextFactory.Create{TRequest, TResponse}(TRequest, CancellationToken)"/>
+    public object Create<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default) where TRequest : ICommandOrQuery<TResponse> {
         ArgumentNullException.ThrowIfNull(request);
 
-        var concreteRequestType = request.GetType();   // ex: CreateUserCommand
-        var responseType = request.GetResponseType();  // ex: Result<Guid>
+        Type concreteRequestType = request.GetType();
+        Type responseType = request.GetResponseType();
 
-        var requestContextObj = CreateConcrete(concreteRequestType, responseType, request, cancellationToken);
+        object requestContextObj = CreateConcrete(concreteRequestType, responseType, request, cancellationToken);
 
 
         return requestContextObj ?? throw new InvalidOperationException($"Could not create RequestContext for request type {typeof(TRequest)} and response type {typeof(TResponse)}.");
     }
 
-    private object CreateConcrete(Type requestType, Type responseType, object request, CancellationToken cancellationToken)
-    {
-        var contextType = typeof(RequestContext<,>).MakeGenericType(requestType, responseType);
+    private object CreateConcrete(Type requestType, Type responseType, object request, CancellationToken cancellationToken) {
+        Type contextType = typeof(RequestContext<,>).MakeGenericType(requestType, responseType);
         return Activator.CreateInstance(contextType, request, _userContext.UserId, cancellationToken);
     }
 }

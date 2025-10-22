@@ -21,7 +21,7 @@ public class ValidationBehaviorTests
         
         var validationBehavior = new ValidationBehavior<TestCommand, Result>(new[] { validatorMock.Object });
         
-        var requestContextMock = new Mock<IMutableRequestContext<TestCommand, Result>>();
+        var requestContextMock = new Mock<IIMMutableRequestContext<TestCommand, Result>>();
         requestContextMock.SetupGet(r => r.Request).Returns(new TestCommand("test"));
 
         // Act
@@ -46,7 +46,7 @@ public class ValidationBehaviorTests
         
         var validationBehavior = new ValidationBehavior<TestCommand, Result>(new[] { validatorMock.Object });
         
-        var requestContextMock = new Mock<IMutableRequestContext<TestCommand, Result>>();
+        var requestContextMock = new Mock<IIMMutableRequestContext<TestCommand, Result>>();
         requestContextMock.SetupGet(r => r.Request).Returns(new TestCommand("test"));
         
         // Act

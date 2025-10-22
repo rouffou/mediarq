@@ -22,10 +22,10 @@ public class PipelineExecutorTests
 
         // Behavior 1
         mockBehavior1
-            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
+            .Setup(b => b.Handle(It.IsAny<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                  It.IsAny<Func<Task<Result<string>>>>(),
                                  It.IsAny<CancellationToken>()))
-            .Returns(async (IMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
+            .Returns(async (IIMMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
             {
                 log.Add("Before 1");
                 var result = await next();
@@ -35,10 +35,10 @@ public class PipelineExecutorTests
 
         // Behavior 2
         mockBehavior2
-            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
+            .Setup(b => b.Handle(It.IsAny<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                  It.IsAny<Func<Task<Result<string>>>>(),
                                  It.IsAny<CancellationToken>()))
-            .Returns(async (IMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
+            .Returns(async (IIMMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
             {
                 log.Add("Before 2");
                 var result = await next();
@@ -48,10 +48,10 @@ public class PipelineExecutorTests
 
         // Behavior 3
         mockBehavior3
-            .Setup(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
+            .Setup(b => b.Handle(It.IsAny<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                  It.IsAny<Func<Task<Result<string>>>>(),
                                  It.IsAny<CancellationToken>()))
-            .Returns(async (IMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
+            .Returns(async (IIMMutableRequestContext<TestCommandWithValue, Result<string>> ctx, Func<Task<Result<string>>> next, CancellationToken _) =>
             {
                 log.Add("Before 3");
                 var result = await next();
@@ -94,13 +94,13 @@ public class PipelineExecutorTests
         );
 
         // Vérifie que chaque behavior a bien été appelé une seule fois
-        mockBehavior1.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
+        mockBehavior1.Verify(b => b.Handle(It.IsAny<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                            It.IsAny<Func<Task<Result<string>>>>(),
                                            It.IsAny<CancellationToken>()), Times.Once);
-        mockBehavior2.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
+        mockBehavior2.Verify(b => b.Handle(It.IsAny<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                            It.IsAny<Func<Task<Result<string>>>>(),
                                            It.IsAny<CancellationToken>()), Times.Once);
-        mockBehavior3.Verify(b => b.Handle(It.IsAny<IMutableRequestContext<TestCommandWithValue, Result<string>>>(),
+        mockBehavior3.Verify(b => b.Handle(It.IsAny<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>(),
                                            It.IsAny<Func<Task<Result<string>>>>(),
                                            It.IsAny<CancellationToken>()), Times.Once);
     }
