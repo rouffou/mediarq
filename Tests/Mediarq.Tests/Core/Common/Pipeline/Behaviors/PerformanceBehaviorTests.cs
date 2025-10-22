@@ -30,7 +30,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         {
             // Arrange
             var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
-            var context = new Mock<IMutableRequestContext<TestCommand, Result>>().Object;
+            var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
             var wasCalled = false;
 
             Task<Result> Next() { wasCalled = true; return Task.FromResult(Result.Success()); }
@@ -48,7 +48,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         {
             // Arrange
             var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
-            var context = new Mock<IMutableRequestContext<TestCommand, Result>>().Object;
+            var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
 
             Task<Result> Next() => Task.FromResult(Result.Success());
 
@@ -71,7 +71,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         {
             // Arrange
             var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
-            var context = new Mock<IMutableRequestContext<TestCommand, Result>>().Object;
+            var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
 
             Task<Result> Next()
             {
@@ -113,7 +113,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         {
             // Arrange
             var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
-            var context = new Mock<IMutableRequestContext<TestCommand, Result>>().Object;
+            var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
 
             // Act & Assert
             await FluentActions

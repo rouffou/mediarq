@@ -53,3 +53,7 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 .vs/
+
+raw_links.txt
+
+script_raw_git.ps1

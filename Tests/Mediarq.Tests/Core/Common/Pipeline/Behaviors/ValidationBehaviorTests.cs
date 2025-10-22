@@ -18,13 +18,13 @@ namespace Mediarq.Core.Tests.Common.Pipeline.Behaviors;
 
 public class ValidationBehaviorTests
 {
-    private readonly Mock<IMutableRequestContext<TestCommand, Result>> _mockContextResult;
-    private readonly Mock<IMutableRequestContext<TestCommandWithValue, Result<string>>> _mockContextResultT;
+    private readonly Mock<IIMMutableRequestContext<TestCommand, Result>> _mockContextResult;
+    private readonly Mock<IIMMutableRequestContext<TestCommandWithValue, Result<string>>> _mockContextResultT;
 
     public ValidationBehaviorTests()
     {
-        _mockContextResult = new Mock<IMutableRequestContext<TestCommand, Result>>();
-        _mockContextResultT = new Mock<IMutableRequestContext<TestCommandWithValue, Result<string>>>();
+        _mockContextResult = new Mock<IIMMutableRequestContext<TestCommand, Result>>();
+        _mockContextResultT = new Mock<IIMMutableRequestContext<TestCommandWithValue, Result<string>>>();
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class ValidationBehaviorTests
 
         var behavior = new ValidationBehavior<TestCommandWithVReturnUnsupported, string>(new[] { mockValidator.Object });
         var command = new TestCommandWithVReturnUnsupported("Test");
-        var mockContext = new Mock<IMutableRequestContext<TestCommandWithVReturnUnsupported, string>>();
+        var mockContext = new Mock<IIMMutableRequestContext<TestCommandWithVReturnUnsupported, string>>();
         mockContext.SetupGet(c => c.Request).Returns(command);
 
         // Act

@@ -2,9 +2,9 @@
 
 public record ValidationResult
 {
-    public bool IsValid => !Errors.Any();
+    public bool IsValid => Errors.Count == 0;
 
-    public List<ValidationPropertyError> Errors { get; } = new();
+    public List<ValidationPropertyError> Errors { get; } = [];
 
     public ValidationResult()
     {
@@ -12,8 +12,7 @@ public record ValidationResult
 
     public ValidationResult(IEnumerable<ValidationPropertyError> errors)
     {
-        if (errors is null)
-            throw new ArgumentNullException(nameof(errors));
+        ArgumentNullException.ThrowIfNull(errors);
 
         Errors.AddRange(errors);
     }

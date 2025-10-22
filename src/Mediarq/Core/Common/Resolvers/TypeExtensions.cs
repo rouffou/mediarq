@@ -15,11 +15,8 @@ public static class TypeResponseExtensions
                                  (i.GetGenericTypeDefinition() == typeof(ICommandOrQuery<>) ||
                                   i.GetGenericTypeDefinition() == typeof(IRequest<>)));
 
-        if (iFace is null)
-        {
-            throw new ArgumentNullException($"Request {requestType.Name} does not implement IRequest<>");
-        }
-
-        return iFace.GetGenericArguments()[0];
+        return iFace is null
+            ? throw new ArgumentNullException($"Request {requestType.Name} does not implement IRequest<>")
+            : iFace.GetGenericArguments()[0];
     }
 }

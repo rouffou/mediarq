@@ -16,12 +16,12 @@ using Xunit;
 public class LoggingBehaviorTests
 {
     private readonly Mock<ILogger<LoggingBehavior<TestCommand, Result>>> _mockLogger;
-    private readonly Mock<IMutableRequestContext<TestCommand, Result>> _mockContext;
+    private readonly Mock<IIMMutableRequestContext<TestCommand, Result>> _mockContext;
 
     public LoggingBehaviorTests()
     {
         _mockLogger = new Mock<ILogger<LoggingBehavior<TestCommand, Result>>>();
-        _mockContext = new Mock<IMutableRequestContext<TestCommand, Result>>();
+        _mockContext = new Mock<IIMMutableRequestContext<TestCommand, Result>>();
 
         _mockContext.SetupGet(c => c.RequestId).Returns(Guid.NewGuid());
         _mockContext.SetupGet(c => c.StartedAt).Returns(DateTime.UtcNow);
@@ -102,7 +102,7 @@ public class LoggingBehaviorTests
     {
         var behavior = new LoggingBehavior<TestCommand, Result>(_mockLogger.Object);
         await FluentActions
-                .Invoking(() => behavior.Handle(new Mock<IMutableRequestContext<TestCommand, Result>>().Object, default, CancellationToken.None))
+                .Invoking(() => behavior.Handle(new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object, default, CancellationToken.None))
                 .Should()
                 .ThrowAsync<ArgumentNullException>()
                 .WithParameterName("next");
