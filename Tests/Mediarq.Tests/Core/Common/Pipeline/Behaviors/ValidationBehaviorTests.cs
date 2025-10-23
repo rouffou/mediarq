@@ -78,7 +78,7 @@ public class ValidationBehaviorTests
         // Assert
         nextCalled.Should().BeTrue();
         response.IsSuccess.Should().BeTrue();
-        response.Error.Should().BeEquivalentTo(Error.None);
+        response.Error.Should().BeEquivalentTo(ResultError.None);
     }
 
     [Fact]

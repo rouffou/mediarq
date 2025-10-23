@@ -14,7 +14,7 @@ public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, Result<Us
 
         if (user is null)
         {
-            return Task.FromResult(Result.Failure<User>(Error.NotFound("User.NotFound", $"User with Id {request.Id} not found.")));
+            return Task.FromResult(Result.Failure<User>(ResultError.NotFound("User.NotFound", $"User with Id {request.Id} not found.")));
         }
 
         return Task.FromResult(Result.Success(user));
