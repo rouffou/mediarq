@@ -12,11 +12,11 @@ public class ValidationErrorTests
     public void Should_Contain_All_Inner_Errors()
     {
         // Arrange
-        var innerErrors = new List<Error>
+        var innerErrors = new List<ResultError>
         {
-            Error.Failure("Field1", "Error message 1"),
-            Error.Failure("Field2", "Error message 2"),
-            Error.Failure("Field3", "Error message 3")
+            ResultError.Failure("Field1", "Error message 1"),
+            ResultError.Failure("Field2", "Error message 2"),
+            ResultError.Failure("Field3", "Error message 3")
         };
 
         // Act
@@ -47,10 +47,10 @@ public class ValidationErrorTests
         var results = new List<Result>
         {
             Result.Success(),
-            Result.Failure(Error.Failure("Field1", "Error message 1")),
-            Result.Failure(Error.Failure("Field2", "Error message 2")),
+            Result.Failure(ResultError.Failure("Field1", "Error message 1")),
+            Result.Failure(ResultError.Failure("Field2", "Error message 2")),
             Result.Success(),
-            Result.Failure(Error.Failure("Field3", "Error message 3"))
+            Result.Failure(ResultError.Failure("Field3", "Error message 3"))
         };
         
         // Act

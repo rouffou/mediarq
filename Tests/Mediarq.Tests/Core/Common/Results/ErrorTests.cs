@@ -9,7 +9,7 @@ public class ErrorTests
     public void Error_None_ShouldHaveDefaultValues()
     {
         // Arrange & Act
-        var error = Error.None;
+        var error = ResultError.None;
         // Assert
         error.Code.Should().Be(string.Empty);
         error.Message.Should().Be(string.Empty);
@@ -20,7 +20,7 @@ public class ErrorTests
     public void Error_NullValue_ShouldHaveExpectedValues()
     {
         // Arrange & Act
-        var error = Error.NullValue;
+        var error = ResultError.NullValue;
         // Assert
         error.Code.Should().Be("General.Null");
         error.Message.Should().Be("Null value was provided");
@@ -31,7 +31,7 @@ public class ErrorTests
     public void Error_FactoryMethods_ShouldCreateErrorsFailureTypes()
     {
         // Arrange & Act
-        var failureError = Error.Failure("FailCode", "Failure occurred");
+        var failureError = ResultError.Failure("FailCode", "Failure occurred");
         // Assert
         failureError.Type.Should().Be(ErrorType.Failure);
         failureError.Code.Should().Be("FailCode");
@@ -42,7 +42,7 @@ public class ErrorTests
     public void Error_FactoryMethods_ShouldCreateErrorsNotFoundTypes()
     {
         // Arrange & Act
-        var notFoundError = Error.NotFound("NotFoundCode", "Resource not found");
+        var notFoundError = ResultError.NotFound("NotFoundCode", "Resource not found");
         // Assert
         notFoundError.Type.Should().Be(ErrorType.NotFound);
         notFoundError.Code.Should().Be("NotFoundCode");
@@ -53,7 +53,7 @@ public class ErrorTests
     public void Error_FactoryMethods_ShouldCreateErrorsConflictTypes()
     {
         // Arrange & Act
-        var conflictError = Error.Conflict("ConflictCode", "Conflict occurred");
+        var conflictError = ResultError.Conflict("ConflictCode", "Conflict occurred");
         // Assert
         conflictError.Type.Should().Be(ErrorType.Conflict);
         conflictError.Code.Should().Be("ConflictCode");
@@ -64,7 +64,7 @@ public class ErrorTests
     public void Error_FactoryMethods_ShouldCreateErrorsProblemTypes()
     {
         // Arrange & Act
-        var problemError = Error.Problem("ProblemCode", "Problem occurred");
+        var problemError = ResultError.Problem("ProblemCode", "Problem occurred");
         // Assert
         problemError.Type.Should().Be(ErrorType.Problem);
         problemError.Code.Should().Be("ProblemCode");

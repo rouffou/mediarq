@@ -5,7 +5,7 @@ namespace Mediarq.Tests.Core.Common.Results;
 
 public class ResultTests
 {
-    private static readonly Error SampleFailure = Error.Failure("SampleError", "This is a sample error message.");
+    private static readonly ResultError SampleFailure = ResultError.Failure("SampleError", "This is a sample error message.");
 
     [Fact]
     public void SuccessResult_ShouldHaveIsSuccessTrue_AndIsFailureFalse()
@@ -85,7 +85,7 @@ public class ResultTests
     public void ImplicitConversion_FromErrorToResult_ShouldCreateFailureResult()
     {
         // Arrange
-        var error = Error.Failure("ImplicitError", "This is an implicit error.");
+        var error = ResultError.Failure("ImplicitError", "This is an implicit error.");
         // Act
         Result<string> result = error;
         // Assert

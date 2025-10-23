@@ -54,6 +54,6 @@ public class ValidationBehaviorTests
         
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Error.Should().Be(Error.None);
+        result.Error.Should().Be(ResultError.None);
     }
 }

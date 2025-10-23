@@ -100,8 +100,8 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         }
 
         // Extraire toutes les erreurs individuelles
-        Error[] propertyErrors = [.. failures
-            .Select(e => new Error(
+        ResultError[] propertyErrors = [.. failures
+            .Select(e => new ResultError(
                 $"Validation.{typeof(TRequest).Name}.{e.PropertyName}",
                 e.ErrorMessage,
                 ErrorType.Validation))];
