@@ -6,7 +6,7 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMediarq(false,Assembly.GetExecutingAssembly());
+builder.Services.AddMediarq(false);
 
 // Add services to the container.
 builder.Services.AddControllers();

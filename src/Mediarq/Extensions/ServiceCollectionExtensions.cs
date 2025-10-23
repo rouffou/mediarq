@@ -85,14 +85,14 @@ public static class ServiceCollectionExtensions
                 typeof(ICommandHandler<,>),
                 typeof(IQueryHandler<,>)
             ))
-            .AsImplementedInterfaces()
-            .WithScopedLifetime()
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
             .AddClasses(c => c.AssignableTo(typeof(IPipelineBehavior<,>)))
-            .AsImplementedInterfaces()
-            .WithScopedLifetime()
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
             .AddClasses(c => c.AssignableTo(typeof(IValidator<>)))
-            .AsImplementedInterfaces()
-            .WithScopedLifetime());
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
 
         return services;
     }
