@@ -3,6 +3,7 @@ using FluentAssertions;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Resolvers;
 using Mediarq.Core.Common.Results;
 using Mediarq.Tests.Data;
 using Moq;
@@ -67,10 +68,12 @@ public class PipelineExecutorTests
         };
 
         // Simule la factory qui renvoie nos mocks
-        ServiceFactory factory = type =>
-            type == typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>) ? behaviors : null!;
+        var mockResolver = new Mock<IHandlerResolver>();
+        mockResolver
+            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Returns(behaviors);
 
-        var executor = new PipelineExecutor(factory);
+        var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
 
         // Act
@@ -109,7 +112,11 @@ public class PipelineExecutorTests
     public async Task ExecuteAsync_Should_Throw_When_Context_Is_Null()
     {
         // Arrange
-        var executor = new PipelineExecutor(_ => Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+        var mockResolver = new Mock<IHandlerResolver>();
+        mockResolver
+            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+        var executor = new PipelineExecutor(mockResolver.Object);
 
         // Act
         var act = async () =>
@@ -126,7 +133,12 @@ public class PipelineExecutorTests
     public async Task ExecuteAsync_Should_Throw_When_HandlerDelegate_Is_Null()
     {
         // Arrange
-        var executor = new PipelineExecutor(_ => Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+        var mockResolver = new Mock<IHandlerResolver>();
+        mockResolver
+            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+
+        var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
 
         // Act
@@ -144,9 +156,13 @@ public class PipelineExecutorTests
     public async Task ExecuteAsync_Should_Invoke_Handler_When_No_Behaviors()
     {
         // Arrange
-        bool handlerCalled = false;
-        ServiceFactory factory = _ => Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>();
-        var executor = new PipelineExecutor(factory);
+        bool handlerCalled = false; var mockResolver = new Mock<IHandlerResolver>();
+        
+        mockResolver
+            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+
+        var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
 
         // Act

@@ -1,6 +1,5 @@
 ﻿using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Resolvers;
-using Mediarq.Core.Common.Time;
 using Mediarq.Core.Common.User;
 
 namespace Mediarq.Core.Common.Contexts;
@@ -10,18 +9,13 @@ namespace Mediarq.Core.Common.Contexts;
 /// </summary>
 public class RequestContextFactory : IRequestContextFactory {
     private readonly IUserContext _userContext;
-    private readonly IClock _clock;
-
     /// <summary>
     /// The constructor for RequestContextFactory.
     /// </summary>
     /// <param name="userContext">The user context to get information about the user.</param>
-    /// <param name="clock">The clock to get the right time.</param>
-    public RequestContextFactory(IUserContext userContext, IClock clock) {
+    public RequestContextFactory(IUserContext userContext) {
         ArgumentNullException.ThrowIfNull(userContext);
-        ArgumentNullException.ThrowIfNull(clock);
         _userContext = userContext;
-        _clock = clock;
     }
 
     /// <see cref="IRequestContextFactory.Create{TRequest, TResponse}(TRequest, CancellationToken)"/>

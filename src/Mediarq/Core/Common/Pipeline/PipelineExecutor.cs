@@ -1,5 +1,6 @@
 ﻿using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Core.Common.Pipeline;
 
@@ -16,9 +17,9 @@ namespace Mediarq.Core.Common.Pipeline;
 /// will run closest to the handler—allowing developers to define pre- and post-processing logic
 /// in a structured and composable way.
 /// </remarks>
-public class PipelineExecutor(ServiceFactory serviceFactory) : IPipelineExecutor
+public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecutor
 {
-    private readonly ServiceFactory _serviceFactory = serviceFactory;
+    private readonly IHandlerResolver _handlerResolver = handlerResolver;
 
     /// <summary>
     /// Executes the request pipeline for a given request and response type.
@@ -78,7 +79,7 @@ public class PipelineExecutor(ServiceFactory serviceFactory) : IPipelineExecutor
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handlerDelegate);
 
-        var behaviors = _serviceFactory(typeof(IEnumerable<IPipelineBehavior<TRequest, TResponse>>))
+        var behaviors = _handlerResolver.Resolve(typeof(IEnumerable<IPipelineBehavior<TRequest, TResponse>>))
             as IEnumerable<IPipelineBehavior<TRequest, TResponse>> ?? [];
 
         Func<Task<TResponse>> next = () => handlerDelegate(cancellationToken);

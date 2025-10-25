@@ -46,7 +46,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     /// <param name="context">
     /// The current request context containing metadata such as the request ID and timestamps.
     /// </param>
-    /// <param name="next">
+    /// <param name="handle">
     /// The delegate representing the next step in the pipeline or the final request handler.
     /// </param>
     /// <param name="cancellationToken">
@@ -56,7 +56,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     /// A task representing the asynchronous operation, producing the response (<typeparamref name="TResponse"/>).
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="context"/> or <paramref name="next"/> is <see langword="null"/>.
+    /// Thrown if <paramref name="context"/> or <paramref name="handle"/> is <see langword="null"/>.
     /// </exception>
     /// <remarks>
     /// The behavior performs the following actions:
@@ -67,14 +67,14 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     /// </list>
     /// This helps trace requests across multiple layers and improves observability in production environments.
     /// </remarks>
-    public Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(handle);
 
         _logger.LogInformation("Handling {RequestType} with RequestId {RequestId} started at {StartedAt}", typeof(TRequest).Name, context.RequestId, context.StartedAt);
 
-        Task<TResponse> response = next();
+        Task<TResponse> response = handle();
 
         _logger.LogInformation("Handled {RequestType} with RequestId {RequestId} ended at {EndedAt}", typeof(TRequest).Name, context.RequestId, context.FinishedAt);
 

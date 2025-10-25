@@ -11,20 +11,18 @@ public class RequestContextFactoryTests
 {
     private readonly RequestContextFactory _testClass;
     private readonly Mock<IUserContext> _userContext;
-    private readonly Mock<IClock> _clock;
 
     public RequestContextFactoryTests()
     {
         _userContext = new Mock<IUserContext>();
-        _clock = new Mock<IClock>();
-        _testClass = new RequestContextFactory(_userContext.Object, _clock.Object);
+        _testClass = new RequestContextFactory(_userContext.Object);
     }
 
     [Fact]
     public void CanConstruct()
     {
         // Act
-        var instance = new RequestContextFactory(_userContext.Object, _clock.Object);
+        var instance = new RequestContextFactory(_userContext.Object);
 
         // Assert
         instance.Should().NotBeNull();
@@ -33,13 +31,7 @@ public class RequestContextFactoryTests
     [Fact]
     public void CannotConstructWithNullUserContext()
     {
-        FluentActions.Invoking(() => new RequestContextFactory(default(IUserContext), _clock.Object)).Should().Throw<ArgumentNullException>().WithParameterName("userContext");
-    }
-
-    [Fact]
-    public void CannotConstructWithNullClock()
-    {
-        FluentActions.Invoking(() => new RequestContextFactory(_userContext.Object, default(IClock))).Should().Throw<ArgumentNullException>().WithParameterName("clock");
+        FluentActions.Invoking(() => new RequestContextFactory(default(IUserContext))).Should().Throw<ArgumentNullException>().WithParameterName("userContext");
     }
 
     [Fact]
