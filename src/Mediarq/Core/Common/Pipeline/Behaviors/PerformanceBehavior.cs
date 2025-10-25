@@ -1,6 +1,5 @@
 ﻿using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Requests.Abstraction;
-using Mediarq.Core.Common.Time;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
@@ -28,7 +27,6 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     where TRequest : ICommandOrQuery<TResponse>
 {
     private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
-    private readonly IClock _clock;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PerformanceBehavior{TRequest, TResponse}"/> class.
@@ -42,13 +40,11 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="logger"/> or <paramref name="clock"/> is <see langword="null"/>.
     /// </exception>
-    public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, IClock clock)
+    public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(clock);
 
         _logger = logger;
-        _clock = clock;
     }
 
     /// <summary>
@@ -58,7 +54,7 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     /// <param name="context">
     /// The current request context containing metadata such as request ID and timestamps.
     /// </param>
-    /// <param name="next">
+    /// <param name="handle">
     /// The delegate representing the next step in the pipeline or the final request handler.
     /// </param>
     /// <param name="cancellationToken">
@@ -68,7 +64,7 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     /// A task representing the asynchronous operation, producing the response (<typeparamref name="TResponse"/>).
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="context"/> or <paramref name="next"/> is <see langword="null"/>.
+    /// Thrown if <paramref name="context"/> or <paramref name="handle"/> is <see langword="null"/>.
     /// </exception>
     /// <remarks>
     /// The behavior performs the following steps:
@@ -79,13 +75,13 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     /// </list>
     /// The 500 ms threshold can be customized based on application performance requirements.
     /// </remarks>
-    public async Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(handle);
 
         var stopWatch = Stopwatch.StartNew();
-        TResponse response = await next();
+        TResponse response = await handle();
         stopWatch.Stop();
 
         long elapsedMs = stopWatch.ElapsedMilliseconds;

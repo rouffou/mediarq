@@ -1,5 +1,4 @@
-﻿using Mediarq.Core.Common.Pipeline.Behaviors;
-using Mediarq.Core.Common.Contexts;
+﻿using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
@@ -10,6 +9,7 @@ using Mediarq.Core.Common.User;
 using Mediarq.Core.Mediators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Extensions;
 
@@ -64,7 +64,7 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddScoped<ServiceFactory>(sp => sp.GetService);
+        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
         services.AddScoped<IMediator, Mediator>();
 
         services.TryAddSingleton<IClock, SystemClock>();

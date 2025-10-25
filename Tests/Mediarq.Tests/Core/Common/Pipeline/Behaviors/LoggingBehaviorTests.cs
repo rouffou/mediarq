@@ -94,7 +94,7 @@ public class LoggingBehaviorTests
             .Invoking(() => behavior.Handle(null!, next, CancellationToken.None))
             .Should()
             .ThrowAsync<ArgumentNullException>()
-            .WithParameterName("request");
+            .WithParameterName("context");
     }
 
     [Fact]
@@ -105,6 +105,6 @@ public class LoggingBehaviorTests
                 .Invoking(() => behavior.Handle(new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object, default, CancellationToken.None))
                 .Should()
                 .ThrowAsync<ArgumentNullException>()
-                .WithParameterName("next");
+                .WithParameterName("handle");
     }
 }

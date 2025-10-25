@@ -1,6 +1,8 @@
 ﻿using Mediarq.Core.Common.Contexts;
+using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Core.Mediators;
 
@@ -30,15 +32,15 @@ namespace Mediarq.Core.Mediators;
 /// </example>
 public class Mediator: IMediator
 {
-    private readonly ServiceFactory _serviceFactory;
     private readonly IRequestContextFactory _requestContextFactory;
     private readonly IPipelineExecutor _pipelineExecutor;
+    private readonly IHandlerResolver _handlerResolver;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mediator"/> class.
     /// </summary>
-    /// <param name="serviceFactory">
-    /// A factory delegate responsible for resolving service instances, such as handlers or pipeline behaviors.
+    /// <param name="handlerResolver">
+    /// The handler to resolve the DI of any behavior and request handler.
     /// </param>
     /// <param name="requestContextFactory">
     /// The factory used to create <see cref="RequestContext{TRequest, TResponse}"/> instances that encapsulate metadata about the request.
@@ -50,17 +52,17 @@ public class Mediator: IMediator
     /// Thrown if any of the constructor parameters are <see langword="null"/>.
     /// </exception>
     public Mediator(
-        ServiceFactory serviceFactory,
         IRequestContextFactory requestContextFactory,
-        IPipelineExecutor pipelineExecutor)
+        IPipelineExecutor pipelineExecutor,
+        IHandlerResolver handlerResolver)
     {
-        ArgumentNullException.ThrowIfNull(serviceFactory);
+        ArgumentNullException.ThrowIfNull(handlerResolver);
         ArgumentNullException.ThrowIfNull(requestContextFactory);
         ArgumentNullException.ThrowIfNull(pipelineExecutor);
 
-        _serviceFactory = serviceFactory;
         _requestContextFactory = requestContextFactory;
         _pipelineExecutor = pipelineExecutor;
+        _handlerResolver = handlerResolver;
     }
 
     /// <summary>
@@ -93,8 +95,8 @@ public class Mediator: IMediator
         var handlerType = typeof(IRequestHandler<,>)
             .MakeGenericType(request.GetType(), typeof(TResponse));
 
-        dynamic handler = _serviceFactory(handlerType)
-            ?? throw new InvalidOperationException($"No handler found for {request.GetType().Name}");
+        dynamic handler = _handlerResolver.Resolve(handlerType)
+            ?? throw new HandlerNotFoundException(request.GetType());
         
         Func<CancellationToken, Task<TResponse>> next = ct =>
         {
@@ -104,13 +106,17 @@ public class Mediator: IMediator
 
         try
         {
-            var requestContext = _requestContextFactory.Create<ICommandOrQuery<TResponse>, TResponse>(request, cancellationToken);
+            var createMethod = typeof(IRequestContextFactory)
+            .GetMethod("Create")!
+            .MakeGenericMethod(request.GetType(), typeof(TResponse));
+
+            var requestContext = createMethod.Invoke(_requestContextFactory, [request, cancellationToken]);
 
             var executeMethod = typeof(IPipelineExecutor)
                 .GetMethod("ExecuteAsync")!
                 .MakeGenericMethod(request.GetType(), typeof(TResponse));
 
-            return (Task<TResponse>)executeMethod.Invoke(_pipelineExecutor, new object[] { requestContext, next, cancellationToken })!;
+            return (Task<TResponse>)executeMethod.Invoke(_pipelineExecutor, [requestContext, next, cancellationToken])!;
         }
         catch (Exception ex)
         {

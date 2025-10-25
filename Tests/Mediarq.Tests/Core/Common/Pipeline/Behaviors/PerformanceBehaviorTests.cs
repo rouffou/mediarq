@@ -16,12 +16,10 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
     public class PerformanceBehaviorTests
     {
         private readonly Mock<ILogger<PerformanceBehavior<TestCommand, Result>>> _mockLogger;
-        private readonly Mock<IClock> _mockClock;
 
         public PerformanceBehaviorTests()
         {
             _mockLogger = new Mock<ILogger<PerformanceBehavior<TestCommand, Result>>>();
-            _mockClock = new Mock<IClock>();
         }
 
 
@@ -29,7 +27,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         public async Task Handle_Should_InvokeNext()
         {
             // Arrange
-            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
+            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object);
             var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
             var wasCalled = false;
 
@@ -47,7 +45,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         public async Task Handle_Should_NotLogWarning_WhenUnderThreshold()
         {
             // Arrange
-            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
+            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object);
             var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
 
             Task<Result> Next() => Task.FromResult(Result.Success());
@@ -70,7 +68,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         public async Task Handle_Should_LogWarning_WhenOverThreshold()
         {
             // Arrange
-            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
+            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object);
             var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
 
             Task<Result> Next()
@@ -98,21 +96,21 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
         public async Task Handle_Should_ThrowArgumentNullException_WhenRequestIsNull()
         {
             // Arrange
-            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
+            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object);
 
             // Act & Assert
             await FluentActions
                 .Invoking(() => behavior.Handle(null!, () => Task.FromResult(Result.Success()), CancellationToken.None))
                 .Should()
                 .ThrowAsync<ArgumentNullException>()
-                .WithParameterName("request");
+                .WithParameterName("context");
         }
 
         [Fact]
         public async Task Handle_Should_ThrowArgumentNullException_WhenNextIsNull()
         {
             // Arrange
-            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object, _mockClock.Object);
+            var behavior = new PerformanceBehavior<TestCommand, Result>(_mockLogger.Object);
             var context = new Mock<IIMMutableRequestContext<TestCommand, Result>>().Object;
 
             // Act & Assert
@@ -120,7 +118,7 @@ namespace Mediarq.Tests.Core.Common.Pipeline.Behaviors
                 .Invoking(() => behavior.Handle(context, null!, CancellationToken.None))
                 .Should()
                 .ThrowAsync<ArgumentNullException>()
-                .WithParameterName("next");
+                .WithParameterName("handle");
         }
     }
 }

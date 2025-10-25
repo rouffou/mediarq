@@ -50,7 +50,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     /// <param name="context">
     /// The current request context containing the request and metadata.
     /// </param>
-    /// <param name="next">
+    /// <param name="handle">
     /// The delegate representing the next step in the pipeline or the final handler.
     /// </param>
     /// <param name="cancellationToken">
@@ -82,10 +82,10 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     ///   <item><description><see cref="Result{T}"/></description></item>
     /// </list>
     /// </remarks>
-    public Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> next, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(handle);
 
         var failures = _validators
             .SelectMany(v => v.Validate(context.Request))
@@ -96,7 +96,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         // Aucune erreur → continuer le pipeline
         if (failures.Count == 0)
         {
-            return next();
+            return handle();
         }
 
         // Extraire toutes les erreurs individuelles
