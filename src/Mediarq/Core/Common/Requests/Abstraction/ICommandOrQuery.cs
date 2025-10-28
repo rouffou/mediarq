@@ -28,3 +28,4 @@
 /// </example>
 
 public interface ICommandOrQuery<TResponse> : IRequest<TResponse>;
+
