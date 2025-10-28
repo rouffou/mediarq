@@ -44,3 +44,18 @@ public interface IRequestHandler<TRequest, TResponse>
     /// </returns>
     Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default);
 }
+
+
+public interface IRequestHandler<in TRequest>
+    where TRequest : ICommandOrQuery
+{
+    /// <summary>
+    /// Handles the specified <paramref name="request"/> asynchronously.
+    /// </summary>
+    /// <param name="request">The request message containing all data required for processing.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>
+    /// A task representing the asynchronous operation.
+    /// </returns>
+    Task Handle(TRequest request, CancellationToken cancellationToken = default);
+}
