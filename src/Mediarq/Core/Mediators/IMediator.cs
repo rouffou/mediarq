@@ -1,4 +1,6 @@
 ﻿using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Notifications;
 
 namespace Mediarq.Core.Mediators;
 
@@ -60,4 +62,20 @@ public interface IMediator
     /// Thrown when no matching handler is found for the given request type.
     /// </exception>
     Task<TResponse> Send<TResponse>(ICommandOrQuery<TResponse> request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a command without expecting a result (for side effects).
+    /// </summary>
+    /// <param name="command">The command to execute.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task Send(ICommand request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Publishes a notification to all registered handlers.
+    /// </summary>
+    /// <param name="notification">The notification instance.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification;
 }
