@@ -28,3 +28,7 @@ namespace Mediarq.Core.Common.Requests.Abstraction;
 /// </example>
 
 public interface IRequest<TResponse>;
+
+
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface IRequest;

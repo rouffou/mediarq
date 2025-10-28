@@ -2,6 +2,8 @@
 using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Core.Mediators;
@@ -124,5 +126,36 @@ public class Mediator: IMediator
             throw new InvalidOperationException(
                 $"Error while handling request {request.GetType().Name}", ex);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task Send(ICommand command, CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(command);
+
+        var handlerType = typeof(IRequestHandler<>).MakeGenericType(command.GetType());
+        dynamic handler = _handlerResolver.Resolve(handlerType)
+            ?? throw new HandlerNotFoundException(command.GetType());
+
+        await handler.Handle((dynamic) command, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task Publish<TNotification>(INotification notification, CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(notification);
+
+        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notification.GetType());
+        var handlers = _handlerResolver.ResolveAll(handlerType).ToList();
+
+        if (handlers.Count > 0)
+        {
+            var tasks = new List<Task>();
+            foreach (var handler in handlers) {
+                var handleMethod = handlerType.GetMethod(nameof(INotificationHandler<TNotification>.Handle))!;
+                var task = (Task) handleMethod.Invoke(handler, [notification, cancellationToken])!;
+                tasks.Add(task);
+            }
+
+            await Task.WhenAll(tasks);
+        }        
     }
 }
