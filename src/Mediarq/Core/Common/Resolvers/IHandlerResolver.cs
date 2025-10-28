@@ -11,4 +11,6 @@ public interface IHandlerResolver {
     /// <param name="handlerType">Type of handler to resolve.</param>
     /// <returns>Resolbed handler instance, or null if not found</returns>
     object Resolve(Type handlerType);
+
+    IEnumerable<object> ResolveAll(Type handlerType);
 }
