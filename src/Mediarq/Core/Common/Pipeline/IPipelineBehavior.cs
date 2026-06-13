@@ -36,7 +36,7 @@ public interface IPipelineBehavior<TRequest, TResponse>
     /// before and/or after calling the next delegate.
     /// </summary>
     /// <param name="context">
-    /// The current <see cref="IIMMutableRequestContext{TRequest, TResponse}"/> containing
+    /// The current <see cref="IMutableRequestContext{TRequest, TResponse}"/> containing
     /// the request data, metadata, and contextual information.
     /// </param>
     /// <param name="next">
@@ -60,5 +60,5 @@ public interface IPipelineBehavior<TRequest, TResponse>
     ///   <item><description><c>PerformanceBehavior</c> – measures execution time and logs slow requests.</description></item>
     /// </list>
     /// </remarks>
-    Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default);        
+    Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default);
 }

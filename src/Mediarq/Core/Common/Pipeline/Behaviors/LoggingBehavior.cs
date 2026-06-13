@@ -67,16 +67,23 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     /// </list>
     /// This helps trace requests across multiple layers and improves observability in production environments.
     /// </remarks>
-    public Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handle);
 
-        _logger.LogInformation("Handling {RequestType} with RequestId {RequestId} started at {StartedAt}", typeof(TRequest).Name, context.RequestId, context.StartedAt);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Handling {RequestType} with RequestId {RequestId} started at {StartedAt}", typeof(TRequest).Name, context.RequestId, context.StartedAt);
+        }
 
-        Task<TResponse> response = handle();
+        TResponse response = await handle();
+        context.FinishedAt = DateTime.UtcNow;
 
-        _logger.LogInformation("Handled {RequestType} with RequestId {RequestId} ended at {EndedAt}", typeof(TRequest).Name, context.RequestId, context.FinishedAt);
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("Handled {RequestType} with RequestId {RequestId} ended at {EndedAt}", typeof(TRequest).Name, context.RequestId, context.FinishedAt);
+        }
 
         return response;
     }

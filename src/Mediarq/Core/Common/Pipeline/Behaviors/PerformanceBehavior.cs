@@ -1,7 +1,7 @@
-﻿using Mediarq.Core.Common.Contexts;
+using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Time;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace Mediarq.Core.Common.Pipeline.Behaviors;
 
@@ -19,14 +19,17 @@ namespace Mediarq.Core.Common.Pipeline.Behaviors;
 /// <remarks>
 /// This behavior measures the total execution time of a request handler.
 /// If the duration exceeds a predefined threshold (default: 500 ms),
-/// it logs a warning message.  
-/// This helps identify performance bottlenecks and long-running operations
-/// within the application pipeline.
+/// it logs a warning message.
+/// Timing is measured through the injected <see cref="IClock"/> abstraction so the
+/// behavior remains deterministically testable.
 /// </remarks>
 public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
+    private const long ThresholdMilliseconds = 500;
+
     private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
+    private readonly IClock _clock;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PerformanceBehavior{TRequest, TResponse}"/> class.
@@ -40,11 +43,13 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="logger"/> or <paramref name="clock"/> is <see langword="null"/>.
     /// </exception>
-    public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
+    public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(clock);
 
         _logger = logger;
+        _clock = clock;
     }
 
     /// <summary>
@@ -69,24 +74,21 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     /// <remarks>
     /// The behavior performs the following steps:
     /// <list type="number">
-    ///   <item><description>Starts a timer before invoking the next delegate.</description></item>
+    ///   <item><description>Reads the current time from <see cref="IClock"/> before invoking the next delegate.</description></item>
     ///   <item><description>Executes the request handler or subsequent behaviors.</description></item>
-    ///   <item><description>Stops the timer and logs a warning if execution time exceeds 500 milliseconds.</description></item>
+    ///   <item><description>Reads the time again and logs a warning if execution exceeded 500 milliseconds.</description></item>
     /// </list>
-    /// The 500 ms threshold can be customized based on application performance requirements.
     /// </remarks>
-    public async Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handle);
 
-        var stopWatch = Stopwatch.StartNew();
+        DateTime start = _clock.UtcNow;
         TResponse response = await handle();
-        stopWatch.Stop();
+        long elapsedMs = (long)(_clock.UtcNow - start).TotalMilliseconds;
 
-        long elapsedMs = stopWatch.ElapsedMilliseconds;
-
-        if(elapsedMs > 500)
+        if (elapsedMs > ThresholdMilliseconds)
         {
             _logger.LogWarning("Long running request: {RequestName} ({ElapsedMilliseconds} ms)", typeof(TRequest).Name, elapsedMs);
         }

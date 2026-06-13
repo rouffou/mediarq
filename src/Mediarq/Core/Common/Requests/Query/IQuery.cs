@@ -33,4 +33,4 @@ namespace Mediarq.Core.Common.Requests.Query;
 /// }
 /// </code>
 /// </example>
-public interface IQuery<TResponse> : ICommandOrQuery<TResponse>;
+public interface IQuery<out TResponse> : ICommandOrQuery<TResponse>;

@@ -2,7 +2,6 @@
 
 namespace Mediarq.Core.Common.Requests.Abstraction;
 
-[EditorBrowsable(EditorBrowsableState.Never)]
 /// <summary>
 /// Represents a marker interface for defining a request that expects a response of type <typeparamref name="TResponse"/>.
 /// </summary>
@@ -26,9 +25,12 @@ namespace Mediarq.Core.Common.Requests.Abstraction;
 /// }
 /// </code>
 /// </example>
+[EditorBrowsable(EditorBrowsableState.Never)]
+public interface IRequest<out TResponse>;
 
-public interface IRequest<TResponse>;
 
-
+/// <summary>
+/// Represents a marker interface for a request that does not return a value.
+/// </summary>
 [EditorBrowsable(EditorBrowsableState.Never)]
 public interface IRequest;
