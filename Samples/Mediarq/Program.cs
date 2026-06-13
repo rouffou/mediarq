@@ -6,7 +6,8 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddMediarq(false);
+// Pass the assemblies that contain your handlers/behaviors/validators explicitly.
+builder.Services.AddMediarq(isHttp: false, typeof(Program).Assembly);
 
 // Add services to the container.
 builder.Services.AddControllers();

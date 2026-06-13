@@ -13,7 +13,7 @@
 /// </typeparam>
 /// <example>
 /// <code>
-/// public class CreateUserCommand : ICommandOrQuery<Result<UserDto>>
+/// public class CreateUserCommand : ICommandOrQuery&lt;Result&lt;UserDto&gt;&gt;
 /// {
 ///     public string Name { get; }
 ///     public string Email { get; }

@@ -57,7 +57,7 @@ public record DefaultUserContext : IUserContext
     /// <param name="userId">The unique identifier of the user. Defaults to an empty string.</param>
     /// <param name="userName">The username of the user. Defaults to <c>"system"</c>.</param>
     /// <param name="roles">The roles associated with the user. Defaults to an empty list.</param>
-    public DefaultUserContext(string userId = null, string userName = "system", IEnumerable<string> roles = null)
+    public DefaultUserContext(string? userId = null, string userName = "system", IEnumerable<string>? roles = null)
     {
         UserId = userId ?? string.Empty;
         UserName = userName;

@@ -24,8 +24,8 @@ namespace Mediarq.Core.Common.Pipeline;
 ///   <item><description>Exception handling or retry policies.</description></item>
 /// </list>
 /// 
-/// Each behavior receives a reference to the <paramref name="next"/> delegate, which represents
-/// the next step in the pipeline. Calling <paramref name="next"/> continues the pipeline execution;
+/// Each behavior receives a reference to the <c>handle</c> delegate, which represents
+/// the next step in the pipeline. Calling <c>handle</c> continues the pipeline execution;
 /// omitting it short-circuits the request handling process.
 /// </remarks>
 public interface IPipelineBehavior<TRequest, TResponse>
@@ -39,7 +39,7 @@ public interface IPipelineBehavior<TRequest, TResponse>
     /// The current <see cref="IMutableRequestContext{TRequest, TResponse}"/> containing
     /// the request data, metadata, and contextual information.
     /// </param>
-    /// <param name="next">
+    /// <param name="handle">
     /// A delegate representing the next behavior or the final handler to execute.
     /// The implementer must call this delegate to continue the pipeline.
     /// </param>

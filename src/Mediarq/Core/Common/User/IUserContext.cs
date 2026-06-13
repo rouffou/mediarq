@@ -38,17 +38,19 @@ public interface IUserContext
     /// Gets the unique identifier of the currently authenticated user.
     /// </summary>
     /// <value>
-    /// A string representing the user's unique ID (for example, a GUID or system-specific identifier).
+    /// A string representing the user's unique ID (for example, a GUID or system-specific identifier),
+    /// or <see langword="null"/> when no user is authenticated.
     /// </value>
-    string UserId { get; }
+    string? UserId { get; }
 
     /// <summary>
     /// Gets the display name or username of the currently authenticated user.
     /// </summary>
     /// <value>
-    /// A string containing the username used for identification or display purposes.
+    /// A string containing the username used for identification or display purposes,
+    /// or <see langword="null"/> when no user is authenticated.
     /// </value>
-    string UserName { get; }
+    string? UserName { get; }
 
     /// <summary>
     /// Gets the collection of roles assigned to the user.

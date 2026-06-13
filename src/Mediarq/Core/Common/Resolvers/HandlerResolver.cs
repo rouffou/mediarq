@@ -1,22 +1,31 @@
-﻿
-
 namespace Mediarq.Core.Common.Resolvers;
 
-public class HandlerResolver : IHandlerResolver {
+/// <summary>
+/// Default <see cref="IHandlerResolver"/> implementation that delegates resolution to a
+/// service-provider callback (typically <c>IServiceProvider.GetService</c>).
+/// </summary>
+public class HandlerResolver : IHandlerResolver
+{
+    private readonly Func<Type, object?> _resolver;
 
-    private readonly Func<Type, object> _resolver;
-
-    public HandlerResolver(Func<Type, object> resolver) {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HandlerResolver"/> class.
+    /// </summary>
+    /// <param name="resolver">The callback used to resolve services from the underlying container.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="resolver"/> is <see langword="null"/>.</exception>
+    public HandlerResolver(Func<Type, object?> resolver)
+    {
         ArgumentNullException.ThrowIfNull(resolver);
 
         _resolver = resolver;
     }
 
-    public object Resolve(Type handlerType) {
-        return _resolver(handlerType);
-    }
+    /// <inheritdoc />
+    public object? Resolve(Type handlerType) => _resolver(handlerType);
 
-    public IEnumerable<object> ResolveAll(Type handlerType) {
+    /// <inheritdoc />
+    public IEnumerable<object> ResolveAll(Type handlerType)
+    {
         ArgumentNullException.ThrowIfNull(handlerType);
 
         var enumerableType = typeof(IEnumerable<>).MakeGenericType(handlerType);

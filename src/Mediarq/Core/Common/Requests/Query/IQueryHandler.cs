@@ -17,11 +17,10 @@ namespace Mediarq.Core.Common.Requests.Query;
 /// validation, logging, and performance tracking.
 /// </remarks>
 /// <typeparam name="TRequest">
-/// The type of the command being handled. Must implement <see cref="ICommand{TResponse}"/>.
+/// The type of the query being handled. Must implement <see cref="IQuery{TResponse}"/>.
 /// </typeparam>
 /// <typeparam name="TResponse">
 /// The type of the response returned after command execution.
-/// </typeparam>
 /// </typeparam>
 /// <example>
 /// <code>

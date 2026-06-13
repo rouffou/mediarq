@@ -36,4 +36,12 @@ namespace Mediarq.Core.Common.Requests.Command;
 /// </example>
 public interface ICommand<out TResponse> : ICommandOrQuery<TResponse>;
 
-public interface ICommand : IRequest;
+/// <summary>
+/// Represents a command that performs a state change without producing a return value.
+/// </summary>
+/// <remarks>
+/// A no-result command flows through the same pipeline (validation, logging, performance, ...) as
+/// any other request; its response type is <see cref="Unit"/>. Implement its handler with
+/// <see cref="Command.ICommandHandler{TRequest}"/>.
+/// </remarks>
+public interface ICommand : ICommandOrQuery<Unit>;
