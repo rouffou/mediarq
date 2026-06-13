@@ -2,6 +2,7 @@
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Results;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Mediarq.Core.Common.Pipeline.Behaviors;
@@ -28,6 +29,11 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     where TRequest : ICommandOrQuery<TResponse>
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
+
+    // Factory that converts a ValidationError into the failed TResponse. It is built once per
+    // closed generic type (Result or Result&lt;T&gt;) and cached, avoiding per-request reflection.
+    // It is null when TResponse is neither Result nor Result&lt;T&gt;.
+    private static readonly Func<ValidationError, TResponse>? FailureFactory = BuildFailureFactory();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ValidationBehavior{TRequest, TResponse}"/> class.
@@ -82,7 +88,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     ///   <item><description><see cref="Result{T}"/></description></item>
     /// </list>
     /// </remarks>
-    public Task<TResponse> Handle(IIMMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
+    public Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handle);
@@ -93,42 +99,56 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             .SelectMany(v => v.Errors)
             .ToList();
 
-        // Aucune erreur → continuer le pipeline
+        // No error → continue the pipeline.
         if (failures.Count == 0)
         {
             return handle();
         }
 
-        // Extraire toutes les erreurs individuelles
+        // Aggregate every individual property error.
         ResultError[] propertyErrors = [.. failures
             .Select(e => new ResultError(
                 $"Validation.{typeof(TRequest).Name}.{e.PropertyName}",
                 e.ErrorMessage,
                 ErrorType.Validation))];
 
-        // Créer un objet ValidationError global
         var validationError = new ValidationError(propertyErrors);
 
-        // Si TResponse est un Result (non générique)
-        if (typeof(TResponse) == typeof(Result))
+        // TResponse is neither Result nor Result<T>: a validation failure cannot be expressed.
+        if (FailureFactory is null)
         {
-            return Task.FromResult((TResponse)(object)Result.Failure(validationError));
+            throw new InvalidOperationException($"Validation failed but TResponse type '{typeof(TResponse).Name}' is not a supported Result type.");
         }
 
-        // Si TResponse est un Result<T>
+        return Task.FromResult(FailureFactory(validationError));
+    }
+
+    /// <summary>
+    /// Builds, once per closed generic type, the delegate that turns a <see cref="ValidationError"/>
+    /// into a failed <typeparamref name="TResponse"/>. Returns <see langword="null"/> when
+    /// <typeparamref name="TResponse"/> is neither <see cref="Result"/> nor <see cref="Result{T}"/>.
+    /// </summary>
+    private static Func<ValidationError, TResponse>? BuildFailureFactory()
+    {
+        if (typeof(TResponse) == typeof(Result))
+        {
+            return static error => (TResponse)(object)Result.Failure(error);
+        }
+
         if (typeof(TResponse).IsGenericType &&
             typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
         {
             Type valueType = typeof(TResponse).GetGenericArguments()[0];
             MethodInfo method = typeof(Result<>)
                 .MakeGenericType(valueType)
-                .GetMethod(nameof(Result<object>.ValidationFailure));
+                .GetMethod(nameof(Result<object>.ValidationFailure))!;
 
-            object genericResult = method!.Invoke(null, [validationError]);
-            return Task.FromResult((TResponse)genericResult!);
+            ParameterExpression errorParam = Expression.Parameter(typeof(ValidationError), "error");
+            Expression body = Expression.Convert(Expression.Call(method, errorParam), typeof(TResponse));
+
+            return Expression.Lambda<Func<ValidationError, TResponse>>(body, errorParam).Compile();
         }
 
-        // Sinon, type non supporté
-        throw new InvalidOperationException($"Validation failed but TResponse type '{typeof(TResponse).Name}' is not a supported Result type.");
+        return null;
     }
 }

@@ -27,5 +27,5 @@
 /// </code>
 /// </example>
 
-public interface ICommandOrQuery<TResponse> : IRequest<TResponse>;
+public interface ICommandOrQuery<out TResponse> : IRequest<TResponse>;
 

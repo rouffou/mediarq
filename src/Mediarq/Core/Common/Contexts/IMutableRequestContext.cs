@@ -7,7 +7,7 @@ namespace Mediarq.Core.Common.Contexts;
 /// </summary>
 /// <typeparam name="TRequest">The type of the request that need to extends <see cref="ICommandOrQuery{TResponse}"/> interface.</typeparam>
 /// <typeparam name="TResponse">The type of the responses must be <see cref="Results.Result"/> or <see cref="Results.Result{TValue}"/>.</typeparam>
-public interface IIMMutableRequestContext<TRequest, TResponse> : IRequestContext<TRequest, TResponse>
+public interface IMutableRequestContext<TRequest, TResponse> : IRequestContext<TRequest, TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
     /// <summary>

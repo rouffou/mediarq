@@ -129,33 +129,39 @@ public class Mediator: IMediator
     }
 
     /// <inheritdoc />
-    public async Task Send(ICommand command, CancellationToken cancellationToken = default) {
-        ArgumentNullException.ThrowIfNull(command);
+    public async Task Send(ICommand request, CancellationToken cancellationToken = default) {
+        ArgumentNullException.ThrowIfNull(request);
 
-        var handlerType = typeof(IRequestHandler<>).MakeGenericType(command.GetType());
+        var handlerType = typeof(IRequestHandler<>).MakeGenericType(request.GetType());
         dynamic handler = _handlerResolver.Resolve(handlerType)
-            ?? throw new HandlerNotFoundException(command.GetType());
+            ?? throw new HandlerNotFoundException(request.GetType());
 
-        await handler.Handle((dynamic) command, cancellationToken);
+        await handler.Handle((dynamic) request, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task Publish<TNotification>(INotification notification, CancellationToken cancellationToken = default) {
+    public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+        where TNotification : INotification
+    {
         ArgumentNullException.ThrowIfNull(notification);
 
         var handlerType = typeof(INotificationHandler<>).MakeGenericType(notification.GetType());
-        var handlers = _handlerResolver.ResolveAll(handlerType).ToList();
+        var handlers = _handlerResolver.ResolveAll(handlerType).ToList() ?? [];
 
-        if (handlers.Count > 0)
+        if(handlers.Count == 0)
         {
-            var tasks = new List<Task>();
-            foreach (var handler in handlers) {
-                var handleMethod = handlerType.GetMethod(nameof(INotificationHandler<TNotification>.Handle))!;
-                var task = (Task) handleMethod.Invoke(handler, [notification, cancellationToken])!;
-                tasks.Add(task);
-            }
+            return;
+        }
 
-            await Task.WhenAll(tasks);
-        }        
+        var tasks = new List<Task>(handlers.Count);
+
+        foreach (var handler in handlers)
+        {
+            var handleMethod = handlerType.GetMethod(nameof(INotificationHandler<TNotification>.Handle))!;
+            var task = (Task) handleMethod.Invoke(handler, [notification, cancellationToken])!;
+            tasks.Add(task);
+        }
+
+        await Task.WhenAll(tasks);
     }
 }

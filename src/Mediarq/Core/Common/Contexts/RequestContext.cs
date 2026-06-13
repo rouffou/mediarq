@@ -17,7 +17,7 @@ namespace Mediarq.Core.Common.Contexts;
 /// <typeparam name="TResponse">The type of the response expected from the request. The response should be <see cref="Results.Result"/> or <see cref="Results.Result{TValue}"/> type.</typeparam>
 [DebuggerDisplay("RequestContext {RequestId} ({typeof(TRequest).Name})")]
 public record RequestContext<TRequest, TResponse>
-    : IIMMutableRequestContext<TRequest, TResponse>
+    : IMutableRequestContext<TRequest, TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
     private readonly IDictionary<string, object> _items = new Dictionary<string, object>();
@@ -95,7 +95,7 @@ public record RequestContext<TRequest, TResponse>
         CancellationToken = cancellationToken;
     }
 
-    /// <see cref="IIMMutableRequestContext{TRequest, TResponse}.AddItem(string, object)"/>
+    /// <see cref="IMutableRequestContext{TRequest, TResponse}.AddItem(string, object)"/>
     public void AddItem(string key, object value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -103,7 +103,7 @@ public record RequestContext<TRequest, TResponse>
         _items[key] = value;
     }
 
-    /// <see cref="IIMMutableRequestContext{TRequest, TResponse}.TryGetItem{T}(string, out T)"/>
+    /// <see cref="IMutableRequestContext{TRequest, TResponse}.TryGetItem{T}(string, out T)"/>
     public bool TryGetItem<T>(string key, out T value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
@@ -118,6 +118,6 @@ public record RequestContext<TRequest, TResponse>
         return false;
     }
 
-    /// <see cref="IIMMutableRequestContext{TRequest, TResponse}.RemoveItem(string)"/>
+    /// <see cref="IMutableRequestContext{TRequest, TResponse}.RemoveItem(string)"/>
     public bool RemoveItem(string key) => _items.Remove(key);
 }

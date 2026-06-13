@@ -31,7 +31,7 @@
 /// }
 /// </code>
 /// </example>
-public interface IRequestHandler<TRequest, TResponse>
+public interface IRequestHandler<in TRequest, TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
     /// <summary>
@@ -47,7 +47,7 @@ public interface IRequestHandler<TRequest, TResponse>
 
 
 public interface IRequestHandler<in TRequest>
-    where TRequest : ICommandOrQuery
+    where TRequest : IRequest
 {
     /// <summary>
     /// Handles the specified <paramref name="request"/> asynchronously.
