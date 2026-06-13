@@ -1,5 +1,6 @@
 ﻿using Mediarq.Core.Common.Requests.Abstraction;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace Mediarq.Core.Common.Contexts;
@@ -35,7 +36,7 @@ public record RequestContext<TRequest, TResponse>
     /// <summary>
     /// Gets the unique identifier of the user associated with this instance.
     /// </summary>
-    public string UserId { get; init; }
+    public string? UserId { get; init; }
 
     /// <summary>
     /// Gets the UTC date and time when the operation started.
@@ -88,10 +89,12 @@ public record RequestContext<TRequest, TResponse>
     /// <param name="cancellationToken">A token that can be used to cancel the request operation. The default value is <see
     /// cref="CancellationToken.None"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="request"/> is null.</exception>
-    public RequestContext(TRequest request, string userId, CancellationToken cancellationToken = default)
+    public RequestContext(TRequest request, string? userId, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         UserId = userId;
-        Request = request ?? throw new ArgumentNullException(nameof(request));
+        Request = request;
         CancellationToken = cancellationToken;
     }
 
@@ -104,7 +107,7 @@ public record RequestContext<TRequest, TResponse>
     }
 
     /// <see cref="IMutableRequestContext{TRequest, TResponse}.TryGetItem{T}(string, out T)"/>
-    public bool TryGetItem<T>(string key, out T value)
+    public bool TryGetItem<T>(string key, [MaybeNullWhen(false)] out T value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentNullException.ThrowIfNull(_items);

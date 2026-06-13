@@ -1,6 +1,7 @@
 ﻿using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Results;
 
 namespace Mediarq.Core.Mediators;
 
@@ -66,7 +67,7 @@ public interface IMediator
     /// <summary>
     /// Sends a command without expecting a result (for side effects).
     /// </summary>
-    /// <param name="command">The command to execute.</param>
+    /// <param name="request">The command to execute.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task Send(ICommand request, CancellationToken cancellationToken = default);
@@ -74,6 +75,12 @@ public interface IMediator
     /// <summary>
     /// Publishes a notification to all registered handlers.
     /// </summary>
+    /// <remarks>
+    /// Handlers are invoked concurrently and awaited together. If several handlers fail, the returned
+    /// task surfaces the first exception. Publishing a notification that has no registered handler
+    /// completes successfully without doing anything.
+    /// </remarks>
+    /// <typeparam name="TNotification">The notification type. Must implement <see cref="INotification"/>.</typeparam>
     /// <param name="notification">The notification instance.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>

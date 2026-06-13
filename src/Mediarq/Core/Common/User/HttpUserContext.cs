@@ -64,7 +64,7 @@ public class HttpUserContext : IUserContext
     /// The value of the <see cref="ClaimTypes.NameIdentifier"/> claim,
     /// or <see langword="null"/> if the user is not authenticated.
     /// </value>
-    public string UserId
+    public string? UserId
         => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
     /// <summary>
@@ -74,7 +74,7 @@ public class HttpUserContext : IUserContext
     /// The value of the <see cref="ClaimsIdentity.Name"/> property,
     /// or <see langword="null"/> if the user is not authenticated.
     /// </value>
-    public string UserName
+    public string? UserName
         => _httpContextAccessor.HttpContext?.User?.Identity?.Name;
 
     /// <summary>

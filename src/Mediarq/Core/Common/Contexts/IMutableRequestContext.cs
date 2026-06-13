@@ -1,4 +1,5 @@
 ﻿using Mediarq.Core.Common.Requests.Abstraction;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Mediarq.Core.Common.Contexts;
 
@@ -30,7 +31,7 @@ public interface IMutableRequestContext<TRequest, TResponse> : IRequestContext<T
     /// langword="false"/>.</returns>
     /// <exception cref="ArgumentException">Throw if <paramref name="key"/> is null or whitespace.</exception>
     /// <exception cref="ArgumentNullException">Throw if the dictionnary are not init.</exception>
-    bool TryGetItem<T>(string key, out T value);
+    bool TryGetItem<T>(string key, [MaybeNullWhen(false)] out T value);
 
     /// <summary>
     /// Removes the item with the specified key from the collection.

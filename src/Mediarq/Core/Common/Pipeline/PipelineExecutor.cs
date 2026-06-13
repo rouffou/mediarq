@@ -53,7 +53,7 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
     /// The pipeline execution process consists of the following steps:
     /// </para>
     /// <list type="number">
-    ///   <item><description>Resolve all registered <see cref="IPipelineBehavior{TRequest, TResponse}"/> instances using the <see cref="ServiceFactory"/>.</description></item>
+    ///   <item><description>Resolve all registered <see cref="IPipelineBehavior{TRequest, TResponse}"/> instances using the <see cref="IHandlerResolver"/>.</description></item>
     ///   <item><description>Wrap each behavior around the next delegate, forming a reverse-ordered chain of execution.</description></item>
     ///   <item><description>Invoke each behavior’s <see cref="IPipelineBehavior{TRequest, TResponse}.Handle"/> method in sequence.</description></item>
     ///   <item><description>Finally, call the provided <paramref name="handlerDelegate"/> to execute the request handler.</description></item>
@@ -82,9 +82,14 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
         var behaviors = _handlerResolver.Resolve(typeof(IEnumerable<IPipelineBehavior<TRequest, TResponse>>))
             as IEnumerable<IPipelineBehavior<TRequest, TResponse>> ?? [];
 
+        // Behaviors implementing IOrderBehavior run from the lowest Order (outermost) to the highest.
+        // Behaviors that do not implement it default to int.MaxValue and, thanks to the stable sort,
+        // keep their registration order and run closest to the handler.
+        var orderedBehaviors = behaviors.OrderBy(b => b is IOrderBehavior order ? order.Order : int.MaxValue);
+
         Func<Task<TResponse>> next = () => handlerDelegate(cancellationToken);
 
-        foreach (var behavior in behaviors.Reverse())
+        foreach (var behavior in orderedBehaviors.Reverse())
         {
             var currentNext = next;
             next = () => behavior.Handle(context, currentNext, cancellationToken);

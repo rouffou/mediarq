@@ -14,7 +14,7 @@ namespace Mediarq.Core.Common.Requests.Abstraction;
 /// </typeparam>
 /// <example>
 /// <code>
-/// public class GetUserByIdQuery : IRequest<UserDto>
+/// public class GetUserByIdQuery : IRequest&lt;UserDto&gt;
 /// {
 ///     public Guid UserId { get; }
 ///

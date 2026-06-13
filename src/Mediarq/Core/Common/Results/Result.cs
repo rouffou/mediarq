@@ -113,7 +113,7 @@ public class Result
 /// </remarks>
 public class Result<TValue> : Result
 {
-    private readonly TValue _value;
+    private readonly TValue? _value;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Result{TValue}"/> class.
@@ -121,7 +121,7 @@ public class Result<TValue> : Result
     /// <param name="value">The value associated with the result, if successful.</param>
     /// <param name="isSuccess">Indicates whether the operation succeeded.</param>
     /// <param name="error">The error associated with the operation, if it failed.</param>
-    public Result(TValue value, bool isSuccess, ResultError error)
+    public Result(TValue? value, bool isSuccess, ResultError error)
         : base(isSuccess, error)
     {
         _value = value;
