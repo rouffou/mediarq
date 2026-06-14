@@ -1,67 +1,42 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
-    <!-- The reflection-free path (AddMediarqCore + generated AddMediarqHandlers) is trimming/AOT safe.
-         The reflection-based AddMediarq scan is annotated [RequiresUnreferencedCode]. -->
-    <IsAotCompatible>true</IsAotCompatible>
+    <!-- Meta-package: bundles the dependencies, ships no assembly of its own. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <!-- NU5128: a meta-package has dependency groups but no lib/ assembly — expected. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
     <PackageId>Mediarq</PackageId>
     <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
-    <Description>A lightweight, dependency-free MediatR alternative for .NET with CQRS support, pipeline behaviors, validation and notifications.</Description>
+    <Description>Meta-package bundling Mediarq.Core and every official Mediarq extension: ASP.NET Core, FluentValidation, Caching, Diagnostics, UnitOfWork, Polly and MassTransit. Install this for everything, or reference individual packages to keep dependencies minimal.</Description>
     <PackageTags>mediator;cqrs;ddd;pipeline;notifications;dotnet</PackageTags>
     <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>See the changelog: https://github.com/rouffou/mediarq/blob/main/CHANGELOG.md</PackageReleaseNotes>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
-    <PackageReference Include="Scrutor" Version="6.1.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.15.0.120848">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Build the source generator and pack it as an analyzer; its output assembly is not referenced at runtime. -->
-    <ProjectReference Include="..\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
-                      ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <None Include="..\Mediarq.SourceGenerators\bin\$(Configuration)\netstandard2.0\Mediarq.SourceGenerators.dll"
-          Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <ProjectReference Include="..\Mediarq.Core\Mediarq.Core.csproj" />
+    <ProjectReference Include="..\Mediarq.AspNetCore\Mediarq.AspNetCore.csproj" />
+    <ProjectReference Include="..\Mediarq.FluentValidation\Mediarq.FluentValidation.csproj" />
+    <ProjectReference Include="..\Mediarq.Caching\Mediarq.Caching.csproj" />
+    <ProjectReference Include="..\Mediarq.Diagnostics\Mediarq.Diagnostics.csproj" />
+    <ProjectReference Include="..\Mediarq.UnitOfWork\Mediarq.UnitOfWork.csproj" />
+    <ProjectReference Include="..\Mediarq.Polly\Mediarq.Polly.csproj" />
+    <ProjectReference Include="..\Mediarq.MassTransit\Mediarq.MassTransit.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Remove="C:\Users\nicol\source\repos\Mediarq\src\Mediarq\.editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="C:\Users\nicol\source\repos\Mediarq\src\Mediarq\.editorconfig" />
   </ItemGroup>
 
 </Project>
