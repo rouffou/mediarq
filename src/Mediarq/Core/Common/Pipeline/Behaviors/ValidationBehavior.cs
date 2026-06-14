@@ -35,6 +35,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         "The AOT path uses the generated AddMediarqHandlers(), which registers the factory via ValidationFailureRegistry.";
 
     private readonly IEnumerable<IValidator<TRequest>> _validators;
+    private readonly IValidationMessageResolver? _messageResolver;
 
     // Converts a ValidationError into a failed TResponse, resolved without reflection or dynamic code:
     // for Result it is a static lambda; for Result<T> it comes from the source-generated
@@ -50,12 +51,17 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     /// <param name="validators">
     /// A collection of validators that apply validation rules to the incoming request.
     /// </param>
+    /// <param name="messageResolver">
+    /// Optional resolver used to localize/translate validation messages. When <see langword="null"/>,
+    /// messages are used as-is.
+    /// </param>
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="validators"/> is <see langword="null"/>.
     /// </exception>
-    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
+    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators, IValidationMessageResolver? messageResolver = null)
     {
         _validators = validators;
+        _messageResolver = messageResolver;
     }
 
     /// <summary>
@@ -117,11 +123,12 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             return await handle().ConfigureAwait(false);
         }
 
-        // Aggregate every individual property error.
+        // Aggregate every individual property error, resolving (e.g. localizing) the message when a
+        // resolver is registered.
         ResultError[] propertyErrors = [.. failures
             .Select(e => new ResultError(
                 $"Validation.{typeof(TRequest).Name}.{e.PropertyName}",
-                e.ErrorMessage,
+                _messageResolver is null ? e.ErrorMessage : _messageResolver.Resolve(e.PropertyName, e.ErrorMessage),
                 ErrorType.Validation))];
 
         var validationError = new ValidationError(propertyErrors);
