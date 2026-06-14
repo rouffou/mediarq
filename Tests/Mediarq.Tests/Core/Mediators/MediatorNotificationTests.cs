@@ -20,7 +20,8 @@ public class MediatorNotificationTests
         _mediator = new Mediator(
             Mock.Of<IRequestContextFactory>(),
             Mock.Of<IPipelineExecutor>(),
-            _resolver.Object);
+            _resolver.Object,
+            new ParallelNotificationPublisher());
     }
 
     [Fact]

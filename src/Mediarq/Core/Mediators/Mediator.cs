@@ -33,6 +33,7 @@ public class Mediator : IMediator
     private readonly IRequestContextFactory _requestContextFactory;
     private readonly IPipelineExecutor _pipelineExecutor;
     private readonly IHandlerResolver _handlerResolver;
+    private readonly INotificationPublisher _notificationPublisher;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mediator"/> class.
@@ -46,21 +47,27 @@ public class Mediator : IMediator
     /// <param name="handlerResolver">
     /// The resolver used to obtain handlers and behaviors from the dependency injection container.
     /// </param>
+    /// <param name="notificationPublisher">
+    /// The strategy used to invoke notification handlers when publishing.
+    /// </param>
     /// <exception cref="ArgumentNullException">
     /// Thrown if any of the constructor parameters are <see langword="null"/>.
     /// </exception>
     public Mediator(
         IRequestContextFactory requestContextFactory,
         IPipelineExecutor pipelineExecutor,
-        IHandlerResolver handlerResolver)
+        IHandlerResolver handlerResolver,
+        INotificationPublisher notificationPublisher)
     {
         ArgumentNullException.ThrowIfNull(handlerResolver);
         ArgumentNullException.ThrowIfNull(requestContextFactory);
         ArgumentNullException.ThrowIfNull(pipelineExecutor);
+        ArgumentNullException.ThrowIfNull(notificationPublisher);
 
         _requestContextFactory = requestContextFactory;
         _pipelineExecutor = pipelineExecutor;
         _handlerResolver = handlerResolver;
+        _notificationPublisher = notificationPublisher;
     }
 
     /// <inheritdoc />
@@ -102,7 +109,7 @@ public class Mediator : IMediator
     }
 
     /// <inheritdoc />
-    public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
         where TNotification : INotification
     {
         ArgumentNullException.ThrowIfNull(notification);
@@ -112,17 +119,19 @@ public class Mediator : IMediator
 
         if (handlers.Count == 0)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         var handleMethod = handlerType.GetMethod(nameof(INotificationHandler<TNotification>.Handle))!;
-        var tasks = new List<Task>(handlers.Count);
+        var callbacks = new List<Func<CancellationToken, Task>>(handlers.Count);
 
         foreach (var handler in handlers)
         {
-            tasks.Add((Task)handleMethod.Invoke(handler, [notification, cancellationToken])!);
+            var captured = handler;
+            callbacks.Add(ct => (Task)handleMethod.Invoke(captured, [notification, ct])!);
         }
 
-        await Task.WhenAll(tasks);
+        // The configured INotificationPublisher decides how handlers are invoked (parallel, sequential, ...).
+        return _notificationPublisher.Publish(callbacks, cancellationToken);
     }
 }

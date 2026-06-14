@@ -88,21 +88,22 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     ///   <item><description><see cref="Result{T}"/></description></item>
     /// </list>
     /// </remarks>
-    public Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
+    public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handle);
 
-        var failures = _validators
-            .SelectMany(v => v.Validate(context.Request))
-            .Where(r => !r.IsValid)
-            .SelectMany(v => v.Errors)
-            .ToList();
+        var failures = new List<ValidationPropertyError>();
+        foreach (var validator in _validators)
+        {
+            var results = await validator.ValidateAsync(context.Request, cancellationToken).ConfigureAwait(false);
+            failures.AddRange(results.Where(r => !r.IsValid).SelectMany(r => r.Errors));
+        }
 
         // No error → continue the pipeline.
         if (failures.Count == 0)
         {
-            return handle();
+            return await handle().ConfigureAwait(false);
         }
 
         // Aggregate every individual property error.
@@ -120,7 +121,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             throw new InvalidOperationException($"Validation failed but TResponse type '{typeof(TResponse).Name}' is not a supported Result type.");
         }
 
-        return Task.FromResult(FailureFactory(validationError));
+        return FailureFactory(validationError);
     }
 
     /// <summary>
