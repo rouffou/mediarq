@@ -47,15 +47,23 @@ builder.Services.AddHttpContextAccessor();
 
 Inject `IMediator`, or the narrower `ISender` (commands/queries) / `IPublisher` (notifications).
 
-### Reflection-free registration (source generator)
+### Reflection-free registration (source generator) — Native AOT
 
-For startup with no assembly scan (trimming/AOT friendly), use `AddMediarqCore` together with the
-compile-time generated `AddMediarqHandlers()` extension — shipped as an analyzer inside the package:
+For startup with no assembly scan, use `AddMediarqCore` together with the compile-time generated
+`AddMediarqHandlers()` extension — shipped as an analyzer inside the package:
 
 ```csharp
 builder.Services.AddMediarqCore(isHttp: false)
                 .AddMediarqHandlers(); // generated at compile time
 ```
+
+On this path there is **no reflection at all** on dispatch: the generator pre-populates a registry of
+strongly-typed `Send`/notification wrappers (no `Activator.CreateInstance`, no `MakeGenericType`), and
+the validation pipeline builds `Result<T>` failures from generated factories. The library is marked
+`IsAotCompatible` and publishes cleanly with **Native AOT** (see [Samples/Mediarq.AotSample](Samples/Mediarq.AotSample)).
+
+> The scan-based `AddMediarq(...)` is convenient but uses reflection and is annotated
+> `[RequiresUnreferencedCode]`; prefer `AddMediarqCore()` + `AddMediarqHandlers()` for trimming/AOT.
 
 ## Commands & queries (with a result)
 
@@ -118,6 +126,23 @@ await mediator.Publish(new UserCreated(id));
 By default handlers run concurrently (`ParallelNotificationPublisher`) and the first failure is surfaced;
 publishing with no registered handler is a no-op. Register a different `INotificationPublisher`
 (e.g. `SequentialNotificationPublisher`, or your own) before `AddMediarq`/`AddMediarqCore` to change this.
+
+### Out-of-process notifications (MassTransit)
+
+The optional **`Mediarq.MassTransit`** package forwards notifications to a MassTransit bus, so other
+services can consume them out-of-process. The forwarder is a regular notification handler, so it runs
+alongside your in-process handlers.
+
+```csharp
+// Configure MassTransit as usual (provides IPublishEndpoint), then:
+builder.Services.AddMediarqMassTransitForwarding<OrderPlaced>();          // one event, or
+builder.Services.AddMediarqMassTransitForwarding(typeof(OrderPlaced).Assembly); // every IIntegrationEvent
+
+public record OrderPlaced(Guid Id) : IIntegrationEvent; // IIntegrationEvent : INotification
+```
+
+`await mediator.Publish(new OrderPlaced(id))` now runs the local handlers **and** publishes the event on
+the bus.
 
 ## Pipeline behaviors
 

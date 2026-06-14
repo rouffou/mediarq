@@ -6,6 +6,9 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- The reflection-free path (AddMediarqCore + generated AddMediarqHandlers) is trimming/AOT safe.
+         The reflection-based AddMediarq scan is annotated [RequiresUnreferencedCode]. -->
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <PropertyGroup>

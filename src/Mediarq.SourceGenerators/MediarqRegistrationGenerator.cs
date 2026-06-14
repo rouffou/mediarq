@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace Mediarq.SourceGenerators;
 /// Incremental source generator that discovers, at compile time, every Mediarq handler, pipeline
 /// behavior and validator declared in the current assembly and emits an internal
 /// <c>services.AddMediarqHandlers()</c> extension that registers them explicitly.
+/// It also pre-populates a <c>MediarqWrapperRegistry</c> with strongly-typed dispatch wrappers, so
+/// the mediator never needs <c>Activator.CreateInstance</c>/<c>MakeGenericType</c> at runtime.
 /// This removes the runtime, reflection-based assembly scan and is trimming/AOT friendly.
 /// </summary>
 [Generator(LanguageNames.CSharp)]
@@ -76,39 +79,76 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                 continue;
             }
 
-            bool isRequestHandler = key == "Mediarq.Core.Common.Requests.Abstraction.IRequestHandler`2";
+            var kind = KindOf(key);
 
             if (type.IsGenericType)
             {
+                // Open-generic handlers cannot be registered as closed wrappers; the reflective
+                // fallback handles them. We still emit the open-generic DI registration.
                 list.Add(new HandlerRegistration(
                     definition.ConstructUnboundGenericType().ToDisplayString(FullyQualified),
                     type.ConstructUnboundGenericType().ToDisplayString(FullyQualified),
                     IsOpenGeneric: true,
-                    IsRequestHandler: isRequestHandler));
+                    Kind: kind,
+                    RequestType: null,
+                    ResponseType: null,
+                    NotificationType: null,
+                    ResponseIsGenericResult: false));
             }
             else
             {
+                string? requestType = null;
+                string? responseType = null;
+                string? notificationType = null;
+                bool responseIsGenericResult = false;
+
+                if (kind == HandlerKind.RequestHandler && iface.TypeArguments.Length == 2)
+                {
+                    requestType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
+                    responseType = iface.TypeArguments[1].ToDisplayString(FullyQualified);
+                    responseIsGenericResult = IsGenericResult(iface.TypeArguments[1]);
+                }
+                else if (kind == HandlerKind.NotificationHandler && iface.TypeArguments.Length == 1)
+                {
+                    notificationType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
+                }
+
                 list.Add(new HandlerRegistration(
                     iface.ToDisplayString(FullyQualified),
                     type.ToDisplayString(FullyQualified),
                     IsOpenGeneric: false,
-                    IsRequestHandler: isRequestHandler));
+                    Kind: kind,
+                    RequestType: requestType,
+                    ResponseType: responseType,
+                    NotificationType: notificationType,
+                    ResponseIsGenericResult: responseIsGenericResult));
             }
         }
 
         return new EquatableArray<HandlerRegistration>(list.ToImmutableArray());
     }
 
-    private static bool IsTarget(string key) =>
-        key == "Mediarq.Core.Common.Requests.Abstraction.IRequestHandler`2" ||
-        key == "Mediarq.Core.Common.Requests.Notifications.INotificationHandler`1" ||
-        key == "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" ||
-        key == "Mediarq.Core.Common.Requests.Validators.IValidator`1";
+    private static bool IsGenericResult(ITypeSymbol responseType) =>
+        responseType is INamedTypeSymbol named &&
+        named.IsGenericType &&
+        named.OriginalDefinition.MetadataName == "Result`1" &&
+        (named.OriginalDefinition.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Results");
+
+    private static bool IsTarget(string key) => KindOf(key) != HandlerKind.Other;
+
+    private static HandlerKind KindOf(string key) => key switch
+    {
+        "Mediarq.Core.Common.Requests.Abstraction.IRequestHandler`2" => HandlerKind.RequestHandler,
+        "Mediarq.Core.Common.Requests.Notifications.INotificationHandler`1" => HandlerKind.NotificationHandler,
+        "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" => HandlerKind.Behavior,
+        "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
+        _ => HandlerKind.Other,
+    };
 
     private static void Emit(SourceProductionContext context, EquatableArray<HandlerRegistration> registrations)
     {
         // Diagnose multiple handlers registered for the same request (a request handler must be unique).
-        foreach (var group in registrations.Where(r => r.IsRequestHandler).GroupBy(r => r.ServiceType))
+        foreach (var group in registrations.Where(r => r.Kind == HandlerKind.RequestHandler).GroupBy(r => r.ServiceType))
         {
             if (group.Select(r => r.ImplType).Distinct().Count() > 1)
             {
@@ -130,7 +170,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         sb.AppendLine("        internal static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
         sb.AppendLine("        {");
 
-        foreach (var reg in registrations.OrderBy(r => r.ServiceType + "|" + r.ImplType, System.StringComparer.Ordinal))
+        foreach (var reg in registrations.OrderBy(r => r.ServiceType + "|" + r.ImplType, StringComparer.Ordinal))
         {
             if (reg.IsOpenGeneric)
             {
@@ -142,6 +182,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             }
         }
 
+        EmitWrapperRegistry(sb, registrations);
+
         sb.AppendLine("            return services;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
@@ -149,7 +191,80 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
 
         context.AddSource("MediarqGeneratedRegistration.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
+
+    private static void EmitWrapperRegistry(StringBuilder sb, EquatableArray<HandlerRegistration> registrations)
+    {
+        var requestWrappers = registrations
+            .Where(r => r.Kind == HandlerKind.RequestHandler && !r.IsOpenGeneric && r.RequestType != null && r.ResponseType != null)
+            .Select(r => r.RequestType + "|" + r.ResponseType)
+            .Distinct()
+            .OrderBy(s => s, StringComparer.Ordinal)
+            .ToList();
+
+        var notificationWrappers = registrations
+            .Where(r => r.Kind == HandlerKind.NotificationHandler && !r.IsOpenGeneric && r.NotificationType != null)
+            .Select(r => r.NotificationType!)
+            .Distinct()
+            .OrderBy(s => s, StringComparer.Ordinal)
+            .ToList();
+
+        // Result<T> responses get a reflection-free validation-failure factory so ValidationBehavior
+        // can short-circuit without dynamic code on AOT.
+        var resultResponses = registrations
+            .Where(r => r.Kind == HandlerKind.RequestHandler && !r.IsOpenGeneric && r.ResponseIsGenericResult && r.ResponseType != null)
+            .Select(r => r.ResponseType!)
+            .Distinct()
+            .OrderBy(s => s, StringComparer.Ordinal)
+            .ToList();
+
+        if (requestWrappers.Count == 0 && notificationWrappers.Count == 0)
+        {
+            return;
+        }
+
+        sb.AppendLine("            var registry = new global::Mediarq.Core.Mediators.MediarqWrapperRegistry();");
+
+        foreach (var pair in requestWrappers)
+        {
+            var parts = pair.Split('|');
+            sb.Append("            registry.Add<").Append(parts[0]).Append(", ").Append(parts[1]).AppendLine(">();");
+        }
+
+        foreach (var notification in notificationWrappers)
+        {
+            sb.Append("            registry.AddNotification<").Append(notification).AppendLine(">();");
+        }
+
+        sb.AppendLine("            services.AddSingleton(registry);");
+
+        foreach (var response in resultResponses)
+        {
+            sb.Append("            global::Mediarq.Core.Common.Pipeline.Behaviors.ValidationFailureRegistry.Register<")
+              .Append(response)
+              .Append(">(static __error => ")
+              .Append(response)
+              .AppendLine(".ValidationFailure(__error));");
+        }
+    }
+}
+
+/// <summary>The kind of Mediarq abstraction a discovered registration implements.</summary>
+internal enum HandlerKind
+{
+    Other,
+    RequestHandler,
+    NotificationHandler,
+    Behavior,
+    Validator,
 }
 
 /// <summary>One discovered DI registration to emit.</summary>
-internal readonly record struct HandlerRegistration(string ServiceType, string ImplType, bool IsOpenGeneric, bool IsRequestHandler);
+internal readonly record struct HandlerRegistration(
+    string ServiceType,
+    string ImplType,
+    bool IsOpenGeneric,
+    HandlerKind Kind,
+    string? RequestType,
+    string? ResponseType,
+    string? NotificationType,
+    bool ResponseIsGenericResult);

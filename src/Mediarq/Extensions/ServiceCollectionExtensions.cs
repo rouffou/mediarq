@@ -12,6 +12,7 @@ using Mediarq.Core.Common.User;
 using Mediarq.Core.Mediators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Mediarq.Extensions;
@@ -42,6 +43,7 @@ public static class ServiceCollectionExtensions
     /// For a reflection-free, trimming/AOT-friendly alternative, use <see cref="AddMediarqCore"/> together
     /// with the compile-time generated <c>AddMediarqHandlers()</c> extension (provided by the Mediarq source generator).
     /// </remarks>
+    [RequiresUnreferencedCode("AddMediarq discovers handlers via a runtime assembly scan, which is not trimming/AOT safe. Use AddMediarqCore() + the generated AddMediarqHandlers() instead.")]
     public static IServiceCollection AddMediarq(
         this IServiceCollection services,
         bool isHttp = false,

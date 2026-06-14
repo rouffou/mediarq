@@ -79,8 +79,8 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handlerDelegate);
 
-        var behaviors = _handlerResolver.Resolve(typeof(IEnumerable<IPipelineBehavior<TRequest, TResponse>>))
-            as IEnumerable<IPipelineBehavior<TRequest, TResponse>> ?? [];
+        IReadOnlyList<IPipelineBehavior<TRequest, TResponse>> behaviors =
+            _handlerResolver.ResolveAll<IPipelineBehavior<TRequest, TResponse>>();
 
         // Behaviors implementing IOrderBehavior run from the lowest Order (outermost) to the highest.
         // Behaviors that do not implement it default to int.MaxValue and, thanks to the stable sort,

@@ -40,7 +40,7 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestH
     {
         var typedRequest = (TRequest)request;
 
-        var handler = handlerResolver.Resolve(typeof(IRequestHandler<TRequest, TResponse>)) as IRequestHandler<TRequest, TResponse>
+        var handler = handlerResolver.Resolve<IRequestHandler<TRequest, TResponse>>()
             ?? throw new HandlerNotFoundException(typeof(TRequest));
 
         RequestContext<TRequest, TResponse> context = requestContextFactory.Create<TRequest, TResponse>(typedRequest, cancellationToken);

@@ -61,6 +61,46 @@ public class MediarqRegistrationGeneratorTests
         generated.Should().Contain("AddMediarqHandlers");
         generated.Should().Contain("global::Demo.PingHandler");
         generated.Should().Contain("IRequestHandler<global::Demo.Ping, global::Mediarq.Core.Common.Results.Result<string>>");
+
+        // The generator also pre-populates the reflection-free dispatch registry...
+        generated.Should().Contain("new global::Mediarq.Core.Mediators.MediarqWrapperRegistry()");
+        generated.Should().Contain("registry.Add<global::Demo.Ping, global::Mediarq.Core.Common.Results.Result<string>>();");
+        generated.Should().Contain("services.AddSingleton(registry);");
+        // ...and the AOT-safe validation-failure factory for the Result<T> response.
+        generated.Should().Contain("ValidationFailureRegistry.Register<global::Mediarq.Core.Common.Results.Result<string>>");
+    }
+
+    [Fact]
+    public void Generates_Notification_Wrapper_Registration()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Notifications;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Demo;
+
+            public record OrderPlaced(int Id) : INotification;
+
+            public sealed class AuditHandler : INotificationHandler<OrderPlaced>
+            {
+                public Task Handle(OrderPlaced notification, CancellationToken cancellationToken = default) => Task.CompletedTask;
+            }
+
+            public sealed class EmailHandler : INotificationHandler<OrderPlaced>
+            {
+                public Task Handle(OrderPlaced notification, CancellationToken cancellationToken = default) => Task.CompletedTask;
+            }
+            """;
+
+        var (generated, diagnostics) = Run(source);
+
+        diagnostics.Should().BeEmpty();
+        // Both handlers are registered, but the notification wrapper is added exactly once.
+        generated.Should().Contain("global::Demo.AuditHandler");
+        generated.Should().Contain("global::Demo.EmailHandler");
+        generated.Should().Contain("registry.AddNotification<global::Demo.OrderPlaced>();");
+        System.Text.RegularExpressions.Regex.Matches(generated, "AddNotification<global::Demo.OrderPlaced>").Count.Should().Be(1);
     }
 
     [Fact]
