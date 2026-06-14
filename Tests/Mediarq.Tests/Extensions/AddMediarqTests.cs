@@ -117,6 +117,19 @@ public class AddMediarqTests
         items.Should().Equal(1, 2, 3);
     }
 
+    [Fact]
+    public async Task Runs_Pre_And_Post_Processors_Around_Handler()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var trace = scope.ServiceProvider.GetRequiredService<ExecutionTrace>();
+
+        await mediator.Send(new ProcessedCommand("x"));
+
+        trace.Entries.Should().ContainInOrder("pre:processed", "handler:processed", "post:processed");
+    }
+
     // --- Compile-time generated registration path (AddMediarqCore + generated AddMediarqHandlers) ---
 
     private static ServiceProvider BuildGeneratedProvider()
@@ -197,5 +210,18 @@ public class AddMediarqTests
         }
 
         items.Should().Equal(1, 2, 3, 4);
+    }
+
+    [Fact]
+    public async Task Generated_Registration_Runs_Pre_And_Post_Processors()
+    {
+        using var provider = BuildGeneratedProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var trace = scope.ServiceProvider.GetRequiredService<ExecutionTrace>();
+
+        await mediator.Send(new ProcessedCommand("y"));
+
+        trace.Entries.Should().ContainInOrder("pre:processed", "handler:processed", "post:processed");
     }
 }
