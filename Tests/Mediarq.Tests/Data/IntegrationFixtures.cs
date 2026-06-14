@@ -2,6 +2,7 @@ using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Exceptions;
 using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Results;
@@ -89,6 +90,24 @@ public sealed class OrderPlacedEmailHandler(ExecutionTrace trace) : INotificatio
     public Task Handle(OrderPlaced notification, CancellationToken cancellationToken = default)
     {
         trace.Entries.Add($"email:{notification.OrderId}");
+        return Task.CompletedTask;
+    }
+}
+
+// --- Command whose handler throws, with an exception handler turning it into a failed Result ---
+public record ThrowingCommand(string Message) : ICommand<Result<string>>;
+
+public sealed class ThrowingCommandHandler : ICommandHandler<ThrowingCommand, Result<string>>
+{
+    public Task<Result<string>> Handle(ThrowingCommand request, CancellationToken cancellationToken = default)
+        => throw new InvalidOperationException(request.Message);
+}
+
+public sealed class ThrowingCommandExceptionHandler : IRequestExceptionHandler<ThrowingCommand, Result<string>>
+{
+    public Task Handle(ThrowingCommand request, Exception exception, RequestExceptionHandlerState<Result<string>> state, CancellationToken cancellationToken = default)
+    {
+        state.SetHandled(Result.Failure<string>(ResultError.Failure("Command.Failed", exception.Message)));
         return Task.CompletedTask;
     }
 }

@@ -142,6 +142,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         "Mediarq.Core.Common.Requests.Notifications.INotificationHandler`1" => HandlerKind.NotificationHandler,
         "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" => HandlerKind.Behavior,
         "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
+        "Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler`2" => HandlerKind.ExceptionHandler,
         _ => HandlerKind.Other,
     };
 
@@ -256,6 +257,7 @@ internal enum HandlerKind
     NotificationHandler,
     Behavior,
     Validator,
+    ExceptionHandler,
 }
 
 /// <summary>One discovered DI registration to emit.</summary>
