@@ -46,4 +46,22 @@ public class NotificationPublisherTests
         await FluentActions.Invoking(() => new SequentialNotificationPublisher().Publish(null!, CancellationToken.None))
             .Should().ThrowAsync<ArgumentNullException>();
     }
+
+    [Fact]
+    public async Task Aggregate_Invokes_All_Handlers_And_Collects_Every_Failure()
+    {
+        var count = 0;
+        var handlers = new List<Func<CancellationToken, Task>>
+        {
+            _ => { Interlocked.Increment(ref count); return Task.CompletedTask; },
+            _ => throw new InvalidOperationException("first"),
+            _ => throw new InvalidOperationException("second"),
+        };
+
+        var act = () => new AggregateExceptionNotificationPublisher().Publish(handlers, CancellationToken.None);
+
+        var assertion = await act.Should().ThrowAsync<AggregateException>();
+        assertion.Which.InnerExceptions.Should().HaveCount(2);
+        count.Should().Be(1);
+    }
 }
