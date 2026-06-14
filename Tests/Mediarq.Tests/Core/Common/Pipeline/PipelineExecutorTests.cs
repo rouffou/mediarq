@@ -70,7 +70,7 @@ public class PipelineExecutorTests
         // Simule la factory qui renvoie nos mocks
         var mockResolver = new Mock<IHandlerResolver>();
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
             .Returns(behaviors);
 
         var executor = new PipelineExecutor(mockResolver.Object);
@@ -114,8 +114,8 @@ public class PipelineExecutorTests
         // Arrange
         var mockResolver = new Mock<IHandlerResolver>();
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
-            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
         var executor = new PipelineExecutor(mockResolver.Object);
 
         // Act
@@ -135,8 +135,8 @@ public class PipelineExecutorTests
         // Arrange
         var mockResolver = new Mock<IHandlerResolver>();
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
-            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
 
         var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
@@ -159,8 +159,8 @@ public class PipelineExecutorTests
         bool handlerCalled = false; var mockResolver = new Mock<IHandlerResolver>();
         
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
-            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
 
         var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
@@ -175,5 +175,48 @@ public class PipelineExecutorTests
         // Assert
         handlerCalled.Should().BeTrue();
         result.Value.Should().Be("OK");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Should_Order_Behaviors_By_IOrderBehavior()
+    {
+        // Arrange — registered in descending Order on purpose (Order 2 before Order 1).
+        var log = new List<string>();
+        var behaviors = new IPipelineBehavior<TestCommandWithValue, Result<string>>[]
+        {
+            new OrderedBehavior(2, "B2", log),
+            new OrderedBehavior(1, "B1", log),
+        };
+
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(behaviors);
+
+        var executor = new PipelineExecutor(resolver.Object);
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), "user");
+
+        // Act
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+
+        // Assert — execution follows Order ascending, not registration order.
+        log.Should().ContainInOrder("Before B1", "Before B2", "After B2", "After B1");
+    }
+
+    private sealed class OrderedBehavior(int order, string name, List<string> log)
+        : IPipelineBehavior<TestCommandWithValue, Result<string>>, IOrderBehavior
+    {
+        public int Order { get; } = order;
+
+        public async Task<Result<string>> Handle(
+            IMutableRequestContext<TestCommandWithValue, Result<string>> context,
+            Func<Task<Result<string>>> handle,
+            CancellationToken cancellationToken = default)
+        {
+            log.Add($"Before {name}");
+            var result = await handle();
+            log.Add($"After {name}");
+            return result;
+        }
     }
 }

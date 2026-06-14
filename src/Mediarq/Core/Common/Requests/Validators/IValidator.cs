@@ -47,4 +47,15 @@ public interface IValidator<in T>
     /// A collection of <see cref="ValidationResult"/> objects describing the validation outcomes.
     /// </returns>
     IEnumerable<ValidationResult> Validate(T instance);
+
+    /// <summary>
+    /// Executes validation rules on the specified instance asynchronously. Override this when validation
+    /// needs to perform asynchronous work (for example a database uniqueness check). The default
+    /// implementation simply wraps <see cref="Validate(T)"/>.
+    /// </summary>
+    /// <param name="instance">The instance to validate.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A task producing the <see cref="ValidationResult"/> objects describing the outcomes.</returns>
+    Task<IEnumerable<ValidationResult>> ValidateAsync(T instance, CancellationToken cancellationToken = default)
+        => Task.FromResult(Validate(instance));
 }

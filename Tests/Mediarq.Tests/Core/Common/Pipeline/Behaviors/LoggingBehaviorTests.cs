@@ -21,6 +21,7 @@ public class LoggingBehaviorTests
     public LoggingBehaviorTests()
     {
         _mockLogger = new Mock<ILogger<LoggingBehavior<TestCommand, Result>>>();
+        _mockLogger.Setup(l => l.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
         _mockContext = new Mock<IMutableRequestContext<TestCommand, Result>>();
 
         _mockContext.SetupGet(c => c.RequestId).Returns(Guid.NewGuid());

@@ -24,8 +24,9 @@ public interface IRequestContext<TRequest, TResponse>
 
     /// <summary>
     /// The user unique identifier that is processing the request. Allow to identify who want to perform the operation.
+    /// May be <see langword="null"/> when no user is associated with the request.
     /// </summary>
-    string UserId { get; }
+    string? UserId { get; }
 
     /// <summary>
     /// The date and time when the request processing started.

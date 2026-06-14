@@ -5,6 +5,7 @@ using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Resolvers;
 using Mediarq.Core.Common.Results;
 using Mediarq.Core.Mediators;
@@ -18,6 +19,7 @@ public class MediatorTests
     private readonly Mock<IRequestContextFactory> _mockRequestContextFactory;
     private readonly Mock<IPipelineExecutor> _mockPipelineExecutor;
     private readonly Mock<IRequestHandler<TestCommand, Result<string>>> _mockHandler;
+    private readonly INotificationPublisher _publisher = new ParallelNotificationPublisher();
 
     public record TestCommand(string Message) : ICommand<Result<string>>;
 
@@ -30,13 +32,14 @@ public class MediatorTests
 
         // Default resolver: returns a valid handler
         _mockHandlerResolver
-            .Setup(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)))
+            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
             .Returns(_mockHandler.Object);
 
         _testClass = new Mediator(
             _mockRequestContextFactory.Object,
             _mockPipelineExecutor.Object,
-            _mockHandlerResolver.Object);
+            _mockHandlerResolver.Object,
+            _publisher);
     }
 
     [Fact]
@@ -45,7 +48,8 @@ public class MediatorTests
         var instance = new Mediator(
             _mockRequestContextFactory.Object,
             _mockPipelineExecutor.Object,
-            _mockHandlerResolver.Object);
+            _mockHandlerResolver.Object,
+            _publisher);
 
         instance.Should().NotBeNull();
     }
@@ -56,7 +60,8 @@ public class MediatorTests
         Action act = () => new Mediator(
             _mockRequestContextFactory.Object,
             _mockPipelineExecutor.Object,
-            null!);
+            null!,
+            _publisher);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("handlerResolver");
     }
@@ -67,7 +72,8 @@ public class MediatorTests
         Action act = () => new Mediator(
             null!,
             _mockPipelineExecutor.Object,
-            _mockHandlerResolver.Object);
+            _mockHandlerResolver.Object,
+            _publisher);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("requestContextFactory");
     }
@@ -78,9 +84,22 @@ public class MediatorTests
         Action act = () => new Mediator(
             _mockRequestContextFactory.Object,
             null!,
-            _mockHandlerResolver.Object);
+            _mockHandlerResolver.Object,
+            _publisher);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("pipelineExecutor");
+    }
+
+    [Fact]
+    public void CannotConstructWithNullNotificationPublisher()
+    {
+        Action act = () => new Mediator(
+            _mockRequestContextFactory.Object,
+            _mockPipelineExecutor.Object,
+            _mockHandlerResolver.Object,
+            null!);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("notificationPublisher");
     }
 
     [Fact]
@@ -98,8 +117,8 @@ public class MediatorTests
     {
         // Arrange
         _mockHandlerResolver
-            .Setup(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)))
-            .Returns(null);
+            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
+            .Returns((IRequestHandler<TestCommand, Result<string>>)null);
 
         var request = new TestCommand("Hello");
 
@@ -125,7 +144,7 @@ public class MediatorTests
             .ReturnsAsync(Result.Success("OK"));
 
         _mockHandlerResolver
-            .Setup(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)))
+            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
             .Returns(_mockHandler.Object);
 
         _mockRequestContextFactory
@@ -145,7 +164,7 @@ public class MediatorTests
         // Assert
         result.Should().Be(expected);
 
-        _mockHandlerResolver.Verify(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)), Times.Once);
+        _mockHandlerResolver.Verify(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>(), Times.Once);
         _mockRequestContextFactory.Verify(f => f.Create<TestCommand, Result<string>>(request, It.IsAny<CancellationToken>()), Times.Once);
         _mockPipelineExecutor.Verify(p => p.ExecuteAsync(
             context,
