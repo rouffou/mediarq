@@ -1,4 +1,6 @@
-﻿using Mediarq.Core.Common.Contexts;
+using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
+using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
@@ -16,152 +18,157 @@ namespace Mediarq.Core.Mediators;
 /// <remarks>
 /// The <see cref="Mediator"/> acts as the central coordination point for request handling.
 /// It abstracts away the complexity of handler resolution, context creation, and pipeline execution.
-/// 
+///
+/// Dispatch goes through strongly-typed wrappers, so the path does not rely on <c>dynamic</c> or
+/// per-call reflection. When a <see cref="MediarqWrapperRegistry"/> is supplied (populated by the
+/// compile-time generated <c>AddMediarqHandlers()</c>), the wrappers are resolved with no reflection
+/// at all — trimming/AOT friendly. Otherwise (the reflection-based <c>AddMediarq</c> assembly scan),
+/// each wrapper is built reflectively once per type and cached.
+///
 /// This class is designed to replace MediatR with a lightweight, dependency-free mediator
 /// that integrates easily into domain-driven and CQRS-based architectures.
 /// </remarks>
-/// <example>
-/// Example usage:
-/// <code>
-/// var serviceFactory = type => container.Resolve(type);
-/// var requestContextFactory = new DefaultRequestContextFactory(userContext, clock);
-/// var pipelineExecutor = new PipelineExecutor(serviceFactory);
-///
-/// var mediator = new Mediator(serviceFactory, requestContextFactory, pipelineExecutor);
-///
-/// var result = await mediator.Send(new CreateUserCommand("Alice"));
-/// </code>
-/// </example>
-public class Mediator: IMediator
+public class Mediator : IMediator
 {
+    private const string FallbackJustification =
+        "The reflective wrapper fallback is only reached when no source-generated MediarqWrapperRegistry " +
+        "is present (the reflection-based AddMediarq assembly scan), which is not used on Native AOT. " +
+        "The AOT path uses AddMediarqCore() + the generated AddMediarqHandlers(), which pre-populates the registry.";
+
+    // Fallback caches, keyed per concrete request/notification type. Only used when no registry is
+    // supplied. Wrappers are stateless and thread-safe.
+    private static readonly ConcurrentDictionary<Type, object> Wrappers = new();
+    private static readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> NotificationWrappers = new();
+
     private readonly IRequestContextFactory _requestContextFactory;
     private readonly IPipelineExecutor _pipelineExecutor;
     private readonly IHandlerResolver _handlerResolver;
+    private readonly INotificationPublisher _notificationPublisher;
+    private readonly MediarqWrapperRegistry? _wrapperRegistry;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mediator"/> class.
     /// </summary>
-    /// <param name="handlerResolver">
-    /// The handler to resolve the DI of any behavior and request handler.
-    /// </param>
     /// <param name="requestContextFactory">
     /// The factory used to create <see cref="RequestContext{TRequest, TResponse}"/> instances that encapsulate metadata about the request.
     /// </param>
     /// <param name="pipelineExecutor">
     /// The component responsible for executing the pipeline of behaviors and invoking the request handler.
     /// </param>
+    /// <param name="handlerResolver">
+    /// The resolver used to obtain handlers and behaviors from the dependency injection container.
+    /// </param>
+    /// <param name="notificationPublisher">
+    /// The strategy used to invoke notification handlers when publishing.
+    /// </param>
+    /// <param name="wrapperRegistry">
+    /// Optional registry of compile-time generated dispatch wrappers. When supplied, request and
+    /// notification dispatch is fully reflection-free. When <see langword="null"/>, wrappers are
+    /// built reflectively on first use and cached.
+    /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if any of the constructor parameters are <see langword="null"/>.
+    /// Thrown if any of the required constructor parameters are <see langword="null"/>.
     /// </exception>
     public Mediator(
         IRequestContextFactory requestContextFactory,
         IPipelineExecutor pipelineExecutor,
-        IHandlerResolver handlerResolver)
+        IHandlerResolver handlerResolver,
+        INotificationPublisher notificationPublisher,
+        MediarqWrapperRegistry? wrapperRegistry = null)
     {
         ArgumentNullException.ThrowIfNull(handlerResolver);
         ArgumentNullException.ThrowIfNull(requestContextFactory);
         ArgumentNullException.ThrowIfNull(pipelineExecutor);
+        ArgumentNullException.ThrowIfNull(notificationPublisher);
 
         _requestContextFactory = requestContextFactory;
         _pipelineExecutor = pipelineExecutor;
         _handlerResolver = handlerResolver;
+        _notificationPublisher = notificationPublisher;
+        _wrapperRegistry = wrapperRegistry;
     }
 
-    /// <summary>
-    /// Sends a command or query through the mediator pipeline and invokes the corresponding handler.
-    /// </summary>
-    /// <typeparam name="TResponse">
-    /// The type of response expected from the handler. 
-    /// Usually a <see cref="Result"/> or <see cref="Result{T}"/> instance.
-    /// </typeparam>
-    /// <param name="request">
-    /// The command or query to process, implementing <see cref="ICommandOrQuery{TResponse}"/>.
-    /// </param>
-    /// <param name="cancellationToken">
-    /// A cancellation token for cooperative task cancellation.
-    /// </param>
-    /// <returns>
-    /// A task representing the asynchronous operation, containing the response of type <typeparamref name="TResponse"/>.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown when the <paramref name="request"/> is <see langword="null"/>.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if no matching handler can be found for the given request type,
-    /// or if an exception occurs during handler invocation or pipeline execution.
-    /// </exception>
+    /// <inheritdoc />
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = FallbackJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = FallbackJustification)]
     public Task<TResponse> Send<TResponse>(ICommandOrQuery<TResponse> request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-                
-        var handlerType = typeof(IRequestHandler<,>)
-            .MakeGenericType(request.GetType(), typeof(TResponse));
 
-        dynamic handler = _handlerResolver.Resolve(handlerType)
-            ?? throw new HandlerNotFoundException(request.GetType());
-        
-        Func<CancellationToken, Task<TResponse>> next = ct =>
-        {
-            dynamic h = handler;
-            return h.Handle((dynamic)request, ct);
-        };
+        var requestType = request.GetType();
+        var wrapper = _wrapperRegistry?.GetRequestWrapper<TResponse>(requestType)
+            ?? GetOrCreateRequestWrapper<TResponse>(requestType);
 
         try
         {
-            var createMethod = typeof(IRequestContextFactory)
-            .GetMethod("Create")!
-            .MakeGenericMethod(request.GetType(), typeof(TResponse));
-
-            var requestContext = createMethod.Invoke(_requestContextFactory, [request, cancellationToken]);
-
-            var executeMethod = typeof(IPipelineExecutor)
-                .GetMethod("ExecuteAsync")!
-                .MakeGenericMethod(request.GetType(), typeof(TResponse));
-
-            return (Task<TResponse>)executeMethod.Invoke(_pipelineExecutor, [requestContext, next, cancellationToken])!;
+            return wrapper.Handle(request, _handlerResolver, _requestContextFactory, _pipelineExecutor, cancellationToken);
+        }
+        catch (HandlerNotFoundException)
+        {
+            // A missing handler is a configuration error and is surfaced as-is, not wrapped.
+            throw;
         }
         catch (Exception ex)
         {
-
-            throw new InvalidOperationException(
-                $"Error while handling request {request.GetType().Name}", ex);
+            throw new InvalidOperationException($"Error while handling request {requestType.Name}", ex);
         }
     }
 
     /// <inheritdoc />
-    public async Task Send(ICommand request, CancellationToken cancellationToken = default) {
+    public Task Send(ICommand request, CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(request);
 
-        var handlerType = typeof(IRequestHandler<>).MakeGenericType(request.GetType());
-        dynamic handler = _handlerResolver.Resolve(handlerType)
-            ?? throw new HandlerNotFoundException(request.GetType());
-
-        await handler.Handle((dynamic) request, cancellationToken);
+        // A no-result command is dispatched as a Unit request, so it flows through the same pipeline.
+        return Send<Unit>(request, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = FallbackJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = FallbackJustification)]
+    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
         where TNotification : INotification
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notification.GetType());
-        var handlers = _handlerResolver.ResolveAll(handlerType).ToList() ?? [];
+        var notificationType = notification.GetType();
+        var wrapper = _wrapperRegistry?.GetNotificationWrapper(notificationType)
+            ?? GetOrCreateNotificationWrapper(notificationType);
 
-        if(handlers.Count == 0)
+        return wrapper.Handle(notification, _handlerResolver, _notificationPublisher, cancellationToken);
+    }
+
+    // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
+    [RequiresUnreferencedCode(FallbackJustification)]
+    [RequiresDynamicCode(FallbackJustification)]
+    private static IRequestHandlerWrapper<TResponse> GetOrCreateRequestWrapper<TResponse>(Type requestType)
+    {
+        if (Wrappers.TryGetValue(requestType, out var existing))
         {
-            return;
+            return (IRequestHandlerWrapper<TResponse>)existing;
         }
 
-        var tasks = new List<Task>(handlers.Count);
+        var wrapperType = typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
+        var wrapper = Activator.CreateInstance(wrapperType)
+            ?? throw new InvalidOperationException($"Could not create a handler wrapper for request type '{requestType}'.");
 
-        foreach (var handler in handlers)
+        return (IRequestHandlerWrapper<TResponse>)Wrappers.GetOrAdd(requestType, wrapper);
+    }
+
+    // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
+    [RequiresUnreferencedCode(FallbackJustification)]
+    [RequiresDynamicCode(FallbackJustification)]
+    private static INotificationHandlerWrapper GetOrCreateNotificationWrapper(Type notificationType)
+    {
+        if (NotificationWrappers.TryGetValue(notificationType, out var existing))
         {
-            var handleMethod = handlerType.GetMethod(nameof(INotificationHandler<TNotification>.Handle))!;
-            var task = (Task) handleMethod.Invoke(handler, [notification, cancellationToken])!;
-            tasks.Add(task);
+            return existing;
         }
 
-        await Task.WhenAll(tasks);
+        var wrapperType = typeof(NotificationHandlerWrapperImpl<>).MakeGenericType(notificationType);
+        var wrapper = (INotificationHandlerWrapper)(Activator.CreateInstance(wrapperType)
+            ?? throw new InvalidOperationException($"Could not create a notification wrapper for type '{notificationType}'."));
+
+        return NotificationWrappers.GetOrAdd(notificationType, wrapper);
     }
 }

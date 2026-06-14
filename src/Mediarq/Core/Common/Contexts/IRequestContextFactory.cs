@@ -11,14 +11,14 @@ namespace Mediarq.Core.Common.Contexts;
 public interface IRequestContextFactory
 {
     /// <summary>
-    /// Creates and executes the specified command or query, returning the result as an object.
+    /// Creates a strongly-typed <see cref="RequestContext{TRequest, TResponse}"/> for the specified command or query.
     /// </summary>
-    /// <typeparam name="TRequest">The type of the command or query to execute. Must implement ICommandOrQuery<TResponse>.</typeparam>
-    /// <typeparam name="TResponse">The type of the result produced by the command or query. The type of the response should be <see cref="Results.Result"/> or <see cref="Results.Result{TValue}"/></typeparam>
-    /// <param name="request">The command or query instance to execute. Cannot be null.</param>
+    /// <typeparam name="TRequest">The type of the command or query. Must implement <see cref="ICommandOrQuery{TResponse}"/>.</typeparam>
+    /// <typeparam name="TResponse">The type of the result produced by the command or query.</typeparam>
+    /// <param name="request">The command or query instance. Cannot be null.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>An object containing the result of the command or query execution. The returned object is of type TResponse.</returns>
+    /// <returns>A <see cref="RequestContext{TRequest, TResponse}"/> describing the request and its execution environment.</returns>
     /// <exception cref="ArgumentNullException">Thrown if the <paramref name="request"/> is null.</exception>
-    object Create<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default)
+    RequestContext<TRequest, TResponse> Create<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : ICommandOrQuery<TResponse>;
 }

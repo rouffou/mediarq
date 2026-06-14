@@ -1,4 +1,6 @@
-﻿namespace Mediarq.Core.Common.Requests.Validators;
+﻿using Mediarq.Core.Common.Results;
+
+namespace Mediarq.Core.Common.Requests.Validators;
 
 
 /// <summary>

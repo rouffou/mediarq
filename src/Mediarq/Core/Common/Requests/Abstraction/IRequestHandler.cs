@@ -46,8 +46,14 @@ public interface IRequestHandler<in TRequest, TResponse>
 }
 
 
-public interface IRequestHandler<in TRequest>
-    where TRequest : IRequest
+/// <summary>
+/// Defines a handler for a request of type <typeparamref name="TRequest"/> that does not return a value.
+/// </summary>
+/// <typeparam name="TRequest">
+/// The request type. Its response type is <see cref="Unit"/>, allowing it to share the request pipeline.
+/// </typeparam>
+public interface IRequestHandler<in TRequest> : IRequestHandler<TRequest, Unit>
+    where TRequest : ICommandOrQuery<Unit>
 {
     /// <summary>
     /// Handles the specified <paramref name="request"/> asynchronously.
@@ -57,5 +63,19 @@ public interface IRequestHandler<in TRequest>
     /// <returns>
     /// A task representing the asynchronous operation.
     /// </returns>
-    Task Handle(TRequest request, CancellationToken cancellationToken = default);
+    new Task Handle(TRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Adapts the no-result handler to the <see cref="IRequestHandler{TRequest, TResponse}"/> contract,
+    /// returning <see cref="Unit.Value"/> after the request has been handled. This lets commands without
+    /// a return value reuse the same pipeline as commands and queries that produce a response.
+    /// </summary>
+    /// <param name="request">The request message containing all data required for processing.</param>
+    /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+    /// <returns>A task that completes with <see cref="Unit.Value"/>.</returns>
+    async Task<Unit> IRequestHandler<TRequest, Unit>.Handle(TRequest request, CancellationToken cancellationToken)
+    {
+        await ((IRequestHandler<TRequest>)this).Handle(request, cancellationToken);
+        return Unit.Value;
+    }
 }

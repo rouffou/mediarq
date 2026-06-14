@@ -1,4 +1,5 @@
-﻿using Mediarq.Core.Common.Requests.Abstraction;
+﻿using System.Diagnostics.CodeAnalysis;
+using Mediarq.Core.Common.Requests.Abstraction;
 
 namespace Mediarq.Core.Common.Resolvers;
 
@@ -36,6 +37,7 @@ public static class TypeResponseExtensions
     /// Console.WriteLine(responseType.Name); // Output: CreateUserResponse
     /// </code>
     /// </example>
+    [RequiresUnreferencedCode("Inspects the request's interfaces via reflection. The mediator does not use this on its dispatch path; prefer the strongly-typed ICommandOrQuery<TResponse> contract on AOT.")]
     public static Type GetResponseType(this object request)
     {
         ArgumentNullException.ThrowIfNull(request);

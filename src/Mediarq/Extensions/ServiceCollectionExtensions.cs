@@ -1,15 +1,19 @@
-﻿using Mediarq.Core.Common.Contexts;
+using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
+using Mediarq.Core.Common.Pipeline.Behaviors;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Requests.Query;
 using Mediarq.Core.Common.Requests.Validators;
+using Mediarq.Core.Common.Resolvers;
 using Mediarq.Core.Common.Time;
 using Mediarq.Core.Common.User;
 using Mediarq.Core.Mediators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Mediarq.Core.Common.Resolvers;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Mediarq.Extensions;
 
@@ -21,69 +25,63 @@ public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Registers all Mediarq framework components (mediator, handlers, pipeline behaviors,
-    /// validators, and context providers) into the application's dependency injection container.
+    /// validators, and context providers) into the application's dependency injection container,
+    /// discovering handlers via a runtime assembly scan.
     /// </summary>
-    /// <param name="services">
-    /// The <see cref="IServiceCollection"/> instance to configure.
-    /// </param>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to configure.</param>
     /// <param name="isHttp">
-    /// Indicates whether the application is HTTP-based. If <see langword="true"/>,
-    /// the <see cref="HttpUserContext"/> is used to retrieve user information
-    /// from the current HTTP request context; otherwise,
-    /// a <see cref="DefaultUserContext"/> is registered instead.
+    /// When <see langword="true"/>, registers <see cref="HttpUserContext"/> (reads the user from the
+    /// current HTTP context); otherwise a <see cref="DefaultUserContext"/> is used. When <see langword="true"/>,
+    /// also register an <c>IHttpContextAccessor</c> (e.g. via <c>services.AddHttpContextAccessor()</c>).
     /// </param>
-    /// <returns>
-    /// The same <see cref="IServiceCollection"/> instance, enabling fluent chaining.
-    /// </returns>
+    /// <param name="assemblies">
+    /// The assemblies to scan for handlers, pipeline behaviors and validators. When none are provided,
+    /// the entry assembly is scanned. The Mediarq assembly is always scanned for the built-in behaviors.
+    /// </param>
+    /// <returns>The same <see cref="IServiceCollection"/> instance, enabling fluent chaining.</returns>
     /// <remarks>
-    /// This method sets up the Mediarq infrastructure by:
-    /// <list type="bullet">
-    /// <item><description>Registering the <see cref="IMediator"/> implementation (<see cref="Mediator"/>)</description></item>
-    /// <item><description>Configuring <see cref="ServiceFactory"/> to resolve dependencies dynamically</description></item>
-    /// <item><description>Adding support services such as <see cref="IClock"/> and <see cref="IRequestContextFactory"/></description></item>
-    /// <item><description>Automatically discovering and registering request/command/query handlers</description></item>
-    /// <item><description>Registering <see cref="IPipelineBehavior{TRequest,TResponse}"/> implementations</description></item>
-    /// <item><description>Registering all <see cref="IValidator{T}"/> implementations</description></item>
-    /// </list>
-    ///
-    /// Example usage in an ASP.NET Core application:
-    /// <code>
-    /// public void ConfigureServices(IServiceCollection services)
-    /// {
-    ///     services.AddMediarq(isHttp: true);
-    /// }
-    /// </code>
-    ///
-    /// The method performs an assembly scan on all loaded application dependencies
-    /// whose names start with "Mediarq" to automatically discover and register
-    /// framework components.
+    /// For a reflection-free, trimming/AOT-friendly alternative, use <see cref="AddMediarqCore"/> together
+    /// with the compile-time generated <c>AddMediarqHandlers()</c> extension (provided by the Mediarq source generator).
     /// </remarks>
+    [RequiresUnreferencedCode("AddMediarq discovers handlers via a runtime assembly scan, which is not trimming/AOT safe. Use AddMediarqCore() + the generated AddMediarqHandlers() instead.")]
     public static IServiceCollection AddMediarq(
         this IServiceCollection services,
-        bool isHttp = false)
+        bool isHttp = false,
+        params Assembly[] assemblies)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
-        services.AddScoped<IMediator, Mediator>();
+        AddCoreServices(services, isHttp);
 
-        services.TryAddSingleton<IClock, SystemClock>();
-        services.TryAddScoped<IRequestContextFactory, RequestContextFactory>();
-        services.TryAddScoped<IPipelineExecutor, PipelineExecutor>();
+        // Always scan the Mediarq assembly itself (for the built-in pipeline behaviors), plus the
+        // caller-provided assemblies. When none are supplied, fall back to the entry assembly so a
+        // consumer's handlers in the startup project are discovered automatically.
+        var scanTargets = new HashSet<Assembly> { typeof(ServiceCollectionExtensions).Assembly };
 
-        if (isHttp)
+        if (assemblies is { Length: > 0 })
         {
-            services.TryAddScoped<IUserContext, HttpUserContext>();
+            foreach (var assembly in assemblies)
+            {
+                ArgumentNullException.ThrowIfNull(assembly);
+                scanTargets.Add(assembly);
+            }
+        }
+        else
+        {
+            var entryAssembly = Assembly.GetEntryAssembly();
+            if (entryAssembly is not null)
+            {
+                scanTargets.Add(entryAssembly);
+            }
         }
 
-        services.TryAddScoped<IUserContext, DefaultUserContext>();
-
         services.Scan(scan => scan
-            .FromApplicationDependencies(a => a.GetName().Name!.StartsWith("Mediarq"))
+            .FromAssemblies(scanTargets)
             .AddClasses(c => c.AssignableToAny(
                 typeof(IRequestHandler<,>),
                 typeof(ICommandHandler<,>),
-                typeof(IQueryHandler<,>)
+                typeof(IQueryHandler<,>),
+                typeof(INotificationHandler<>)
             ))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
@@ -95,5 +93,56 @@ public static class ServiceCollectionExtensions
                 .WithScopedLifetime());
 
         return services;
+    }
+
+    /// <summary>
+    /// Registers only the Mediarq core services and the built-in pipeline behaviors, without any
+    /// assembly scan. Combine with the compile-time generated <c>AddMediarqHandlers()</c> extension
+    /// to register your handlers, custom behaviors and validators with no runtime reflection.
+    /// </summary>
+    /// <param name="services">The <see cref="IServiceCollection"/> instance to configure.</param>
+    /// <param name="isHttp">See <see cref="AddMediarq"/>.</param>
+    /// <returns>The same <see cref="IServiceCollection"/> instance, enabling fluent chaining.</returns>
+    /// <example>
+    /// <code>
+    /// services.AddMediarqCore(isHttp: true)
+    ///         .AddMediarqHandlers(); // generated at compile time
+    /// </code>
+    /// </example>
+    public static IServiceCollection AddMediarqCore(
+        this IServiceCollection services,
+        bool isHttp = false)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        AddCoreServices(services, isHttp);
+
+        // The built-in behaviors live in the Mediarq assembly; register them explicitly since this
+        // entry point does not scan any assembly.
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        return services;
+    }
+
+    private static void AddCoreServices(IServiceCollection services, bool isHttp)
+    {
+        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
+        services.AddScoped<IMediator, Mediator>();
+        services.AddScoped<ISender>(sp => sp.GetRequiredService<IMediator>());
+        services.AddScoped<IPublisher>(sp => sp.GetRequiredService<IMediator>());
+
+        services.TryAddSingleton<IClock, SystemClock>();
+        services.TryAddScoped<IRequestContextFactory, RequestContextFactory>();
+        services.TryAddScoped<IPipelineExecutor, PipelineExecutor>();
+        services.TryAddSingleton<INotificationPublisher, ParallelNotificationPublisher>();
+
+        if (isHttp)
+        {
+            services.TryAddScoped<IUserContext, HttpUserContext>();
+        }
+
+        services.TryAddScoped<IUserContext, DefaultUserContext>();
     }
 }

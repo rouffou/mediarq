@@ -46,5 +46,9 @@ namespace Mediarq.Core.Common.Requests.Command;
 public interface ICommandHandler<in TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
     where TRequest : ICommand<TResponse>;
 
+/// <summary>
+/// Defines a handler for a no-result command of type <typeparamref name="TRequest"/>.
+/// </summary>
+/// <typeparam name="TRequest">The command type. Must implement <see cref="ICommand"/>.</typeparam>
 public interface ICommandHandler<in TRequest> : IRequestHandler<TRequest>
     where TRequest : ICommand;
