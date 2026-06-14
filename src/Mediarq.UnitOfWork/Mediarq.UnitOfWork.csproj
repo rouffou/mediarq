@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Mediarq.UnitOfWork</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nicolas Rouffart</Authors>
+    <Description>Unit of Work pipeline behavior for Mediarq: commit a unit of work around transactional commands.</Description>
+    <PackageTags>mediarq;cqrs;unitofwork;transaction;pipeline;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mediarq\Mediarq.csproj" />
+  </ItemGroup>
+
+</Project>
