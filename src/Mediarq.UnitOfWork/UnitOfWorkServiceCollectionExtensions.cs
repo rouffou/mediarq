@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Mediarq.Core.Common.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,7 +17,7 @@ public static class UnitOfWorkServiceCollectionExtensions
     /// <param name="services">The service collection to configure.</param>
     /// <returns>The same service collection, enabling fluent chaining.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="services"/> is <see langword="null"/>.</exception>
-    public static IServiceCollection AddMediarqUnitOfWork<TUnitOfWork>(this IServiceCollection services)
+    public static IServiceCollection AddMediarqUnitOfWork<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TUnitOfWork>(this IServiceCollection services)
         where TUnitOfWork : class, IUnitOfWork
     {
         ArgumentNullException.ThrowIfNull(services);
