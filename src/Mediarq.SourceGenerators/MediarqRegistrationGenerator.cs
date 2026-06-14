@@ -225,6 +225,9 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
         "Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler`2" => HandlerKind.ExceptionHandler,
         "Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler`2" => HandlerKind.StreamHandler,
+        // Pre/post-processors are registered like behaviors (plain AddScoped, no dispatch wrapper).
+        "Mediarq.Core.Common.Requests.Processors.IRequestPreProcessor`1" => HandlerKind.Behavior,
+        "Mediarq.Core.Common.Requests.Processors.IRequestPostProcessor`2" => HandlerKind.Behavior,
         _ => HandlerKind.Other,
     };
 

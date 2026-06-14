@@ -68,4 +68,46 @@ public class ResultExtensionsTests
         var bound = await Task.FromResult(Result.Success(2)).BindAsync(x => Task.FromResult(Result.Success(x * 4)));
         bound.Value.Should().Be(8);
     }
+
+    [Fact]
+    public async Task Cross_Async_Overloads_Work_On_Sync_Result()
+    {
+        var mapped = await Result.Success(2).MapAsync(x => Task.FromResult(x + 3));
+        mapped.Value.Should().Be(5);
+
+        var bound = await Result.Success(2).BindAsync(x => Task.FromResult(Result.Success(x * 4)));
+        bound.Value.Should().Be(8);
+    }
+
+    [Fact]
+    public void Combine_Succeeds_When_All_Succeed_And_Returns_First_Error_Otherwise()
+    {
+        ResultExtensions.Combine(Result.Success(), Result.Success()).IsSuccess.Should().BeTrue();
+        ResultExtensions.Combine(Result.Success(), Result.Failure(Error)).IsFailure.Should().BeTrue();
+
+        var combined = ResultExtensions.Combine(Result.Success(1), Result.Success(2), Result.Success(3));
+        combined.IsSuccess.Should().BeTrue();
+        combined.Value.Should().Equal(1, 2, 3);
+
+        ResultExtensions.Combine(Result.Success(1), Result.Failure<int>(Error)).IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Try_Captures_Exception_As_Failure()
+    {
+        ResultExtensions.Try(() => 42, ex => ResultError.Failure("X", ex.Message)).Value.Should().Be(42);
+
+        var failed = ResultExtensions.Try<int>(() => throw new InvalidOperationException("boom"), ex => ResultError.Failure("X", ex.Message));
+        failed.IsFailure.Should().BeTrue();
+        failed.Error.Message.Should().Be("boom");
+    }
+
+    [Fact]
+    public void TryGetValue_Returns_Value_Only_On_Success()
+    {
+        Result.Success(7).TryGetValue(out var value).Should().BeTrue();
+        value.Should().Be(7);
+
+        Result.Failure<int>(Error).TryGetValue(out _).Should().BeFalse();
+    }
 }

@@ -5,6 +5,7 @@ using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Exceptions;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Processors;
 using Mediarq.Core.Common.Requests.Streaming;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Results;
@@ -110,6 +111,36 @@ public sealed class ThrowingCommandExceptionHandler : IRequestExceptionHandler<T
     public Task Handle(ThrowingCommand request, Exception exception, RequestExceptionHandlerState<Result<string>> state, CancellationToken cancellationToken = default)
     {
         state.SetHandled(Result.Failure<string>(ResultError.Failure("Command.Failed", exception.Message)));
+        return Task.CompletedTask;
+    }
+}
+
+// --- Command surrounded by pre/post processors ---
+public record ProcessedCommand(string Name) : ICommand<Result<string>>;
+
+public sealed class ProcessedCommandHandler(ExecutionTrace trace) : ICommandHandler<ProcessedCommand, Result<string>>
+{
+    public Task<Result<string>> Handle(ProcessedCommand request, CancellationToken cancellationToken = default)
+    {
+        trace.Entries.Add("handler:processed");
+        return Task.FromResult(Result.Success(request.Name));
+    }
+}
+
+public sealed class ProcessedCommandPreProcessor(ExecutionTrace trace) : IRequestPreProcessor<ProcessedCommand>
+{
+    public Task Process(ProcessedCommand request, CancellationToken cancellationToken = default)
+    {
+        trace.Entries.Add("pre:processed");
+        return Task.CompletedTask;
+    }
+}
+
+public sealed class ProcessedCommandPostProcessor(ExecutionTrace trace) : IRequestPostProcessor<ProcessedCommand, Result<string>>
+{
+    public Task Process(ProcessedCommand request, Result<string> response, CancellationToken cancellationToken = default)
+    {
+        trace.Entries.Add("post:processed");
         return Task.CompletedTask;
     }
 }

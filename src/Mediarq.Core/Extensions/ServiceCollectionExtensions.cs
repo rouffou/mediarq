@@ -5,6 +5,7 @@ using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Exceptions;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Processors;
 using Mediarq.Core.Common.Requests.Query;
 using Mediarq.Core.Common.Requests.Streaming;
 using Mediarq.Core.Common.Requests.Validators;
@@ -98,6 +99,12 @@ public static class ServiceCollectionExtensions
                 .WithScopedLifetime()
             .AddClasses(c => c.AssignableTo(typeof(IStreamRequestHandler<,>)))
                 .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IRequestPreProcessor<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IRequestPostProcessor<,>)))
+                .AsImplementedInterfaces()
                 .WithScopedLifetime());
 
         return services;
@@ -131,6 +138,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        // Registered after validation so they wrap closest to the handler: validate -> pre -> handler -> post.
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
 
         return services;
     }
