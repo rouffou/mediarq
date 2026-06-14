@@ -1,5 +1,6 @@
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Streaming;
 using Mediarq.Core.Common.Results;
 
 namespace Mediarq.Core.Mediators;
@@ -29,4 +30,15 @@ public interface ISender
     /// <returns>A task representing the asynchronous operation.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is <see langword="null"/>.</exception>
     Task Send(ICommand request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Dispatches a streaming request to its handler and returns the resulting asynchronous stream.
+    /// </summary>
+    /// <typeparam name="TResponse">The type of each streamed item.</typeparam>
+    /// <param name="request">The streaming request implementing <see cref="IStreamRequest{TResponse}"/>.</param>
+    /// <param name="cancellationToken">A token to observe while streaming.</param>
+    /// <returns>An asynchronous stream of <typeparamref name="TResponse"/> items.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is <see langword="null"/>.</exception>
+    /// <exception cref="Common.Exceptions.HandlerNotFoundException">Thrown when no handler is registered for the request.</exception>
+    IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default);
 }

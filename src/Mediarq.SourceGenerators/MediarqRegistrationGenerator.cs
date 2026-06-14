@@ -108,6 +108,11 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     responseType = iface.TypeArguments[1].ToDisplayString(FullyQualified);
                     responseIsGenericResult = IsGenericResult(iface.TypeArguments[1]);
                 }
+                else if (kind == HandlerKind.StreamHandler && iface.TypeArguments.Length == 2)
+                {
+                    requestType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
+                    responseType = iface.TypeArguments[1].ToDisplayString(FullyQualified);
+                }
                 else if (kind == HandlerKind.NotificationHandler && iface.TypeArguments.Length == 1)
                 {
                     notificationType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
@@ -143,6 +148,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" => HandlerKind.Behavior,
         "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
         "Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler`2" => HandlerKind.ExceptionHandler,
+        "Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler`2" => HandlerKind.StreamHandler,
         _ => HandlerKind.Other,
     };
 
@@ -209,6 +215,13 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             .OrderBy(s => s, StringComparer.Ordinal)
             .ToList();
 
+        var streamWrappers = registrations
+            .Where(r => r.Kind == HandlerKind.StreamHandler && !r.IsOpenGeneric && r.RequestType != null && r.ResponseType != null)
+            .Select(r => r.RequestType + "|" + r.ResponseType)
+            .Distinct()
+            .OrderBy(s => s, StringComparer.Ordinal)
+            .ToList();
+
         // Result<T> responses get a reflection-free validation-failure factory so ValidationBehavior
         // can short-circuit without dynamic code on AOT.
         var resultResponses = registrations
@@ -218,7 +231,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             .OrderBy(s => s, StringComparer.Ordinal)
             .ToList();
 
-        if (requestWrappers.Count == 0 && notificationWrappers.Count == 0)
+        if (requestWrappers.Count == 0 && notificationWrappers.Count == 0 && streamWrappers.Count == 0)
         {
             return;
         }
@@ -234,6 +247,12 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         foreach (var notification in notificationWrappers)
         {
             sb.Append("            registry.AddNotification<").Append(notification).AppendLine(">();");
+        }
+
+        foreach (var pair in streamWrappers)
+        {
+            var parts = pair.Split('|');
+            sb.Append("            registry.AddStream<").Append(parts[0]).Append(", ").Append(parts[1]).AppendLine(">();");
         }
 
         sb.AppendLine("            services.AddSingleton(registry);");
@@ -258,6 +277,7 @@ internal enum HandlerKind
     Behavior,
     Validator,
     ExceptionHandler,
+    StreamHandler,
 }
 
 /// <summary>One discovered DI registration to emit.</summary>
