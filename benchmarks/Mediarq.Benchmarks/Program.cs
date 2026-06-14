@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Results;
@@ -6,7 +7,15 @@ using Mediarq.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using MediarqMediator = Mediarq.Core.Mediators.IMediator;
 
-BenchmarkRunner.Run<SendBenchmarks>();
+// Benchmarks must run in Release for reliable numbers: `dotnet run -c Release --project benchmarks/Mediarq.Benchmarks`.
+// In a DEBUG build we relax the optimizations validator so the benchmarks can still be launched for
+// debugging (results are NOT reliable in that case).
+var config = DefaultConfig.Instance;
+#if DEBUG
+config = config.WithOptions(ConfigOptions.DisableOptimizationsValidator);
+#endif
+
+BenchmarkRunner.Run<SendBenchmarks>(config);
 
 /// <summary>
 /// Compares dispatching a request through Mediarq vs MediatR. Run in Release:
