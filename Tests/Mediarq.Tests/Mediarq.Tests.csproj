@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Mediarq\Mediarq.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.FluentValidation\Mediarq.FluentValidation.csproj" />
     <!-- Reference the source generator as an analyzer so AddMediarqHandlers() is generated for this assembly. -->
     <ProjectReference Include="..\..\src\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

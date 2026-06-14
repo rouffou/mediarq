@@ -10,8 +10,10 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 - ✅ Pipeline behaviors (logging, performance, validation) + your own, orderable
 - ✅ Built-in validation abstraction and `Result` / `ResultError` types
 - ✅ No `dynamic` on the dispatch path — strongly-typed wrappers cached per request type
+- ✅ Optional **source generator** for compile-time, reflection-free registration (trimming/AOT friendly)
+- ✅ Functional `Result` combinators (`Map`, `Bind`, `Match`, `Tap`, `Ensure`)
 
-> Requires **.NET 10**.
+> Targets **.NET 8, .NET 9 and .NET 10**.
 
 ---
 
@@ -42,6 +44,18 @@ builder.Services.AddHttpContextAccessor();
 |-----------|-------------|
 | `isHttp` | When `true`, registers `HttpUserContext` (reads the user from `HttpContext`). Otherwise a `DefaultUserContext` (`"system"`) is used. |
 | `assemblies` | The assemblies to scan for handlers/behaviors/validators. When omitted, the entry assembly is scanned. The Mediarq assembly itself is always scanned for the built-in behaviors. |
+
+Inject `IMediator`, or the narrower `ISender` (commands/queries) / `IPublisher` (notifications).
+
+### Reflection-free registration (source generator)
+
+For startup with no assembly scan (trimming/AOT friendly), use `AddMediarqCore` together with the
+compile-time generated `AddMediarqHandlers()` extension — shipped as an analyzer inside the package:
+
+```csharp
+builder.Services.AddMediarqCore(isHttp: false)
+                .AddMediarqHandlers(); // generated at compile time
+```
 
 ## Commands & queries (with a result)
 
@@ -101,7 +115,9 @@ public class SendWelcomeEmail : INotificationHandler<UserCreated>
 await mediator.Publish(new UserCreated(id));
 ```
 
-Handlers run concurrently; the first failure is surfaced. Publishing with no registered handler is a no-op.
+By default handlers run concurrently (`ParallelNotificationPublisher`) and the first failure is surfaced;
+publishing with no registered handler is a no-op. Register a different `INotificationPublisher`
+(e.g. `SequentialNotificationPublisher`, or your own) before `AddMediarq`/`AddMediarqCore` to change this.
 
 ## Pipeline behaviors
 
@@ -165,6 +181,19 @@ Result<int> value = Result.Success(42);
 Result failed = Result.Failure(ResultError.NotFound("User.NotFound", "User not found"));
 
 if (value.IsSuccess) Console.WriteLine(value.Value);
+```
+
+Compose them functionally, without manual `IsSuccess` checks (sync + async variants):
+
+```csharp
+string message =
+    Result.Success(42)
+        .Ensure(x => x > 0, ResultError.Failure("Id.Invalid", "must be positive"))
+        .Map(x => x * 2)
+        .Match(onSuccess: x => $"value: {x}", onFailure: e => $"error: {e.Message}");
+
+// async, over Task<Result<T>>
+Result<int> doubled = await GetResultAsync().MapAsync(x => x * 2);
 ```
 
 ## License

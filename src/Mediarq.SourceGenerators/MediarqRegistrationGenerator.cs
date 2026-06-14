@@ -1,6 +1,10 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Mediarq.SourceGenerators;
@@ -16,58 +20,83 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
 {
     private static readonly SymbolDisplayFormat FullyQualified = SymbolDisplayFormat.FullyQualifiedFormat;
 
+    private static readonly DiagnosticDescriptor MultipleHandlers = new(
+        id: "MQ001",
+        title: "Multiple request handlers for the same request",
+        messageFormat: "Multiple handlers are registered for '{0}'. Mediarq dispatches each request to a single handler.",
+        category: "Mediarq",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var registrations = context.CompilationProvider.Select(static (compilation, _) => GetRegistrations(compilation));
-        context.RegisterSourceOutput(registrations, static (spc, lines) => Emit(spc, lines));
+        var registrations = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (node, _) => node is ClassDeclarationSyntax { BaseList: not null } or RecordDeclarationSyntax { BaseList: not null },
+                transform: static (ctx, ct) => Transform(ctx, ct))
+            .Where(static models => models.Length > 0)
+            .SelectMany(static (models, _) => models)
+            .Collect()
+            .Select(static (items, _) => new EquatableArray<HandlerRegistration>(items.Distinct().ToImmutableArray()));
+
+        context.RegisterSourceOutput(registrations, static (spc, regs) => Emit(spc, regs));
     }
 
-    private static List<string> GetRegistrations(Compilation compilation)
+    private static EquatableArray<HandlerRegistration> Transform(GeneratorSyntaxContext ctx, CancellationToken cancellationToken)
     {
-        var lines = new List<string>();
-        var seen = new HashSet<string>();
-
-        foreach (var type in EnumerateTypes(compilation.Assembly.GlobalNamespace))
+        if (ctx.SemanticModel.GetDeclaredSymbol((TypeDeclarationSyntax)ctx.Node, cancellationToken) is not INamedTypeSymbol type)
         {
-            if (type.TypeKind != TypeKind.Class || type.IsAbstract || type.IsStatic)
-                continue;
+            return default;
+        }
 
-            if (type.DeclaredAccessibility != Accessibility.Public && type.DeclaredAccessibility != Accessibility.Internal)
-                continue;
+        if (type.TypeKind != TypeKind.Class || type.IsAbstract || type.IsStatic)
+        {
+            return default;
+        }
 
-            var ns = type.ContainingNamespace?.ToDisplayString() ?? string.Empty;
-            if (ns == "Mediarq.Core" || ns.StartsWith("Mediarq.Core."))
-                continue;
+        if (type.DeclaredAccessibility != Accessibility.Public && type.DeclaredAccessibility != Accessibility.Internal)
+        {
+            return default;
+        }
 
-            foreach (var iface in type.AllInterfaces)
+        var ns = type.ContainingNamespace?.ToDisplayString() ?? string.Empty;
+        if (ns == "Mediarq.Core" || ns.StartsWith("Mediarq.Core."))
+        {
+            return default;
+        }
+
+        var list = new List<HandlerRegistration>();
+        foreach (var iface in type.AllInterfaces)
+        {
+            var definition = iface.OriginalDefinition;
+            var key = definition.ContainingNamespace.ToDisplayString() + "." + definition.MetadataName;
+            if (!IsTarget(key))
             {
-                var definition = iface.OriginalDefinition;
-                var key = definition.ContainingNamespace.ToDisplayString() + "." + definition.MetadataName;
-                if (!IsTarget(key))
-                    continue;
+                continue;
+            }
 
-                string line;
-                if (type.IsGenericType)
-                {
-                    var service = definition.ConstructUnboundGenericType().ToDisplayString(FullyQualified);
-                    var impl = type.ConstructUnboundGenericType().ToDisplayString(FullyQualified);
-                    line = "            services.AddScoped(typeof(" + service + "), typeof(" + impl + "));";
-                }
-                else
-                {
-                    var service = iface.ToDisplayString(FullyQualified);
-                    var impl = type.ToDisplayString(FullyQualified);
-                    line = "            services.AddScoped<" + service + ", " + impl + ">();";
-                }
+            bool isRequestHandler = key == "Mediarq.Core.Common.Requests.Abstraction.IRequestHandler`2";
 
-                if (seen.Add(line))
-                    lines.Add(line);
+            if (type.IsGenericType)
+            {
+                list.Add(new HandlerRegistration(
+                    definition.ConstructUnboundGenericType().ToDisplayString(FullyQualified),
+                    type.ConstructUnboundGenericType().ToDisplayString(FullyQualified),
+                    IsOpenGeneric: true,
+                    IsRequestHandler: isRequestHandler));
+            }
+            else
+            {
+                list.Add(new HandlerRegistration(
+                    iface.ToDisplayString(FullyQualified),
+                    type.ToDisplayString(FullyQualified),
+                    IsOpenGeneric: false,
+                    IsRequestHandler: isRequestHandler));
             }
         }
 
-        lines.Sort(System.StringComparer.Ordinal);
-        return lines;
+        return new EquatableArray<HandlerRegistration>(list.ToImmutableArray());
     }
 
     private static bool IsTarget(string key) =>
@@ -76,30 +105,17 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         key == "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" ||
         key == "Mediarq.Core.Common.Requests.Validators.IValidator`1";
 
-    private static IEnumerable<INamedTypeSymbol> EnumerateTypes(INamespaceSymbol root)
+    private static void Emit(SourceProductionContext context, EquatableArray<HandlerRegistration> registrations)
     {
-        var stack = new Stack<INamespaceSymbol>();
-        stack.Push(root);
-
-        while (stack.Count > 0)
+        // Diagnose multiple handlers registered for the same request (a request handler must be unique).
+        foreach (var group in registrations.Where(r => r.IsRequestHandler).GroupBy(r => r.ServiceType))
         {
-            var ns = stack.Pop();
-            foreach (var member in ns.GetMembers())
+            if (group.Select(r => r.ImplType).Distinct().Count() > 1)
             {
-                if (member is INamespaceSymbol childNamespace)
-                {
-                    stack.Push(childNamespace);
-                }
-                else if (member is INamedTypeSymbol type)
-                {
-                    yield return type;
-                }
+                context.ReportDiagnostic(Diagnostic.Create(MultipleHandlers, Location.None, group.Key));
             }
         }
-    }
 
-    private static void Emit(SourceProductionContext context, List<string> registrations)
-    {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
         sb.AppendLine("#nullable enable");
@@ -113,10 +129,19 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         sb.AppendLine("        /// <summary>Registers every Mediarq handler, behavior and validator discovered at compile time.</summary>");
         sb.AppendLine("        internal static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
         sb.AppendLine("        {");
-        foreach (var line in registrations)
+
+        foreach (var reg in registrations.OrderBy(r => r.ServiceType + "|" + r.ImplType, System.StringComparer.Ordinal))
         {
-            sb.AppendLine(line);
+            if (reg.IsOpenGeneric)
+            {
+                sb.Append("            services.AddScoped(typeof(").Append(reg.ServiceType).Append("), typeof(").Append(reg.ImplType).AppendLine("));");
+            }
+            else
+            {
+                sb.Append("            services.AddScoped<").Append(reg.ServiceType).Append(", ").Append(reg.ImplType).AppendLine(">();");
+            }
         }
+
         sb.AppendLine("            return services;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
@@ -125,3 +150,6 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         context.AddSource("MediarqGeneratedRegistration.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 }
+
+/// <summary>One discovered DI registration to emit.</summary>
+internal readonly record struct HandlerRegistration(string ServiceType, string ImplType, bool IsOpenGeneric, bool IsRequestHandler);

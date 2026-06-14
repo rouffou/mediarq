@@ -128,10 +128,13 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
         services.AddScoped<IMediator, Mediator>();
+        services.AddScoped<ISender>(sp => sp.GetRequiredService<IMediator>());
+        services.AddScoped<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
         services.TryAddSingleton<IClock, SystemClock>();
         services.TryAddScoped<IRequestContextFactory, RequestContextFactory>();
         services.TryAddScoped<IPipelineExecutor, PipelineExecutor>();
+        services.TryAddSingleton<INotificationPublisher, ParallelNotificationPublisher>();
 
         if (isHttp)
         {
