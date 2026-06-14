@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mediarq\Mediarq.csproj" />
+    <ProjectReference Include="..\Mediarq.Core\Mediarq.Core.csproj" />
   </ItemGroup>
 
 </Project>

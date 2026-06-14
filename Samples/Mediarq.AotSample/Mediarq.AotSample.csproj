@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Mediarq\Mediarq.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Core\Mediarq.Core.csproj" />
     <!-- The source generator emits AddMediarqHandlers() (handlers + reflection-free dispatch registry). -->
     <ProjectReference Include="..\..\src\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
