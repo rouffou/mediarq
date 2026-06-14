@@ -133,6 +133,36 @@ public class MediarqRegistrationGeneratorTests
     }
 
     [Fact]
+    public void Generates_Stream_Wrapper_Registration()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Streaming;
+            using System.Collections.Generic;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Demo;
+
+            public record Ticks(int N) : IStreamRequest<int>;
+
+            public sealed class TicksHandler : IStreamRequestHandler<Ticks, int>
+            {
+                public async IAsyncEnumerable<int> Handle(Ticks request, CancellationToken cancellationToken = default)
+                {
+                    for (var i = 0; i < request.N; i++) { yield return i; }
+                    await Task.CompletedTask;
+                }
+            }
+            """;
+
+        var (generated, diagnostics) = Run(source);
+
+        diagnostics.Should().BeEmpty();
+        generated.Should().Contain("global::Demo.TicksHandler");
+        generated.Should().Contain("registry.AddStream<global::Demo.Ticks, int>();");
+    }
+
+    [Fact]
     public void Generates_Empty_Method_When_No_Handlers()
     {
         const string source = """
