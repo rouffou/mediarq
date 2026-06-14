@@ -69,6 +69,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             return default;
         }
 
+        var lifetime = ReadLifetime(type);
+
         var list = new List<HandlerRegistration>();
         foreach (var iface in type.AllInterfaces)
         {
@@ -93,7 +95,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     RequestType: null,
                     ResponseType: null,
                     NotificationType: null,
-                    ResponseIsGenericResult: false));
+                    ResponseIsGenericResult: false,
+                    Lifetime: lifetime));
             }
             else
             {
@@ -126,7 +129,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     RequestType: requestType,
                     ResponseType: responseType,
                     NotificationType: notificationType,
-                    ResponseIsGenericResult: responseIsGenericResult));
+                    ResponseIsGenericResult: responseIsGenericResult,
+                    Lifetime: lifetime));
             }
         }
 
@@ -138,6 +142,38 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         named.IsGenericType &&
         named.OriginalDefinition.MetadataName == "Result`1" &&
         (named.OriginalDefinition.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Results");
+
+    // Reads the [RegisterHandler(ServiceLifetime)] attribute, defaulting to Scoped.
+    // ServiceLifetime: Singleton = 0, Scoped = 1, Transient = 2.
+    private static string ReadLifetime(INamedTypeSymbol type)
+    {
+        foreach (var attribute in type.GetAttributes())
+        {
+            var attributeClass = attribute.AttributeClass;
+            if (attributeClass is null)
+            {
+                continue;
+            }
+
+            if (attributeClass.Name == "RegisterHandlerAttribute" &&
+                attributeClass.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Registration")
+            {
+                if (attribute.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Value is int value)
+                {
+                    return value switch
+                    {
+                        0 => "Singleton",
+                        2 => "Transient",
+                        _ => "Scoped",
+                    };
+                }
+
+                return "Scoped";
+            }
+        }
+
+        return "Scoped";
+    }
 
     private static bool IsTarget(string key) => KindOf(key) != HandlerKind.Other;
 
@@ -181,11 +217,11 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         {
             if (reg.IsOpenGeneric)
             {
-                sb.Append("            services.AddScoped(typeof(").Append(reg.ServiceType).Append("), typeof(").Append(reg.ImplType).AppendLine("));");
+                sb.Append("            services.Add").Append(reg.Lifetime).Append("(typeof(").Append(reg.ServiceType).Append("), typeof(").Append(reg.ImplType).AppendLine("));");
             }
             else
             {
-                sb.Append("            services.AddScoped<").Append(reg.ServiceType).Append(", ").Append(reg.ImplType).AppendLine(">();");
+                sb.Append("            services.Add").Append(reg.Lifetime).Append('<').Append(reg.ServiceType).Append(", ").Append(reg.ImplType).AppendLine(">();");
             }
         }
 
@@ -289,4 +325,5 @@ internal readonly record struct HandlerRegistration(
     string? RequestType,
     string? ResponseType,
     string? NotificationType,
-    bool ResponseIsGenericResult);
+    bool ResponseIsGenericResult,
+    string Lifetime);

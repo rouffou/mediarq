@@ -11,13 +11,16 @@ public class MediarqRegistrationGeneratorTests
 {
     private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source)
     {
-        // Ensure the Mediarq assembly (which declares the marker interfaces) is loaded and referenced.
+        // Ensure the Mediarq assembly (which declares the marker interfaces) is loaded and referenced,
+        // along with Microsoft.Extensions.DependencyInjection.Abstractions (for ServiceLifetime).
         var mediarqLocation = typeof(Mediarq.Core.Common.Results.Result).Assembly.Location;
+        var diAbstractionsLocation = typeof(Microsoft.Extensions.DependencyInjection.ServiceLifetime).Assembly.Location;
 
         var references = AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
             .Select(a => a.Location)
             .Append(mediarqLocation)
+            .Append(diAbstractionsLocation)
             .Distinct()
             .Select(p => MetadataReference.CreateFromFile(p));
 
@@ -160,6 +163,35 @@ public class MediarqRegistrationGeneratorTests
         diagnostics.Should().BeEmpty();
         generated.Should().Contain("global::Demo.TicksHandler");
         generated.Should().Contain("registry.AddStream<global::Demo.Ticks, int>();");
+    }
+
+    [Fact]
+    public void Honors_RegisterHandler_Lifetime()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Registration;
+            using Mediarq.Core.Common.Requests.Command;
+            using Mediarq.Core.Common.Results;
+            using Microsoft.Extensions.DependencyInjection;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Demo;
+
+            public record Ping(string Text) : ICommand<Result<string>>;
+
+            [RegisterHandler(ServiceLifetime.Singleton)]
+            public sealed class PingHandler : ICommandHandler<Ping, Result<string>>
+            {
+                public Task<Result<string>> Handle(Ping request, CancellationToken cancellationToken = default)
+                    => Task.FromResult(Result.Success(request.Text));
+            }
+            """;
+
+        var (generated, diagnostics) = Run(source);
+
+        diagnostics.Should().BeEmpty();
+        generated.Should().Contain("services.AddSingleton<global::Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<global::Demo.Ping, global::Mediarq.Core.Common.Results.Result<string>>, global::Demo.PingHandler>();");
     }
 
     [Fact]
