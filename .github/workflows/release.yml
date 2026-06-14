@@ -30,6 +30,7 @@ jobs:
 
       - name: Pack
         run: |
+          dotnet pack src/Mediarq.Core/Mediarq.Core.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq/Mediarq.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.AspNetCore/Mediarq.AspNetCore.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.FluentValidation/Mediarq.FluentValidation.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
