@@ -136,6 +136,23 @@ public class MediarqRegistrationGeneratorTests
     }
 
     [Fact]
+    public void Reports_MQ002_For_Command_Without_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Command;
+            using Mediarq.Core.Common.Results;
+
+            namespace Demo;
+
+            public record Orphan(string Text) : ICommand<Result<string>>;
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().Contain(d => d.Id == "MQ002");
+    }
+
+    [Fact]
     public void Generates_Stream_Wrapper_Registration()
     {
         const string source = """
