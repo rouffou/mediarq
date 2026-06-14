@@ -88,6 +88,19 @@ public class AddMediarqTests
         trace.Entries.Should().Contain("email:42");
     }
 
+    [Fact]
+    public async Task ExceptionHandler_Converts_Thrown_Exception_To_Failed_Result()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var result = await mediator.Send(new ThrowingCommand("boom"));
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Message.Should().Be("boom");
+    }
+
     // --- Compile-time generated registration path (AddMediarqCore + generated AddMediarqHandlers) ---
 
     private static ServiceProvider BuildGeneratedProvider()
@@ -139,5 +152,18 @@ public class AddMediarqTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();
+    }
+
+    [Fact]
+    public async Task Generated_Registration_ExceptionHandler_Converts_Thrown_Exception()
+    {
+        using var provider = BuildGeneratedProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var result = await mediator.Send(new ThrowingCommand("kaboom"));
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Message.Should().Be("kaboom");
     }
 }

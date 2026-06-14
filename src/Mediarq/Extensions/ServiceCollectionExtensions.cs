@@ -3,6 +3,7 @@ using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Pipeline.Behaviors;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Exceptions;
 using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Requests.Query;
 using Mediarq.Core.Common.Requests.Validators;
@@ -90,6 +91,9 @@ public static class ServiceCollectionExtensions
                 .WithScopedLifetime()
             .AddClasses(c => c.AssignableTo(typeof(IValidator<>)))
                 .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IRequestExceptionHandler<,>)))
+                .AsImplementedInterfaces()
                 .WithScopedLifetime());
 
         return services;
@@ -119,6 +123,7 @@ public static class ServiceCollectionExtensions
 
         // The built-in behaviors live in the Mediarq assembly; register them explicitly since this
         // entry point does not scan any assembly.
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
