@@ -1,9 +1,11 @@
+using System.Runtime.CompilerServices;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Exceptions;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Streaming;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Results;
 
@@ -109,5 +111,21 @@ public sealed class ThrowingCommandExceptionHandler : IRequestExceptionHandler<T
     {
         state.SetHandled(Result.Failure<string>(ResultError.Failure("Command.Failed", exception.Message)));
         return Task.CompletedTask;
+    }
+}
+
+// --- Streaming request producing a sequence of items ---
+public record CountStream(int Count) : IStreamRequest<int>;
+
+public sealed class CountStreamHandler : IStreamRequestHandler<CountStream, int>
+{
+    public async IAsyncEnumerable<int> Handle(CountStream request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        for (var i = 1; i <= request.Count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return i;
+            await Task.Yield();
+        }
     }
 }

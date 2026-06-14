@@ -6,6 +6,7 @@ using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Streaming;
 using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Core.Mediators;
@@ -39,6 +40,7 @@ public class Mediator : IMediator
     // supplied. Wrappers are stateless and thread-safe.
     private static readonly ConcurrentDictionary<Type, object> Wrappers = new();
     private static readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> NotificationWrappers = new();
+    private static readonly ConcurrentDictionary<Type, object> StreamWrappers = new();
 
     private readonly IRequestContextFactory _requestContextFactory;
     private readonly IPipelineExecutor _pipelineExecutor;
@@ -138,6 +140,20 @@ public class Mediator : IMediator
         return wrapper.Handle(notification, _handlerResolver, _notificationPublisher, cancellationToken);
     }
 
+    /// <inheritdoc />
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = FallbackJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = FallbackJustification)]
+    public IAsyncEnumerable<TResponse> CreateStream<TResponse>(IStreamRequest<TResponse> request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var requestType = request.GetType();
+        var wrapper = _wrapperRegistry?.GetStreamWrapper<TResponse>(requestType)
+            ?? GetOrCreateStreamWrapper<TResponse>(requestType);
+
+        return wrapper.Handle(request, _handlerResolver, cancellationToken);
+    }
+
     // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
     [RequiresUnreferencedCode(FallbackJustification)]
     [RequiresDynamicCode(FallbackJustification)]
@@ -170,5 +186,22 @@ public class Mediator : IMediator
             ?? throw new InvalidOperationException($"Could not create a notification wrapper for type '{notificationType}'."));
 
         return NotificationWrappers.GetOrAdd(notificationType, wrapper);
+    }
+
+    // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
+    [RequiresUnreferencedCode(FallbackJustification)]
+    [RequiresDynamicCode(FallbackJustification)]
+    private static IStreamRequestHandlerWrapper<TResponse> GetOrCreateStreamWrapper<TResponse>(Type requestType)
+    {
+        if (StreamWrappers.TryGetValue(requestType, out var existing))
+        {
+            return (IStreamRequestHandlerWrapper<TResponse>)existing;
+        }
+
+        var wrapperType = typeof(StreamRequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
+        var wrapper = Activator.CreateInstance(wrapperType)
+            ?? throw new InvalidOperationException($"Could not create a stream handler wrapper for request type '{requestType}'.");
+
+        return (IStreamRequestHandlerWrapper<TResponse>)StreamWrappers.GetOrAdd(requestType, wrapper);
     }
 }
