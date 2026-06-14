@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
@@ -18,22 +19,32 @@ namespace Mediarq.Core.Mediators;
 /// The <see cref="Mediator"/> acts as the central coordination point for request handling.
 /// It abstracts away the complexity of handler resolution, context creation, and pipeline execution.
 ///
-/// Per request type, a strongly-typed wrapper is built once and cached, so the dispatch path
-/// does not rely on <c>dynamic</c> or per-call reflection.
+/// Dispatch goes through strongly-typed wrappers, so the path does not rely on <c>dynamic</c> or
+/// per-call reflection. When a <see cref="MediarqWrapperRegistry"/> is supplied (populated by the
+/// compile-time generated <c>AddMediarqHandlers()</c>), the wrappers are resolved with no reflection
+/// at all — trimming/AOT friendly. Otherwise (the reflection-based <c>AddMediarq</c> assembly scan),
+/// each wrapper is built reflectively once per type and cached.
 ///
 /// This class is designed to replace MediatR with a lightweight, dependency-free mediator
 /// that integrates easily into domain-driven and CQRS-based architectures.
 /// </remarks>
 public class Mediator : IMediator
 {
-    // Cached per concrete request type. A request type maps to exactly one response type, so the
-    // request type alone is a sufficient cache key. Wrappers are stateless and thread-safe.
+    private const string FallbackJustification =
+        "The reflective wrapper fallback is only reached when no source-generated MediarqWrapperRegistry " +
+        "is present (the reflection-based AddMediarq assembly scan), which is not used on Native AOT. " +
+        "The AOT path uses AddMediarqCore() + the generated AddMediarqHandlers(), which pre-populates the registry.";
+
+    // Fallback caches, keyed per concrete request/notification type. Only used when no registry is
+    // supplied. Wrappers are stateless and thread-safe.
     private static readonly ConcurrentDictionary<Type, object> Wrappers = new();
+    private static readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> NotificationWrappers = new();
 
     private readonly IRequestContextFactory _requestContextFactory;
     private readonly IPipelineExecutor _pipelineExecutor;
     private readonly IHandlerResolver _handlerResolver;
     private readonly INotificationPublisher _notificationPublisher;
+    private readonly MediarqWrapperRegistry? _wrapperRegistry;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mediator"/> class.
@@ -50,14 +61,20 @@ public class Mediator : IMediator
     /// <param name="notificationPublisher">
     /// The strategy used to invoke notification handlers when publishing.
     /// </param>
+    /// <param name="wrapperRegistry">
+    /// Optional registry of compile-time generated dispatch wrappers. When supplied, request and
+    /// notification dispatch is fully reflection-free. When <see langword="null"/>, wrappers are
+    /// built reflectively on first use and cached.
+    /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if any of the constructor parameters are <see langword="null"/>.
+    /// Thrown if any of the required constructor parameters are <see langword="null"/>.
     /// </exception>
     public Mediator(
         IRequestContextFactory requestContextFactory,
         IPipelineExecutor pipelineExecutor,
         IHandlerResolver handlerResolver,
-        INotificationPublisher notificationPublisher)
+        INotificationPublisher notificationPublisher,
+        MediarqWrapperRegistry? wrapperRegistry = null)
     {
         ArgumentNullException.ThrowIfNull(handlerResolver);
         ArgumentNullException.ThrowIfNull(requestContextFactory);
@@ -68,21 +85,19 @@ public class Mediator : IMediator
         _pipelineExecutor = pipelineExecutor;
         _handlerResolver = handlerResolver;
         _notificationPublisher = notificationPublisher;
+        _wrapperRegistry = wrapperRegistry;
     }
 
     /// <inheritdoc />
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = FallbackJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = FallbackJustification)]
     public Task<TResponse> Send<TResponse>(ICommandOrQuery<TResponse> request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var wrapper = (IRequestHandlerWrapper<TResponse>)Wrappers.GetOrAdd(
-            request.GetType(),
-            requestType =>
-            {
-                var wrapperType = typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
-                return Activator.CreateInstance(wrapperType)
-                    ?? throw new InvalidOperationException($"Could not create a handler wrapper for request type '{requestType}'.");
-            });
+        var requestType = request.GetType();
+        var wrapper = _wrapperRegistry?.GetRequestWrapper<TResponse>(requestType)
+            ?? GetOrCreateRequestWrapper<TResponse>(requestType);
 
         try
         {
@@ -95,7 +110,7 @@ public class Mediator : IMediator
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error while handling request {request.GetType().Name}", ex);
+            throw new InvalidOperationException($"Error while handling request {requestType.Name}", ex);
         }
     }
 
@@ -109,29 +124,51 @@ public class Mediator : IMediator
     }
 
     /// <inheritdoc />
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = FallbackJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = FallbackJustification)]
     public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
         where TNotification : INotification
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notification.GetType());
-        var handlers = _handlerResolver.ResolveAll(handlerType).ToList();
+        var notificationType = notification.GetType();
+        var wrapper = _wrapperRegistry?.GetNotificationWrapper(notificationType)
+            ?? GetOrCreateNotificationWrapper(notificationType);
 
-        if (handlers.Count == 0)
+        return wrapper.Handle(notification, _handlerResolver, _notificationPublisher, cancellationToken);
+    }
+
+    // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
+    [RequiresUnreferencedCode(FallbackJustification)]
+    [RequiresDynamicCode(FallbackJustification)]
+    private static IRequestHandlerWrapper<TResponse> GetOrCreateRequestWrapper<TResponse>(Type requestType)
+    {
+        if (Wrappers.TryGetValue(requestType, out var existing))
         {
-            return Task.CompletedTask;
+            return (IRequestHandlerWrapper<TResponse>)existing;
         }
 
-        var handleMethod = handlerType.GetMethod(nameof(INotificationHandler<TNotification>.Handle))!;
-        var callbacks = new List<Func<CancellationToken, Task>>(handlers.Count);
+        var wrapperType = typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
+        var wrapper = Activator.CreateInstance(wrapperType)
+            ?? throw new InvalidOperationException($"Could not create a handler wrapper for request type '{requestType}'.");
 
-        foreach (var handler in handlers)
+        return (IRequestHandlerWrapper<TResponse>)Wrappers.GetOrAdd(requestType, wrapper);
+    }
+
+    // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
+    [RequiresUnreferencedCode(FallbackJustification)]
+    [RequiresDynamicCode(FallbackJustification)]
+    private static INotificationHandlerWrapper GetOrCreateNotificationWrapper(Type notificationType)
+    {
+        if (NotificationWrappers.TryGetValue(notificationType, out var existing))
         {
-            var captured = handler;
-            callbacks.Add(ct => (Task)handleMethod.Invoke(captured, [notification, ct])!);
+            return existing;
         }
 
-        // The configured INotificationPublisher decides how handlers are invoked (parallel, sequential, ...).
-        return _notificationPublisher.Publish(callbacks, cancellationToken);
+        var wrapperType = typeof(NotificationHandlerWrapperImpl<>).MakeGenericType(notificationType);
+        var wrapper = (INotificationHandlerWrapper)(Activator.CreateInstance(wrapperType)
+            ?? throw new InvalidOperationException($"Could not create a notification wrapper for type '{notificationType}'."));
+
+        return NotificationWrappers.GetOrAdd(notificationType, wrapper);
     }
 }

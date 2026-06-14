@@ -70,7 +70,7 @@ public class PipelineExecutorTests
         // Simule la factory qui renvoie nos mocks
         var mockResolver = new Mock<IHandlerResolver>();
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
             .Returns(behaviors);
 
         var executor = new PipelineExecutor(mockResolver.Object);
@@ -114,8 +114,8 @@ public class PipelineExecutorTests
         // Arrange
         var mockResolver = new Mock<IHandlerResolver>();
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
-            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
         var executor = new PipelineExecutor(mockResolver.Object);
 
         // Act
@@ -135,8 +135,8 @@ public class PipelineExecutorTests
         // Arrange
         var mockResolver = new Mock<IHandlerResolver>();
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
-            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
 
         var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
@@ -159,8 +159,8 @@ public class PipelineExecutorTests
         bool handlerCalled = false; var mockResolver = new Mock<IHandlerResolver>();
         
         mockResolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
-            .Returns(Enumerable.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
 
         var executor = new PipelineExecutor(mockResolver.Object);
         var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), Guid.NewGuid().ToString());
@@ -190,7 +190,7 @@ public class PipelineExecutorTests
 
         var resolver = new Mock<IHandlerResolver>();
         resolver
-            .Setup(r => r.Resolve(typeof(IEnumerable<IPipelineBehavior<TestCommandWithValue, Result<string>>>)))
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
             .Returns(behaviors);
 
         var executor = new PipelineExecutor(resolver.Object);

@@ -2,6 +2,7 @@
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Results;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -28,12 +29,20 @@ namespace Mediarq.Core.Common.Pipeline.Behaviors;
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
+    private const string DynamicFallbackJustification =
+        "The dynamic Result<T> failure factory is only built when no source-generated factory is " +
+        "registered (the reflection-based AddMediarq assembly scan), which is not used on Native AOT. " +
+        "The AOT path uses the generated AddMediarqHandlers(), which registers the factory via ValidationFailureRegistry.";
+
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
-    // Factory that converts a ValidationError into the failed TResponse. It is built once per
-    // closed generic type (Result or Result&lt;T&gt;) and cached, avoiding per-request reflection.
-    // It is null when TResponse is neither Result nor Result&lt;T&gt;.
-    private static readonly Func<ValidationError, TResponse>? FailureFactory = BuildFailureFactory();
+    // Converts a ValidationError into a failed TResponse, resolved without reflection or dynamic code:
+    // for Result it is a static lambda; for Result<T> it comes from the source-generated
+    // ValidationFailureRegistry. Null when TResponse is neither Result nor a registered Result<T>.
+    private static readonly Func<ValidationError, TResponse>? FailureFactory = BuildSafeFailureFactory();
+
+    // Lazily-built dynamic fallback for Result<T> when no generated factory was registered (scan mode).
+    private static Func<ValidationError, TResponse>? _dynamicFailureFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ValidationBehavior{TRequest, TResponse}"/> class.
@@ -88,6 +97,8 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     ///   <item><description><see cref="Result{T}"/></description></item>
     /// </list>
     /// </remarks>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = DynamicFallbackJustification)]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = DynamicFallbackJustification)]
     public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -115,25 +126,43 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         var validationError = new ValidationError(propertyErrors);
 
+        var factory = FailureFactory ?? ResolveDynamicFailureFactory();
+
         // TResponse is neither Result nor Result<T>: a validation failure cannot be expressed.
-        if (FailureFactory is null)
+        if (factory is null)
         {
             throw new InvalidOperationException($"Validation failed but TResponse type '{typeof(TResponse).Name}' is not a supported Result type.");
         }
 
-        return FailureFactory(validationError);
+        return factory(validationError);
     }
 
     /// <summary>
-    /// Builds, once per closed generic type, the delegate that turns a <see cref="ValidationError"/>
-    /// into a failed <typeparamref name="TResponse"/>. Returns <see langword="null"/> when
-    /// <typeparamref name="TResponse"/> is neither <see cref="Result"/> nor <see cref="Result{T}"/>.
+    /// Builds the reflection-free failure factory: a static lambda for <see cref="Result"/>, or the
+    /// factory registered by the source generator for a <see cref="Result{T}"/> response. Returns
+    /// <see langword="null"/> when neither applies (for example the scan path for <see cref="Result{T}"/>).
     /// </summary>
-    private static Func<ValidationError, TResponse>? BuildFailureFactory()
+    private static Func<ValidationError, TResponse>? BuildSafeFailureFactory()
     {
         if (typeof(TResponse) == typeof(Result))
         {
             return static error => (TResponse)(object)Result.Failure(error);
+        }
+
+        return ValidationFailureRegistry.Get<TResponse>();
+    }
+
+    /// <summary>
+    /// Resolves (and caches) the dynamic <see cref="Result{T}"/> failure factory used only when no
+    /// source-generated factory is registered. Reached only on the reflection-based scan path.
+    /// </summary>
+    [RequiresUnreferencedCode(DynamicFallbackJustification)]
+    [RequiresDynamicCode(DynamicFallbackJustification)]
+    private static Func<ValidationError, TResponse>? ResolveDynamicFailureFactory()
+    {
+        if (_dynamicFailureFactory is not null)
+        {
+            return _dynamicFailureFactory;
         }
 
         if (typeof(TResponse).IsGenericType &&
@@ -147,7 +176,8 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
             ParameterExpression errorParam = Expression.Parameter(typeof(ValidationError), "error");
             Expression body = Expression.Convert(Expression.Call(method, errorParam), typeof(TResponse));
 
-            return Expression.Lambda<Func<ValidationError, TResponse>>(body, errorParam).Compile();
+            _dynamicFailureFactory = Expression.Lambda<Func<ValidationError, TResponse>>(body, errorParam).Compile();
+            return _dynamicFailureFactory;
         }
 
         return null;

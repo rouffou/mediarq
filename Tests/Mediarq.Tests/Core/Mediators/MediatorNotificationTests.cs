@@ -43,8 +43,8 @@ public class MediatorNotificationTests
         handler2.Setup(h => h.Handle(It.IsAny<SampleNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         _resolver
-            .Setup(r => r.ResolveAll(typeof(INotificationHandler<SampleNotification>)))
-            .Returns(new object[] { handler1.Object, handler2.Object });
+            .Setup(r => r.ResolveAll<INotificationHandler<SampleNotification>>())
+            .Returns(new[] { handler1.Object, handler2.Object });
 
         var notification = new SampleNotification("hello");
 
@@ -58,8 +58,8 @@ public class MediatorNotificationTests
     public async Task Publish_ShouldBeNoop_WhenNoHandlersRegistered()
     {
         _resolver
-            .Setup(r => r.ResolveAll(It.IsAny<Type>()))
-            .Returns(Array.Empty<object>());
+            .Setup(r => r.ResolveAll<INotificationHandler<SampleNotification>>())
+            .Returns(Array.Empty<INotificationHandler<SampleNotification>>());
 
         var act = async () => await _mediator.Publish(new SampleNotification("x"));
 

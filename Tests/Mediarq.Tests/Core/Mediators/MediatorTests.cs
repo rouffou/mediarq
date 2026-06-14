@@ -32,7 +32,7 @@ public class MediatorTests
 
         // Default resolver: returns a valid handler
         _mockHandlerResolver
-            .Setup(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)))
+            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
             .Returns(_mockHandler.Object);
 
         _testClass = new Mediator(
@@ -117,8 +117,8 @@ public class MediatorTests
     {
         // Arrange
         _mockHandlerResolver
-            .Setup(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)))
-            .Returns(null);
+            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
+            .Returns((IRequestHandler<TestCommand, Result<string>>)null);
 
         var request = new TestCommand("Hello");
 
@@ -144,7 +144,7 @@ public class MediatorTests
             .ReturnsAsync(Result.Success("OK"));
 
         _mockHandlerResolver
-            .Setup(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)))
+            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
             .Returns(_mockHandler.Object);
 
         _mockRequestContextFactory
@@ -164,7 +164,7 @@ public class MediatorTests
         // Assert
         result.Should().Be(expected);
 
-        _mockHandlerResolver.Verify(r => r.Resolve(typeof(IRequestHandler<TestCommand, Result<string>>)), Times.Once);
+        _mockHandlerResolver.Verify(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>(), Times.Once);
         _mockRequestContextFactory.Verify(f => f.Create<TestCommand, Result<string>>(request, It.IsAny<CancellationToken>()), Times.Once);
         _mockPipelineExecutor.Verify(p => p.ExecuteAsync(
             context,

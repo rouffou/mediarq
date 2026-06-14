@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Mediarq.Core.Common.Resolvers;
 
 /// <summary>
@@ -24,6 +26,10 @@ public class HandlerResolver : IHandlerResolver
     public object? Resolve(Type handlerType) => _resolver(handlerType);
 
     /// <inheritdoc />
+    public TService? Resolve<TService>() where TService : class => _resolver(typeof(TService)) as TService;
+
+    /// <inheritdoc />
+    [RequiresDynamicCode("Resolving by System.Type builds a closed IEnumerable<T> with MakeGenericType. Use ResolveAll<TService>() for an AOT-friendly path.")]
     public IEnumerable<object> ResolveAll(Type handlerType)
     {
         ArgumentNullException.ThrowIfNull(handlerType);
@@ -34,5 +40,18 @@ public class HandlerResolver : IHandlerResolver
         // sequence when no handler is registered). We intentionally do not fall back to
         // resolving a single handler, which would silently mask a misconfigured registration.
         return _resolver(enumerableType) is IEnumerable<object> handlers ? handlers : [];
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<TService> ResolveAll<TService>()
+    {
+        // typeof(IEnumerable<TService>) is a closed constructed type known at the call site,
+        // so no MakeGenericType is involved — this path is trimming/AOT friendly.
+        if (_resolver(typeof(IEnumerable<TService>)) is not IEnumerable<TService> services)
+        {
+            return [];
+        }
+
+        return services as IReadOnlyList<TService> ?? [.. services];
     }
 }
