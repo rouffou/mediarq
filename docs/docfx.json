@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [
+            "Mediarq/Mediarq.csproj",
+            "Mediarq.AspNetCore/Mediarq.AspNetCore.csproj",
+            "Mediarq.FluentValidation/Mediarq.FluentValidation.csproj",
+            "Mediarq.MassTransit/Mediarq.MassTransit.csproj",
+            "Mediarq.Caching/Mediarq.Caching.csproj",
+            "Mediarq.Diagnostics/Mediarq.Diagnostics.csproj",
+            "Mediarq.UnitOfWork/Mediarq.UnitOfWork.csproj",
+            "Mediarq.Polly/Mediarq.Polly.csproj"
+          ]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      { "files": [ "api/**.yml", "api/index.md" ] },
+      { "files": [ "*.md", "toc.yml" ] }
+    ],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appName": "Mediarq",
+      "_appTitle": "Mediarq",
+      "_appFooter": "Mediarq — a lightweight CQRS mediator for .NET. MIT © Nicolas Rouffart.",
+      "_enableSearch": true
+    },
+    "template": [ "default", "modern" ]
+  }
+}
