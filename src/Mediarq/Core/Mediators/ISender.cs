@@ -18,7 +18,7 @@ public interface ISender
     /// <param name="cancellationToken">A token to observe while waiting for completion.</param>
     /// <returns>A task producing the response of type <typeparamref name="TResponse"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is <see langword="null"/>.</exception>
-    /// <exception cref="Mediarq.Core.Common.Exceptions.HandlerNotFoundException">Thrown when no handler is registered for the request.</exception>
+    /// <exception cref="Common.Exceptions.HandlerNotFoundException">Thrown when no handler is registered for the request.</exception>
     Task<TResponse> Send<TResponse>(ICommandOrQuery<TResponse> request, CancellationToken cancellationToken = default);
 
     /// <summary>
