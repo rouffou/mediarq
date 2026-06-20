@@ -169,8 +169,18 @@ the bus.
 
 ## Pipeline behaviors
 
-Cross-cutting logic wraps the handler. Mediarq ships with `LoggingBehavior`, `PerformanceBehavior`
-and `ValidationBehavior`. Add your own by implementing `IPipelineBehavior<TRequest, TResponse>`:
+Cross-cutting logic wraps the handler. The pipeline is **lean by default**: the built-in
+`ValidationBehavior`, pre/post-processor and exception behaviors register only when you actually have a
+validator / processor / exception handler, so an idle request resolves no behavior at all. Request
+logging and performance tracking are **opt-in**:
+
+```csharp
+services.AddMediarq(/* ... */)
+        .AddMediarqRequestLogging()       // LoggingBehavior
+        .AddMediarqPerformanceTracking(); // PerformanceBehavior
+```
+
+Add your own by implementing `IPipelineBehavior<TRequest, TResponse>`:
 
 ```csharp
 public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>

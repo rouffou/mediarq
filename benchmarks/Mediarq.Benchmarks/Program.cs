@@ -1,9 +1,16 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
+using Mediarq.Core.Common.Contexts;
+using Mediarq.Core.Common.Pipeline;
+using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Resolvers;
 using Mediarq.Core.Common.Results;
+using Mediarq.Core.Common.Time;
+using Mediarq.Core.Common.User;
+using Mediarq.Core.Mediators;
 using Mediarq.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using MediarqMediator = Mediarq.Core.Mediators.IMediator;
@@ -26,8 +33,10 @@ BenchmarkRunner.Run([typeof(SendBenchmarks), typeof(PublishBenchmarks)], config)
 public class SendBenchmarks
 {
     private IServiceScope _mediarqScope = null!;
+    private IServiceScope _mediarqLeanScope = null!;
     private IServiceScope _mediatrScope = null!;
     private MediarqMediator _mediarq = null!;
+    private MediarqMediator _mediarqLean = null!;
     private MediatR.IMediator _mediatr = null!;
 
     [GlobalSetup]
@@ -39,6 +48,20 @@ public class SendBenchmarks
         _mediarqScope = mediarqServices.BuildServiceProvider().CreateScope();
         _mediarq = _mediarqScope.ServiceProvider.GetRequiredService<MediarqMediator>();
 
+        // Lean Mediarq: core services + handler only, no pipeline behaviors registered. Isolates the
+        // framework dispatch floor from the per-call cost of resolving the built-in behaviors.
+        var leanServices = new ServiceCollection();
+        leanServices.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
+        leanServices.AddScoped<MediarqMediator, Mediator>();
+        leanServices.AddSingleton<IClock, SystemClock>();
+        leanServices.AddScoped<IRequestContextFactory, RequestContextFactory>();
+        leanServices.AddScoped<IPipelineExecutor, PipelineExecutor>();
+        leanServices.AddSingleton<INotificationPublisher, ParallelNotificationPublisher>();
+        leanServices.AddScoped<IUserContext, DefaultUserContext>();
+        leanServices.AddScoped<IRequestHandler<MediarqPing, Result<string>>, MediarqPingHandler>();
+        _mediarqLeanScope = leanServices.BuildServiceProvider().CreateScope();
+        _mediarqLean = _mediarqLeanScope.ServiceProvider.GetRequiredService<MediarqMediator>();
+
         var mediatrServices = new ServiceCollection();
         mediatrServices.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(SendBenchmarks).Assembly));
         _mediatrScope = mediatrServices.BuildServiceProvider().CreateScope();
@@ -49,6 +72,7 @@ public class SendBenchmarks
     public void Cleanup()
     {
         _mediarqScope.Dispose();
+        _mediarqLeanScope.Dispose();
         _mediatrScope.Dispose();
     }
 
@@ -59,6 +83,13 @@ public class SendBenchmarks
     public async Task<string> Mediarq_Send()
     {
         Result<string> result = await _mediarq.Send(new MediarqPing("x"));
+        return result.Value;
+    }
+
+    [Benchmark]
+    public async Task<string> Mediarq_Send_Lean()
+    {
+        Result<string> result = await _mediarqLean.Send(new MediarqPing("x"));
         return result.Value;
     }
 }
