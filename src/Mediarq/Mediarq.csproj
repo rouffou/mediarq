@@ -28,6 +28,7 @@
     <ProjectReference Include="..\Mediarq.Core\Mediarq.Core.csproj" />
     <ProjectReference Include="..\Mediarq.AspNetCore\Mediarq.AspNetCore.csproj" />
     <ProjectReference Include="..\Mediarq.FluentValidation\Mediarq.FluentValidation.csproj" />
+    <ProjectReference Include="..\Mediarq.DataAnnotations\Mediarq.DataAnnotations.csproj" />
     <ProjectReference Include="..\Mediarq.Caching\Mediarq.Caching.csproj" />
     <ProjectReference Include="..\Mediarq.Diagnostics\Mediarq.Diagnostics.csproj" />
     <ProjectReference Include="..\Mediarq.UnitOfWork\Mediarq.UnitOfWork.csproj" />

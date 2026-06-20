@@ -34,6 +34,7 @@ jobs:
           dotnet pack src/Mediarq/Mediarq.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.AspNetCore/Mediarq.AspNetCore.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.FluentValidation/Mediarq.FluentValidation.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.DataAnnotations/Mediarq.DataAnnotations.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.MassTransit/Mediarq.MassTransit.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Caching/Mediarq.Caching.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Diagnostics/Mediarq.Diagnostics.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
