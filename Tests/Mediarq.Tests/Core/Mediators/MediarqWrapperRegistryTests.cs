@@ -37,19 +37,13 @@ public class MediarqWrapperRegistryTests
 
         var resolver = new Mock<IHandlerResolver>();
         resolver.Setup(r => r.Resolve<IRequestHandler<RegPing, Result<string>>>()).Returns(handler.Object);
+        resolver.Setup(r => r.ResolveAll<IPipelineBehavior<RegPing, Result<string>>>()).Returns([]);
 
         var request = new RegPing("x");
 
         var factory = new Mock<IRequestContextFactory>();
 
-        // The mediator delegates to the request/handler executor overload, which creates the context
-        // lazily; the mock simply invokes the supplied handler.
-        var executor = new Mock<IPipelineExecutor>();
-        executor
-            .Setup(p => p.ExecuteAsync(request, handler.Object, factory.Object, It.IsAny<CancellationToken>()))
-            .Returns((RegPing req, IRequestHandler<RegPing, Result<string>> h, IRequestContextFactory _, CancellationToken ct) => h.Handle(req, ct));
-
-        var mediator = new Mediator(factory.Object, executor.Object, resolver.Object, new ParallelNotificationPublisher(), registry);
+        var mediator = new Mediator(factory.Object, resolver.Object, new ParallelNotificationPublisher(), registry);
 
         var result = await mediator.Send(request);
 
@@ -72,7 +66,6 @@ public class MediarqWrapperRegistryTests
 
         var mediator = new Mediator(
             Mock.Of<IRequestContextFactory>(),
-            Mock.Of<IPipelineExecutor>(),
             resolver.Object,
             new ParallelNotificationPublisher(),
             registry);

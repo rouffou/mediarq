@@ -17,7 +17,6 @@ internal interface IRequestHandlerWrapper<TResponse>
         object request,
         IHandlerResolver handlerResolver,
         IRequestContextFactory requestContextFactory,
-        IPipelineExecutor pipelineExecutor,
         CancellationToken cancellationToken);
 }
 
@@ -35,7 +34,6 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestH
         object request,
         IHandlerResolver handlerResolver,
         IRequestContextFactory requestContextFactory,
-        IPipelineExecutor pipelineExecutor,
         CancellationToken cancellationToken)
     {
         var typedRequest = (TRequest)request;
@@ -43,8 +41,16 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestH
         var handler = handlerResolver.Resolve<IRequestHandler<TRequest, TResponse>>()
             ?? throw new HandlerNotFoundException(typeof(TRequest));
 
-        // The executor creates the request context lazily — only when a behavior is active — so a request
-        // with no active behavior is dispatched straight to the handler with no extra allocation.
-        return pipelineExecutor.ExecuteAsync(typedRequest, handler, requestContextFactory, cancellationToken);
+        // Dispatch inline (no executor hop): resolve the behaviors, and when none are active for this
+        // request type, invoke the handler directly — no request-context allocation, no delegate chain.
+        var behaviors = handlerResolver.ResolveAll<IPipelineBehavior<TRequest, TResponse>>();
+        var active = PipelineDispatch.SelectActive<TRequest, TResponse>(behaviors, out var activeCount);
+        if (active is null)
+        {
+            return handler.Handle(typedRequest, cancellationToken);
+        }
+
+        RequestContext<TRequest, TResponse> context = requestContextFactory.Create<TRequest, TResponse>(typedRequest, cancellationToken);
+        return PipelineDispatch.Run(active, activeCount, context, ct => handler.Handle(typedRequest, ct), cancellationToken);
     }
 }

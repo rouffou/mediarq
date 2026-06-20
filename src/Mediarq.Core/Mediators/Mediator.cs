@@ -43,7 +43,6 @@ public class Mediator : IMediator
     private static readonly ConcurrentDictionary<Type, object> StreamWrappers = new();
 
     private readonly IRequestContextFactory _requestContextFactory;
-    private readonly IPipelineExecutor _pipelineExecutor;
     private readonly IHandlerResolver _handlerResolver;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly MediarqWrapperRegistry? _wrapperRegistry;
@@ -54,9 +53,6 @@ public class Mediator : IMediator
     /// </summary>
     /// <param name="requestContextFactory">
     /// The factory used to create <see cref="RequestContext{TRequest, TResponse}"/> instances that encapsulate metadata about the request.
-    /// </param>
-    /// <param name="pipelineExecutor">
-    /// The component responsible for executing the pipeline of behaviors and invoking the request handler.
     /// </param>
     /// <param name="handlerResolver">
     /// The resolver used to obtain handlers and behaviors from the dependency injection container.
@@ -78,7 +74,6 @@ public class Mediator : IMediator
     /// </exception>
     public Mediator(
         IRequestContextFactory requestContextFactory,
-        IPipelineExecutor pipelineExecutor,
         IHandlerResolver handlerResolver,
         INotificationPublisher notificationPublisher,
         MediarqWrapperRegistry? wrapperRegistry = null,
@@ -86,11 +81,9 @@ public class Mediator : IMediator
     {
         ArgumentNullException.ThrowIfNull(handlerResolver);
         ArgumentNullException.ThrowIfNull(requestContextFactory);
-        ArgumentNullException.ThrowIfNull(pipelineExecutor);
         ArgumentNullException.ThrowIfNull(notificationPublisher);
 
         _requestContextFactory = requestContextFactory;
-        _pipelineExecutor = pipelineExecutor;
         _handlerResolver = handlerResolver;
         _notificationPublisher = notificationPublisher;
         _wrapperRegistry = wrapperRegistry;
@@ -110,7 +103,7 @@ public class Mediator : IMediator
 
         try
         {
-            return wrapper.Handle(request, _handlerResolver, _requestContextFactory, _pipelineExecutor, cancellationToken);
+            return wrapper.Handle(request, _handlerResolver, _requestContextFactory, cancellationToken);
         }
         catch (HandlerNotFoundException)
         {

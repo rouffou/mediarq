@@ -51,7 +51,7 @@ public class SendBenchmarks
         // Lean Mediarq: core services + handler only, no pipeline behaviors registered. Isolates the
         // framework dispatch floor from the per-call cost of resolving the built-in behaviors.
         var leanServices = new ServiceCollection();
-        leanServices.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
+        leanServices.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp));
         leanServices.AddScoped<MediarqMediator, Mediator>();
         leanServices.AddSingleton<IClock, SystemClock>();
         leanServices.AddScoped<IRequestContextFactory, RequestContextFactory>();
@@ -92,6 +92,11 @@ public class SendBenchmarks
         Result<string> result = await _mediarqLean.Send(new MediarqPing("x"));
         return result.Value;
     }
+
+    // Returns a raw string (no Result<T> wrapper) so the comparison with MediatR's raw-string handler is
+    // apples-to-apples — isolating the framework cost from the Result<T> allocation/validation.
+    [Benchmark]
+    public Task<string> Mediarq_Send_Plain() => _mediarq.Send(new MediarqPingPlain("x"));
 }
 
 public record MediarqPing(string Message) : ICommand<Result<string>>;
@@ -100,6 +105,14 @@ public sealed class MediarqPingHandler : ICommandHandler<MediarqPing, Result<str
 {
     public Task<Result<string>> Handle(MediarqPing request, CancellationToken cancellationToken = default)
         => Task.FromResult(Result.Success(request.Message));
+}
+
+public record MediarqPingPlain(string Message) : ICommand<string>;
+
+public sealed class MediarqPingPlainHandler : ICommandHandler<MediarqPingPlain, string>
+{
+    public Task<string> Handle(MediarqPingPlain request, CancellationToken cancellationToken = default)
+        => Task.FromResult(request.Message);
 }
 
 public record MediatRPing(string Message) : MediatR.IRequest<string>;
