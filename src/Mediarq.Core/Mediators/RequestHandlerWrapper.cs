@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
@@ -7,13 +8,17 @@ using Mediarq.Core.Common.Resolvers;
 namespace Mediarq.Core.Mediators;
 
 /// <summary>
-/// Generic over the response type, exposing the entry point the <see cref="Mediator"/> calls.
-/// Implementations are cached (as <see cref="object"/>) per concrete request type.
+/// Generic over the response type, exposing the entry point the <see cref="Mediator"/> calls. An
+/// abstract class (rather than an interface) so the call dispatches through a vtable slot, which is a
+/// little cheaper than interface dispatch on this hot path. Implementations are cached (as
+/// <see cref="object"/>) per concrete request type.
 /// </summary>
 /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
-internal interface IRequestHandlerWrapper<TResponse>
+[SuppressMessage("Major Code Smell", "S1694:An abstract class should have both abstract and concrete methods",
+    Justification = "Intentionally an abstract class, not an interface: vtable dispatch is cheaper than interface dispatch on the mediator hot path.")]
+internal abstract class RequestHandlerWrapper<TResponse>
 {
-    Task<TResponse> Handle(
+    public abstract Task<TResponse> Handle(
         object request,
         IHandlerResolver handlerResolver,
         IRequestContextFactory requestContextFactory,
@@ -27,10 +32,10 @@ internal interface IRequestHandlerWrapper<TResponse>
 /// </summary>
 /// <typeparam name="TRequest">The concrete request type.</typeparam>
 /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
-internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestHandlerWrapper<TResponse>
+internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : RequestHandlerWrapper<TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
-    public Task<TResponse> Handle(
+    public override Task<TResponse> Handle(
         object request,
         IHandlerResolver handlerResolver,
         IRequestContextFactory requestContextFactory,

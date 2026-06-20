@@ -39,7 +39,7 @@ public class Mediator : IMediator
     // Fallback caches, keyed per concrete request/notification type. Only used when no registry is
     // supplied. Wrappers are stateless and thread-safe.
     private static readonly ConcurrentDictionary<Type, object> Wrappers = new();
-    private static readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> NotificationWrappers = new();
+    private static readonly ConcurrentDictionary<Type, NotificationHandlerWrapper> NotificationWrappers = new();
     private static readonly ConcurrentDictionary<Type, object> StreamWrappers = new();
 
     private readonly IRequestContextFactory _requestContextFactory;
@@ -157,24 +157,24 @@ public class Mediator : IMediator
     // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
     [RequiresUnreferencedCode(FallbackJustification)]
     [RequiresDynamicCode(FallbackJustification)]
-    private static IRequestHandlerWrapper<TResponse> GetOrCreateRequestWrapper<TResponse>(Type requestType)
+    private static RequestHandlerWrapper<TResponse> GetOrCreateRequestWrapper<TResponse>(Type requestType)
     {
         if (Wrappers.TryGetValue(requestType, out var existing))
         {
-            return (IRequestHandlerWrapper<TResponse>)existing;
+            return (RequestHandlerWrapper<TResponse>)existing;
         }
 
         var wrapperType = typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
         var wrapper = Activator.CreateInstance(wrapperType)
             ?? throw new InvalidOperationException($"Could not create a handler wrapper for request type '{requestType}'.");
 
-        return (IRequestHandlerWrapper<TResponse>)Wrappers.GetOrAdd(requestType, wrapper);
+        return (RequestHandlerWrapper<TResponse>)Wrappers.GetOrAdd(requestType, wrapper);
     }
 
     // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
     [RequiresUnreferencedCode(FallbackJustification)]
     [RequiresDynamicCode(FallbackJustification)]
-    private static INotificationHandlerWrapper GetOrCreateNotificationWrapper(Type notificationType)
+    private static NotificationHandlerWrapper GetOrCreateNotificationWrapper(Type notificationType)
     {
         if (NotificationWrappers.TryGetValue(notificationType, out var existing))
         {
@@ -182,7 +182,7 @@ public class Mediator : IMediator
         }
 
         var wrapperType = typeof(NotificationHandlerWrapperImpl<>).MakeGenericType(notificationType);
-        var wrapper = (INotificationHandlerWrapper)(Activator.CreateInstance(wrapperType)
+        var wrapper = (NotificationHandlerWrapper)(Activator.CreateInstance(wrapperType)
             ?? throw new InvalidOperationException($"Could not create a notification wrapper for type '{notificationType}'."));
 
         return NotificationWrappers.GetOrAdd(notificationType, wrapper);
@@ -191,17 +191,17 @@ public class Mediator : IMediator
     // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
     [RequiresUnreferencedCode(FallbackJustification)]
     [RequiresDynamicCode(FallbackJustification)]
-    private static IStreamRequestHandlerWrapper<TResponse> GetOrCreateStreamWrapper<TResponse>(Type requestType)
+    private static StreamRequestHandlerWrapper<TResponse> GetOrCreateStreamWrapper<TResponse>(Type requestType)
     {
         if (StreamWrappers.TryGetValue(requestType, out var existing))
         {
-            return (IStreamRequestHandlerWrapper<TResponse>)existing;
+            return (StreamRequestHandlerWrapper<TResponse>)existing;
         }
 
         var wrapperType = typeof(StreamRequestHandlerWrapperImpl<,>).MakeGenericType(requestType, typeof(TResponse));
         var wrapper = Activator.CreateInstance(wrapperType)
             ?? throw new InvalidOperationException($"Could not create a stream handler wrapper for request type '{requestType}'.");
 
-        return (IStreamRequestHandlerWrapper<TResponse>)StreamWrappers.GetOrAdd(requestType, wrapper);
+        return (StreamRequestHandlerWrapper<TResponse>)StreamWrappers.GetOrAdd(requestType, wrapper);
     }
 }
