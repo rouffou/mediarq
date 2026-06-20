@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- The reflection-free path (AddMediarqCore + generated AddMediarqHandlers) is trimming/AOT safe.
+         The reflection-based AddMediarq scan is annotated [RequiresUnreferencedCode]. -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Mediarq.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nicolas Rouffart</Authors>
+    <Description>Core of Mediarq: a lightweight, dependency-free CQRS mediator for .NET (commands, queries, notifications, pipeline behaviors, validation, Result, source generator). The Mediarq meta-package bundles this with the optional extensions.</Description>
+    <PackageTags>mediator;cqrs;ddd;pipeline;notifications;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See the changelog: https://github.com/rouffou/mediarq/blob/main/CHANGELOG.md</PackageReleaseNotes>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Scrutor" Version="6.1.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.15.0.120848">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build the source generator and pack it as an analyzer; its output assembly is not referenced at runtime. -->
+    <ProjectReference Include="..\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="..\Mediarq.SourceGenerators\bin\$(Configuration)\netstandard2.0\Mediarq.SourceGenerators.dll"
+          Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <!-- Exposes MediarqGeneratedAccessibility to the source generator in consumers (auto-imported as build/{PackageId}.props). -->
+    <None Include="build\Mediarq.Core.props" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+</Project>

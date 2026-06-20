@@ -12,7 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Mediarq\Mediarq.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Core\Mediarq.Core.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.AspNetCore\Mediarq.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>
