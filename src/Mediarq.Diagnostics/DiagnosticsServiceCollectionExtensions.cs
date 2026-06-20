@@ -24,6 +24,7 @@ public static class DiagnosticsServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(DiagnosticsBehavior<,>));
+        services.AddScoped(typeof(IStreamPipelineBehavior<,>), typeof(StreamDiagnosticsBehavior<,>));
         return services;
     }
 }

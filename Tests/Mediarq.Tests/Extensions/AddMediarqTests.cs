@@ -118,6 +118,24 @@ public class AddMediarqTests
     }
 
     [Fact]
+    public async Task Stream_Pipeline_Behavior_Wraps_The_Stream()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var trace = scope.ServiceProvider.GetRequiredService<ExecutionTrace>();
+
+        var items = new List<int>();
+        await foreach (var item in mediator.CreateStream(new CountStream(2)))
+        {
+            items.Add(item);
+        }
+
+        items.Should().Equal(1, 2);
+        trace.Entries.Should().ContainInOrder("stream:before", "stream:after");
+    }
+
+    [Fact]
     public async Task Runs_Pre_And_Post_Processors_Around_Handler()
     {
         using var provider = BuildProvider();
@@ -210,6 +228,24 @@ public class AddMediarqTests
         }
 
         items.Should().Equal(1, 2, 3, 4);
+    }
+
+    [Fact]
+    public async Task Generated_Registration_Applies_Stream_Pipeline_Behavior()
+    {
+        using var provider = BuildGeneratedProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var trace = scope.ServiceProvider.GetRequiredService<ExecutionTrace>();
+
+        var items = new List<int>();
+        await foreach (var item in mediator.CreateStream(new CountStream(2)))
+        {
+            items.Add(item);
+        }
+
+        items.Should().Equal(1, 2);
+        trace.Entries.Should().ContainInOrder("stream:before", "stream:after");
     }
 
     [Fact]

@@ -228,6 +228,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         "Mediarq.Core.Common.Requests.Abstraction.IRequestHandler`2" => HandlerKind.RequestHandler,
         "Mediarq.Core.Common.Requests.Notifications.INotificationHandler`1" => HandlerKind.NotificationHandler,
         "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" => HandlerKind.Behavior,
+        "Mediarq.Core.Common.Pipeline.IStreamPipelineBehavior`2" => HandlerKind.Behavior,
         "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
         "Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler`2" => HandlerKind.ExceptionHandler,
         "Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler`2" => HandlerKind.StreamHandler,

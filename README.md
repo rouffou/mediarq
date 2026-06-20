@@ -259,6 +259,7 @@ Built into `Mediarq.Core`:
 
 - **Exception handling** — implement `IRequestExceptionHandler<TRequest, TResponse>` to turn an exception into a response (typically a failed `Result`).
 - **Pre/post processors** — `IRequestPreProcessor<TRequest>` and `IRequestPostProcessor<TRequest, TResponse>` run around the handler.
+- **Streaming pipeline** — `IStreamPipelineBehavior<TRequest, TResponse>` wraps `CreateStream` with the same ordering as `Send` behaviors.
 - **Lifetime control** — opt a handler into a DI lifetime with `[RegisterHandler(ServiceLifetime.Singleton)]`.
 - **Validation localization** — translate messages via `IValidationMessageResolver`.
 - **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, plus cross async `MapAsync`/`BindAsync` overloads.
