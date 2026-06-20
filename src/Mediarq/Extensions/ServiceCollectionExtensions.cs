@@ -6,6 +6,7 @@ using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Requests.Exceptions;
 using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Requests.Query;
+using Mediarq.Core.Common.Requests.Streaming;
 using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Resolvers;
 using Mediarq.Core.Common.Time;
@@ -93,6 +94,9 @@ public static class ServiceCollectionExtensions
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
             .AddClasses(c => c.AssignableTo(typeof(IRequestExceptionHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IStreamRequestHandler<,>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime());
 
