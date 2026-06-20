@@ -31,6 +31,14 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor MissingHandler = new(
+        id: "MQ002",
+        title: "No request handler found for a command or query",
+        messageFormat: "No IRequestHandler was found in this assembly for '{0}'. Define a handler, or ignore this if the handler lives in another assembly.",
+        category: "Mediarq",
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -69,6 +77,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             return default;
         }
 
+        var lifetime = ReadLifetime(type);
+
         var list = new List<HandlerRegistration>();
         foreach (var iface in type.AllInterfaces)
         {
@@ -93,7 +103,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     RequestType: null,
                     ResponseType: null,
                     NotificationType: null,
-                    ResponseIsGenericResult: false));
+                    ResponseIsGenericResult: false,
+                    Lifetime: lifetime));
             }
             else
             {
@@ -108,6 +119,11 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     responseType = iface.TypeArguments[1].ToDisplayString(FullyQualified);
                     responseIsGenericResult = IsGenericResult(iface.TypeArguments[1]);
                 }
+                else if (kind == HandlerKind.StreamHandler && iface.TypeArguments.Length == 2)
+                {
+                    requestType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
+                    responseType = iface.TypeArguments[1].ToDisplayString(FullyQualified);
+                }
                 else if (kind == HandlerKind.NotificationHandler && iface.TypeArguments.Length == 1)
                 {
                     notificationType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
@@ -121,11 +137,44 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     RequestType: requestType,
                     ResponseType: responseType,
                     NotificationType: notificationType,
-                    ResponseIsGenericResult: responseIsGenericResult));
+                    ResponseIsGenericResult: responseIsGenericResult,
+                    Lifetime: lifetime));
             }
         }
 
+        // Not a handler/behavior/validator but a declared command/query: track it so a missing
+        // handler can be diagnosed (MQ002).
+        if (list.Count == 0 && !type.IsGenericType && ImplementsCommandOrQuery(type))
+        {
+            var requestFqn = type.ToDisplayString(FullyQualified);
+            list.Add(new HandlerRegistration(
+                requestFqn,
+                string.Empty,
+                IsOpenGeneric: false,
+                Kind: HandlerKind.Request,
+                RequestType: requestFqn,
+                ResponseType: null,
+                NotificationType: null,
+                ResponseIsGenericResult: false,
+                Lifetime: "Scoped"));
+        }
+
         return new EquatableArray<HandlerRegistration>(list.ToImmutableArray());
+    }
+
+    private static bool ImplementsCommandOrQuery(INamedTypeSymbol type)
+    {
+        foreach (var iface in type.AllInterfaces)
+        {
+            var definition = iface.OriginalDefinition;
+            if (definition.MetadataName == "ICommandOrQuery`1" &&
+                definition.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Requests.Abstraction")
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsGenericResult(ITypeSymbol responseType) =>
@@ -133,6 +182,38 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         named.IsGenericType &&
         named.OriginalDefinition.MetadataName == "Result`1" &&
         (named.OriginalDefinition.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Results");
+
+    // Reads the [RegisterHandler(ServiceLifetime)] attribute, defaulting to Scoped.
+    // ServiceLifetime: Singleton = 0, Scoped = 1, Transient = 2.
+    private static string ReadLifetime(INamedTypeSymbol type)
+    {
+        foreach (var attribute in type.GetAttributes())
+        {
+            var attributeClass = attribute.AttributeClass;
+            if (attributeClass is null)
+            {
+                continue;
+            }
+
+            if (attributeClass.Name == "RegisterHandlerAttribute" &&
+                attributeClass.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Registration")
+            {
+                if (attribute.ConstructorArguments.Length > 0 && attribute.ConstructorArguments[0].Value is int value)
+                {
+                    return value switch
+                    {
+                        0 => "Singleton",
+                        2 => "Transient",
+                        _ => "Scoped",
+                    };
+                }
+
+                return "Scoped";
+            }
+        }
+
+        return "Scoped";
+    }
 
     private static bool IsTarget(string key) => KindOf(key) != HandlerKind.Other;
 
@@ -143,6 +224,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         "Mediarq.Core.Common.Pipeline.IPipelineBehavior`2" => HandlerKind.Behavior,
         "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
         "Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler`2" => HandlerKind.ExceptionHandler,
+        "Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler`2" => HandlerKind.StreamHandler,
         _ => HandlerKind.Other,
     };
 
@@ -154,6 +236,18 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             if (group.Select(r => r.ImplType).Distinct().Count() > 1)
             {
                 context.ReportDiagnostic(Diagnostic.Create(MultipleHandlers, Location.None, group.Key));
+            }
+        }
+
+        // Diagnose a declared command/query that has no handler in this assembly (MQ002, informational).
+        var handledRequestTypes = new HashSet<string>(
+            registrations.Where(r => r.Kind == HandlerKind.RequestHandler && r.RequestType != null).Select(r => r.RequestType!));
+
+        foreach (var request in registrations.Where(r => r.Kind == HandlerKind.Request && r.RequestType != null))
+        {
+            if (!handledRequestTypes.Contains(request.RequestType!))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(MissingHandler, Location.None, request.RequestType));
             }
         }
 
@@ -171,15 +265,15 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         sb.AppendLine("        internal static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
         sb.AppendLine("        {");
 
-        foreach (var reg in registrations.OrderBy(r => r.ServiceType + "|" + r.ImplType, StringComparer.Ordinal))
+        foreach (var reg in registrations.Where(r => r.Kind != HandlerKind.Request).OrderBy(r => r.ServiceType + "|" + r.ImplType, StringComparer.Ordinal))
         {
             if (reg.IsOpenGeneric)
             {
-                sb.Append("            services.AddScoped(typeof(").Append(reg.ServiceType).Append("), typeof(").Append(reg.ImplType).AppendLine("));");
+                sb.Append("            services.Add").Append(reg.Lifetime).Append("(typeof(").Append(reg.ServiceType).Append("), typeof(").Append(reg.ImplType).AppendLine("));");
             }
             else
             {
-                sb.Append("            services.AddScoped<").Append(reg.ServiceType).Append(", ").Append(reg.ImplType).AppendLine(">();");
+                sb.Append("            services.Add").Append(reg.Lifetime).Append('<').Append(reg.ServiceType).Append(", ").Append(reg.ImplType).AppendLine(">();");
             }
         }
 
@@ -209,6 +303,13 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             .OrderBy(s => s, StringComparer.Ordinal)
             .ToList();
 
+        var streamWrappers = registrations
+            .Where(r => r.Kind == HandlerKind.StreamHandler && !r.IsOpenGeneric && r.RequestType != null && r.ResponseType != null)
+            .Select(r => r.RequestType + "|" + r.ResponseType)
+            .Distinct()
+            .OrderBy(s => s, StringComparer.Ordinal)
+            .ToList();
+
         // Result<T> responses get a reflection-free validation-failure factory so ValidationBehavior
         // can short-circuit without dynamic code on AOT.
         var resultResponses = registrations
@@ -218,7 +319,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             .OrderBy(s => s, StringComparer.Ordinal)
             .ToList();
 
-        if (requestWrappers.Count == 0 && notificationWrappers.Count == 0)
+        if (requestWrappers.Count == 0 && notificationWrappers.Count == 0 && streamWrappers.Count == 0)
         {
             return;
         }
@@ -234,6 +335,12 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         foreach (var notification in notificationWrappers)
         {
             sb.Append("            registry.AddNotification<").Append(notification).AppendLine(">();");
+        }
+
+        foreach (var pair in streamWrappers)
+        {
+            var parts = pair.Split('|');
+            sb.Append("            registry.AddStream<").Append(parts[0]).Append(", ").Append(parts[1]).AppendLine(">();");
         }
 
         sb.AppendLine("            services.AddSingleton(registry);");
@@ -258,6 +365,10 @@ internal enum HandlerKind
     Behavior,
     Validator,
     ExceptionHandler,
+    StreamHandler,
+
+    /// <summary>A declared command/query (implements ICommandOrQuery&lt;T&gt;), tracked only to diagnose a missing handler.</summary>
+    Request,
 }
 
 /// <summary>One discovered DI registration to emit.</summary>
@@ -269,4 +380,5 @@ internal readonly record struct HandlerRegistration(
     string? RequestType,
     string? ResponseType,
     string? NotificationType,
-    bool ResponseIsGenericResult);
+    bool ResponseIsGenericResult,
+    string Lifetime);

@@ -7,10 +7,10 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 - ✅ Commands / queries returning a `Result` (railway-oriented)
 - ✅ No-result (void) commands routed through the same pipeline
 - ✅ Notifications published to multiple handlers
-- ✅ Pipeline behaviors (logging, performance, validation) + your own, orderable
+- ✅ Streaming requests (`IStreamRequest<T>` → `IAsyncEnumerable<T>`)
+- ✅ Pipeline behaviors (logging, performance, validation, exception handling) + your own, orderable
 - ✅ Built-in validation abstraction and `Result` / `ResultError` types
-- ✅ No `dynamic` on the dispatch path — strongly-typed wrappers cached per request type
-- ✅ Optional **source generator** for compile-time, reflection-free registration (trimming/AOT friendly)
+- ✅ **Reflection-free dispatch** via an optional source generator — **trimming/Native AOT friendly**
 - ✅ Functional `Result` combinators (`Map`, `Bind`, `Match`, `Tap`, `Ensure`)
 
 > Targets **.NET 8, .NET 9 and .NET 10**.
@@ -220,6 +220,25 @@ string message =
 // async, over Task<Result<T>>
 Result<int> doubled = await GetResultAsync().MapAsync(x => x * 2);
 ```
+
+## Extension packages
+
+Mediarq ships optional, opt-in packages so the core stays dependency-free:
+
+| Package | Purpose |
+|---|---|
+| `Mediarq.AspNetCore` | Map `Result` / `ResultError` → `IResult` and RFC 7807 ProblemDetails |
+| `Mediarq.FluentValidation` | Run FluentValidation validators in the Mediarq pipeline |
+| `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) |
+| `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
+| `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |
+| `Mediarq.Polly` | Retry / timeout / circuit breaker for `IResilientRequest` via Polly (`AddMediarqResilience`) |
+| `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
+
+Exception handling is built in: implement `IRequestExceptionHandler<TRequest, TResponse>` to turn an
+exception into a response (typically a failed `Result`). Handlers can opt into a DI lifetime with
+`[RegisterHandler(ServiceLifetime.Singleton)]`, and validation messages can be localized via
+`IValidationMessageResolver`.
 
 ## License
 
