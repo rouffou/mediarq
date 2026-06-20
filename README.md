@@ -236,6 +236,10 @@ public class CreateUserCommandValidator : IValidator<CreateUserCommand>
 }
 ```
 
+Notifications are validated too: define an `IValidator<TNotification>` and it runs automatically before
+the notification is published. Because a notification has no return value, an invalid one throws a
+`NotificationValidationException` (carrying the property errors) instead of returning a failed `Result`.
+
 ## The `Result` type
 
 `Result` / `Result<T>` express success or failure without exceptions:

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Core.Mediators;
@@ -37,6 +38,53 @@ internal sealed class NotificationHandlerWrapperImpl<TNotification> : Notificati
     {
         var typedNotification = (TNotification)notification;
 
+        // Validate the notification first when a validator is registered for it. A notification has no
+        // return value, so an invalid one (a programming error) is reported by throwing rather than being
+        // published. The common case (no validator) stays on the synchronous fast path below.
+        var validators = handlerResolver.ResolveAll<IValidator<TNotification>>();
+        if (validators is { Count: > 0 })
+        {
+            return ValidateThenPublish(typedNotification, validators, handlerResolver, notificationPublisher, cancellationToken);
+        }
+
+        return PublishCore(typedNotification, handlerResolver, notificationPublisher, cancellationToken);
+    }
+
+    private static async Task ValidateThenPublish(
+        TNotification notification,
+        IReadOnlyList<IValidator<TNotification>> validators,
+        IHandlerResolver handlerResolver,
+        INotificationPublisher notificationPublisher,
+        CancellationToken cancellationToken)
+    {
+        List<ValidationPropertyError>? failures = null;
+        for (var i = 0; i < validators.Count; i++)
+        {
+            var results = await validators[i].ValidateAsync(notification, cancellationToken).ConfigureAwait(false);
+            foreach (var result in results)
+            {
+                if (!result.IsValid)
+                {
+                    failures ??= [];
+                    failures.AddRange(result.Errors);
+                }
+            }
+        }
+
+        if (failures is { Count: > 0 })
+        {
+            throw new NotificationValidationException(typeof(TNotification), failures);
+        }
+
+        await PublishCore(notification, handlerResolver, notificationPublisher, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static Task PublishCore(
+        TNotification typedNotification,
+        IHandlerResolver handlerResolver,
+        INotificationPublisher notificationPublisher,
+        CancellationToken cancellationToken)
+    {
         IReadOnlyList<INotificationHandler<TNotification>> handlers =
             handlerResolver.ResolveAll<INotificationHandler<TNotification>>();
 

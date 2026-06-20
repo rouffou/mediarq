@@ -2,6 +2,7 @@ using FluentAssertions;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Validators;
 using Mediarq.Core.Common.Resolvers;
 using Mediarq.Core.Mediators;
 using Moq;
@@ -124,6 +125,62 @@ public class MediatorNotificationTests
         await mediator.Publish(new SampleNotification("x"));
 
         log.Should().Equal(1, 2);
+    }
+
+    [Fact]
+    public async Task Publish_Runs_Handlers_When_Notification_Is_Valid()
+    {
+        var handler = new Mock<INotificationHandler<SampleNotification>>();
+        handler.Setup(h => h.Handle(It.IsAny<SampleNotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        _resolver
+            .Setup(r => r.ResolveAll<IValidator<SampleNotification>>())
+            .Returns(new IValidator<SampleNotification>[] { new SampleNotificationValidator() });
+        _resolver
+            .Setup(r => r.ResolveAll<INotificationHandler<SampleNotification>>())
+            .Returns(new[] { handler.Object });
+
+        var notification = new SampleNotification("ok");
+
+        await _mediator.Publish(notification);
+
+        handler.Verify(h => h.Handle(notification, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Publish_Throws_And_Skips_Handlers_When_Notification_Is_Invalid()
+    {
+        var handler = new Mock<INotificationHandler<SampleNotification>>();
+
+        _resolver
+            .Setup(r => r.ResolveAll<IValidator<SampleNotification>>())
+            .Returns(new IValidator<SampleNotification>[] { new SampleNotificationValidator() });
+        _resolver
+            .Setup(r => r.ResolveAll<INotificationHandler<SampleNotification>>())
+            .Returns(new[] { handler.Object });
+
+        // Empty message fails the validator.
+        var act = () => _mediator.Publish(new SampleNotification(""));
+
+        (await act.Should().ThrowAsync<NotificationValidationException>())
+            .Which.Errors.Should().ContainSingle(e => e.PropertyName == nameof(SampleNotification.Message));
+
+        handler.Verify(h => h.Handle(It.IsAny<SampleNotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private sealed class SampleNotificationValidator : IValidator<SampleNotification>
+    {
+        public IEnumerable<ValidationResult> Validate(SampleNotification instance)
+        {
+            if (string.IsNullOrWhiteSpace(instance.Message))
+            {
+                yield return ValidationResult.Failure([new ValidationPropertyError(nameof(SampleNotification.Message), "Message is required.")]);
+            }
+            else
+            {
+                yield return ValidationResult.Success();
+            }
+        }
     }
 
     private sealed class OrderedHandler(int order, List<int> log) : INotificationHandler<SampleNotification>, IOrderedNotificationHandler
