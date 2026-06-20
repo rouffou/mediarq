@@ -252,7 +252,9 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.DataAnnotations` | Validate requests with `System.ComponentModel.DataAnnotations` attributes (`AddMediarqDataAnnotations`) |
 | `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
+| `Mediarq.OpenTelemetry` | One-line `AddMediarqInstrumentation()` on the tracer/meter provider builders |
 | `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |
+| `Mediarq.EntityFrameworkCore` | `EfCoreUnitOfWork<TContext>` over a `DbContext` (`AddMediarqEntityFrameworkCore`) |
 | `Mediarq.Polly` | Retry / timeout / circuit breaker for `IResilientRequest` via Polly (`AddMediarqResilience`) |
 | `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
 
