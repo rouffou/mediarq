@@ -25,13 +25,16 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 ## Installation
 
 ```bash
-dotnet add package Mediarq        # meta-package: core + every official extension
+dotnet add package Mediarq        # lean meta-package: core + lightweight extensions
 # or, for the core only:
 dotnet add package Mediarq.Core   # mediator, pipeline, results, source generator
 ```
 
-The **`Mediarq`** meta-package bundles `Mediarq.Core` with all optional extensions (see
-[Extension packages](#extension-packages)); reference `Mediarq.Core` plus only the extensions you
+The **`Mediarq`** meta-package bundles `Mediarq.Core` with the lightweight extensions (ASP.NET Core,
+FluentValidation, DataAnnotations, Caching, Diagnostics, UnitOfWork). Heavy or opinionated
+integrations — `Mediarq.EntityFrameworkCore`, `Mediarq.OpenTelemetry`, `Mediarq.MassTransit` and
+`Mediarq.Polly` — ship separately and are installed explicitly when needed (see
+[Extension packages](#extension-packages)). Reference `Mediarq.Core` plus only the extensions you
 need to keep dependencies minimal.
 
 ## Getting started
