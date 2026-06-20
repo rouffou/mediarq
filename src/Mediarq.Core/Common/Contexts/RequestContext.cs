@@ -21,17 +21,33 @@ public record RequestContext<TRequest, TResponse>
     : IMutableRequestContext<TRequest, TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
-    private readonly IDictionary<string, object> _items = new Dictionary<string, object>();
+    // Lazily-initialized so the common hot path (a request whose context metadata is never read) pays
+    // for none of these. The identifiers/timestamp are still stable once observed, and assigning them
+    // via init keeps the eager-set behavior for callers that need a specific value.
+    private static readonly IReadOnlyDictionary<string, object> EmptyItems =
+        new Dictionary<string, object>(0).AsReadOnly();
+
+    private Dictionary<string, object>? _items;
+    private Guid? _requestId;
+    private Guid? _correlationId;
 
     /// <summary>
     /// Gets the unique identifier for the request.
     /// </summary>
-    public Guid RequestId { get; init; } = Guid.NewGuid();
+    public Guid RequestId
+    {
+        get => _requestId ??= Guid.NewGuid();
+        init => _requestId = value;
+    }
 
     /// <summary>
     /// Gets the unique identifier used to correlate related operations or requests.
     /// </summary>
-    public Guid CorrelationId { get; init; } = Guid.NewGuid();
+    public Guid CorrelationId
+    {
+        get => _correlationId ??= Guid.NewGuid();
+        init => _correlationId = value;
+    }
 
     /// <summary>
     /// Gets the unique identifier of the user associated with this instance.
@@ -67,7 +83,7 @@ public record RequestContext<TRequest, TResponse>
     /// </summary>
     /// <remarks>The returned dictionary provides access to all items stored in the context, using string
     /// keys. Modifying the returned collection is not supported.</remarks>
-    public IReadOnlyDictionary<string, object> Items => _items.AsReadOnly();
+    public IReadOnlyDictionary<string, object> Items => _items is null ? EmptyItems : _items.AsReadOnly();
 
     /// <summary>
     /// Gets the elapsed time between the start and finish of the operation, or between the start and the current time
@@ -103,6 +119,7 @@ public record RequestContext<TRequest, TResponse>
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentNullException.ThrowIfNull(value);
+        _items ??= new Dictionary<string, object>();
         _items[key] = value;
     }
 
@@ -110,9 +127,8 @@ public record RequestContext<TRequest, TResponse>
     public bool TryGetItem<T>(string key, [MaybeNullWhen(false)] out T value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        ArgumentNullException.ThrowIfNull(_items);
 
-        if (_items.TryGetValue(key, out var obj) && obj is T casted)
+        if (_items is not null && _items.TryGetValue(key, out var obj) && obj is T casted)
         {
             value = casted;
             return true;
@@ -122,5 +138,5 @@ public record RequestContext<TRequest, TResponse>
     }
 
     /// <see cref="IMutableRequestContext{TRequest, TResponse}.RemoveItem(string)"/>
-    public bool RemoveItem(string key) => _items.Remove(key);
+    public bool RemoveItem(string key) => _items is not null && _items.Remove(key);
 }

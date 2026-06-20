@@ -201,6 +201,13 @@ public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TR
 }
 ```
 
+A behavior can also opt out of the pipeline per request type by implementing
+`IConditionalPipelineBehavior` and returning `IsActive => false` — the executor then omits it entirely,
+adding neither an async frame nor a delegate. The built-in behaviors use this so an idle pipeline costs
+nothing: validation/pre/post/exception activate only when a validator, processor or exception handler is
+registered, and logging/performance only when the matching log level is enabled. As a result, dispatch
+for a request with no active behavior goes straight to the handler — allocations are on par with MediatR.
+
 ## Validation
 
 Implement `IValidator<TRequest>`; the `ValidationBehavior` runs all validators before the handler

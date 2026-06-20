@@ -17,10 +17,10 @@ namespace Mediarq.Core.Common.Pipeline.Behaviors;
 /// observe exceptions from the whole pipeline and the handler. With no registered exception handler
 /// it is a transparent pass-through.
 /// </remarks>
-public sealed class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>, IOrderBehavior
+public sealed class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>, IOrderBehavior, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
-    private readonly IEnumerable<IRequestExceptionHandler<TRequest, TResponse>> _exceptionHandlers;
+    private readonly IRequestExceptionHandler<TRequest, TResponse>[] _exceptionHandlers;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RequestExceptionProcessorBehavior{TRequest, TResponse}"/> class.
@@ -28,11 +28,14 @@ public sealed class RequestExceptionProcessorBehavior<TRequest, TResponse> : IPi
     /// <param name="exceptionHandlers">The exception handlers registered for this request type.</param>
     public RequestExceptionProcessorBehavior(IEnumerable<IRequestExceptionHandler<TRequest, TResponse>> exceptionHandlers)
     {
-        _exceptionHandlers = exceptionHandlers;
+        _exceptionHandlers = exceptionHandlers as IRequestExceptionHandler<TRequest, TResponse>[] ?? [.. exceptionHandlers];
     }
 
     /// <summary>Runs outermost so it can catch exceptions from every other behavior and the handler.</summary>
     public int Order => int.MinValue;
+
+    /// <summary>Active only when at least one exception handler is registered for this request type.</summary>
+    public bool IsActive => _exceptionHandlers.Length > 0;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)

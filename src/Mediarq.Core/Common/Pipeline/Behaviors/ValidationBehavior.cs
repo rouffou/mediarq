@@ -26,7 +26,7 @@ namespace Mediarq.Core.Common.Pipeline.Behaviors;
 /// instead of calling the next delegate.  
 /// This is conceptually similar to FluentValidation integration in MediatR, but adapted for the Mediarq architecture.
 /// </remarks>
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
     private const string DynamicFallbackJustification =
@@ -34,7 +34,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         "registered (the reflection-based AddMediarq assembly scan), which is not used on Native AOT. " +
         "The AOT path uses the generated AddMediarqHandlers(), which registers the factory via ValidationFailureRegistry.";
 
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
+    private readonly IValidator<TRequest>[] _validators;
     private readonly IValidationMessageResolver? _messageResolver;
 
     // Converts a ValidationError into a failed TResponse, resolved without reflection or dynamic code:
@@ -60,9 +60,12 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     /// </exception>
     public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators, IValidationMessageResolver? messageResolver = null)
     {
-        _validators = validators;
+        _validators = validators as IValidator<TRequest>[] ?? [.. validators];
         _messageResolver = messageResolver;
     }
+
+    /// <summary>Active only when at least one validator is registered for this request type.</summary>
+    public bool IsActive => _validators.Length > 0;
 
     /// <summary>
     /// Executes the validation logic for the incoming request and determines whether to continue
@@ -110,15 +113,24 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handle);
 
-        var failures = new List<ValidationPropertyError>();
+        // The failures list is only allocated once a validator actually reports an error, so the common
+        // case (no validators, or all valid) stays allocation-free on this hot path.
+        List<ValidationPropertyError>? failures = null;
         foreach (var validator in _validators)
         {
             var results = await validator.ValidateAsync(context.Request, cancellationToken).ConfigureAwait(false);
-            failures.AddRange(results.Where(r => !r.IsValid).SelectMany(r => r.Errors));
+            foreach (var result in results)
+            {
+                if (!result.IsValid)
+                {
+                    failures ??= [];
+                    failures.AddRange(result.Errors);
+                }
+            }
         }
 
         // No error → continue the pipeline.
-        if (failures.Count == 0)
+        if (failures is null || failures.Count == 0)
         {
             return await handle().ConfigureAwait(false);
         }
