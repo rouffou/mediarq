@@ -1,13 +1,16 @@
-﻿using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Results;
+using Mediarq.Core.Mediators;
 using Mediarq.Samples.Models;
+using Mediarq.Samples.Notifications;
 
 namespace Mediarq.Samples.Commands;
 
-public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<Guid>>
+public class CreateUserCommandHandler(IPublisher publisher) : ICommandHandler<CreateUserCommand, Result<Guid>>
 {
     internal static readonly List<User> _users = new();
-    public Task<Result<Guid>> Handle(CreateUserCommand request, CancellationToken cancellationToken = default)
+
+    public async Task<Result<Guid>> Handle(CreateUserCommand request, CancellationToken cancellationToken = default)
     {
         var user = new User
         {
@@ -17,6 +20,9 @@ public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Resul
 
         _users.Add(user);
 
-        return Task.FromResult(result: Result.Success(user.Id));
+        // Publish a notification: every registered handler (audit, welcome email, ...) runs.
+        await publisher.Publish(new UserCreated(user.Id, user.UserName), cancellationToken);
+
+        return Result.Success(user.Id);
     }
 }
