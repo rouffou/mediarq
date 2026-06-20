@@ -8,7 +8,23 @@ namespace Mediarq.Core.Common.Resolvers;
 /// </summary>
 public class HandlerResolver : IHandlerResolver
 {
-    private readonly Func<Type, object?> _resolver;
+    // Exactly one of these is set. The IServiceProvider path is used in production and resolves directly
+    // (no delegate indirection on the hot path); the Func path keeps construction trivial in tests.
+    private readonly IServiceProvider? _serviceProvider;
+    private readonly Func<Type, object?>? _resolver;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HandlerResolver"/> class that resolves services
+    /// directly from the given <paramref name="serviceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The container used to resolve services.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
+    public HandlerResolver(IServiceProvider serviceProvider)
+    {
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+
+        _serviceProvider = serviceProvider;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HandlerResolver"/> class.
@@ -22,11 +38,14 @@ public class HandlerResolver : IHandlerResolver
         _resolver = resolver;
     }
 
-    /// <inheritdoc />
-    public object? Resolve(Type handlerType) => _resolver(handlerType);
+    private object? GetService(Type serviceType)
+        => _serviceProvider is not null ? _serviceProvider.GetService(serviceType) : _resolver!(serviceType);
 
     /// <inheritdoc />
-    public TService? Resolve<TService>() where TService : class => _resolver(typeof(TService)) as TService;
+    public object? Resolve(Type handlerType) => GetService(handlerType);
+
+    /// <inheritdoc />
+    public TService? Resolve<TService>() where TService : class => GetService(typeof(TService)) as TService;
 
     /// <inheritdoc />
     [RequiresDynamicCode("Resolving by System.Type builds a closed IEnumerable<T> with MakeGenericType. Use ResolveAll<TService>() for an AOT-friendly path.")]
@@ -39,7 +58,7 @@ public class HandlerResolver : IHandlerResolver
         // The DI container is expected to resolve IEnumerable<THandler> (returning an empty
         // sequence when no handler is registered). We intentionally do not fall back to
         // resolving a single handler, which would silently mask a misconfigured registration.
-        return _resolver(enumerableType) is IEnumerable<object> handlers ? handlers : [];
+        return GetService(enumerableType) is IEnumerable<object> handlers ? handlers : [];
     }
 
     /// <inheritdoc />
@@ -47,7 +66,7 @@ public class HandlerResolver : IHandlerResolver
     {
         // typeof(IEnumerable<TService>) is a closed constructed type known at the call site,
         // so no MakeGenericType is involved — this path is trimming/AOT friendly.
-        if (_resolver(typeof(IEnumerable<TService>)) is not IEnumerable<TService> services)
+        if (GetService(typeof(IEnumerable<TService>)) is not IEnumerable<TService> services)
         {
             return [];
         }

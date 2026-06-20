@@ -19,7 +19,6 @@ public class MediatorNotificationTests
     {
         _mediator = new Mediator(
             Mock.Of<IRequestContextFactory>(),
-            Mock.Of<IPipelineExecutor>(),
             _resolver.Object,
             new ParallelNotificationPublisher());
     }
@@ -100,7 +99,6 @@ public class MediatorNotificationTests
 
         var mediator = new Mediator(
             Mock.Of<IRequestContextFactory>(),
-            Mock.Of<IPipelineExecutor>(),
             _resolver.Object,
             new SequentialNotificationPublisher());
 
@@ -120,7 +118,6 @@ public class MediatorNotificationTests
 
         var mediator = new Mediator(
             Mock.Of<IRequestContextFactory>(),
-            Mock.Of<IPipelineExecutor>(),
             _resolver.Object,
             new SequentialNotificationPublisher());
 

@@ -222,7 +222,7 @@ public static class ServiceCollectionExtensions
 
     private static void AddCoreServices(IServiceCollection services, bool isHttp)
     {
-        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
+        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp));
         services.AddScoped<IMediator, Mediator>();
         services.AddScoped<ISender>(sp => sp.GetRequiredService<IMediator>());
         services.AddScoped<IPublisher>(sp => sp.GetRequiredService<IMediator>());

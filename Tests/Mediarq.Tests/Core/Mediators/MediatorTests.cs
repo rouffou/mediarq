@@ -17,7 +17,6 @@ public class MediatorTests
     private readonly Mediator _testClass;
     private readonly Mock<IHandlerResolver> _mockHandlerResolver;
     private readonly Mock<IRequestContextFactory> _mockRequestContextFactory;
-    private readonly Mock<IPipelineExecutor> _mockPipelineExecutor;
     private readonly Mock<IRequestHandler<TestCommand, Result<string>>> _mockHandler;
     private readonly INotificationPublisher _publisher = new ParallelNotificationPublisher();
 
@@ -27,17 +26,18 @@ public class MediatorTests
     {
         _mockHandlerResolver = new Mock<IHandlerResolver>();
         _mockRequestContextFactory = new Mock<IRequestContextFactory>();
-        _mockPipelineExecutor = new Mock<IPipelineExecutor>();
         _mockHandler = new Mock<IRequestHandler<TestCommand, Result<string>>>();
 
-        // Default resolver: returns a valid handler
+        // Default resolver: returns a valid handler and no behaviors.
         _mockHandlerResolver
             .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
             .Returns(_mockHandler.Object);
+        _mockHandlerResolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommand, Result<string>>>())
+            .Returns([]);
 
         _testClass = new Mediator(
             _mockRequestContextFactory.Object,
-            _mockPipelineExecutor.Object,
             _mockHandlerResolver.Object,
             _publisher);
     }
@@ -47,7 +47,6 @@ public class MediatorTests
     {
         var instance = new Mediator(
             _mockRequestContextFactory.Object,
-            _mockPipelineExecutor.Object,
             _mockHandlerResolver.Object,
             _publisher);
 
@@ -59,7 +58,6 @@ public class MediatorTests
     {
         Action act = () => new Mediator(
             _mockRequestContextFactory.Object,
-            _mockPipelineExecutor.Object,
             null!,
             _publisher);
 
@@ -71,7 +69,6 @@ public class MediatorTests
     {
         Action act = () => new Mediator(
             null!,
-            _mockPipelineExecutor.Object,
             _mockHandlerResolver.Object,
             _publisher);
 
@@ -79,23 +76,10 @@ public class MediatorTests
     }
 
     [Fact]
-    public void CannotConstructWithNullPipelineExecutor()
-    {
-        Action act = () => new Mediator(
-            _mockRequestContextFactory.Object,
-            null!,
-            _mockHandlerResolver.Object,
-            _publisher);
-
-        act.Should().Throw<ArgumentNullException>().WithParameterName("pipelineExecutor");
-    }
-
-    [Fact]
     public void CannotConstructWithNullNotificationPublisher()
     {
         Action act = () => new Mediator(
             _mockRequestContextFactory.Object,
-            _mockPipelineExecutor.Object,
             _mockHandlerResolver.Object,
             null!);
 
@@ -131,53 +115,38 @@ public class MediatorTests
     }
 
     [Fact]
-    public async Task Send_ShouldCallPipelineExecutor_WhenHandlerExists()
+    public async Task Send_ShouldInvokeHandler_WhenNoBehaviors()
     {
         // Arrange
         var request = new TestCommand("Hello");
         var expected = Result.Success("OK");
 
-        _mockHandlerResolver
-            .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
-            .Returns(_mockHandler.Object);
-
-        // The mediator now hands the resolved handler and the context factory to the executor, which
-        // creates the context lazily — so the executor is invoked through the request/handler overload.
-        _mockPipelineExecutor
-            .Setup(p => p.ExecuteAsync(
-                request,
-                _mockHandler.Object,
-                _mockRequestContextFactory.Object,
-                It.IsAny<CancellationToken>()))
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        // Act
+        // Act — no behaviors registered, so the mediator dispatches straight to the handler and never
+        // creates a request context.
         var result = await _testClass.Send(request, CancellationToken.None);
 
         // Assert
         result.Should().Be(expected);
-
         _mockHandlerResolver.Verify(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>(), Times.Once);
-        _mockPipelineExecutor.Verify(p => p.ExecuteAsync(
-            request,
-            _mockHandler.Object,
-            _mockRequestContextFactory.Object,
-            It.IsAny<CancellationToken>()), Times.Once);
+        _mockHandler.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRequestContextFactory.Verify(
+            f => f.Create<TestCommand, Result<string>>(It.IsAny<TestCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
     public async Task Send_ShouldWrapExceptionsInInvalidOperationException()
     {
-        // Arrange
+        // Arrange — a synchronous failure while dispatching is wrapped by the mediator.
         var request = new TestCommand("Fail");
 
-        _mockPipelineExecutor
-            .Setup(p => p.ExecuteAsync(
-                request,
-                It.IsAny<IRequestHandler<TestCommand, Result<string>>>(),
-                It.IsAny<IRequestContextFactory>(),
-                It.IsAny<CancellationToken>()))
-            .Throws(new Exception("Failure in executor"));
+        _mockHandlerResolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommand, Result<string>>>())
+            .Throws(new Exception("Failure while resolving behaviors"));
 
         // Act + Assert
         await FluentActions
