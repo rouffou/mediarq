@@ -9,6 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Pass the assemblies that contain your handlers/behaviors/validators explicitly.
 builder.Services.AddMediarq(isHttp: false, typeof(Program).Assembly);
 
+// Reflection-free / Native AOT alternative (no assembly scan):
+//   builder.Services.AddMediarqCore(isHttp: false).AddMediarqHandlers();
+
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

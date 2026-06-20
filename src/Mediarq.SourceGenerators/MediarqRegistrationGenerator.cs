@@ -51,7 +51,13 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             .Collect()
             .Select(static (items, _) => new EquatableArray<HandlerRegistration>(items.Distinct().ToImmutableArray()));
 
-        context.RegisterSourceOutput(registrations, static (spc, regs) => Emit(spc, regs));
+        // Optional: make the generated AddMediarqHandlers() public (default internal) so it can be
+        // called from another assembly. Set <MediarqGeneratedAccessibility>public</...> in the consumer.
+        var isPublic = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) =>
+            provider.GlobalOptions.TryGetValue("build_property.MediarqGeneratedAccessibility", out var value) &&
+            string.Equals(value, "public", System.StringComparison.OrdinalIgnoreCase));
+
+        context.RegisterSourceOutput(registrations.Combine(isPublic), static (spc, pair) => Emit(spc, pair.Left, pair.Right));
     }
 
     private static EquatableArray<HandlerRegistration> Transform(GeneratorSyntaxContext ctx, CancellationToken cancellationToken)
@@ -225,11 +231,16 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         "Mediarq.Core.Common.Requests.Validators.IValidator`1" => HandlerKind.Validator,
         "Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler`2" => HandlerKind.ExceptionHandler,
         "Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler`2" => HandlerKind.StreamHandler,
+        // Pre/post-processors are registered like behaviors (plain AddScoped, no dispatch wrapper).
+        "Mediarq.Core.Common.Requests.Processors.IRequestPreProcessor`1" => HandlerKind.Behavior,
+        "Mediarq.Core.Common.Requests.Processors.IRequestPostProcessor`2" => HandlerKind.Behavior,
         _ => HandlerKind.Other,
     };
 
-    private static void Emit(SourceProductionContext context, EquatableArray<HandlerRegistration> registrations)
+    private static void Emit(SourceProductionContext context, EquatableArray<HandlerRegistration> registrations, bool isPublic)
     {
+        var accessibility = isPublic ? "public" : "internal";
+
         // Diagnose multiple handlers registered for the same request (a request handler must be unique).
         foreach (var group in registrations.Where(r => r.Kind == HandlerKind.RequestHandler).GroupBy(r => r.ServiceType))
         {
@@ -259,10 +270,10 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         sb.AppendLine("namespace Mediarq.Extensions");
         sb.AppendLine("{");
         sb.AppendLine("    /// <summary>Compile-time generated Mediarq handler, behavior and validator registrations.</summary>");
-        sb.AppendLine("    internal static class MediarqGeneratedRegistration");
+        sb.Append("    ").Append(accessibility).AppendLine(" static class MediarqGeneratedRegistration");
         sb.AppendLine("    {");
         sb.AppendLine("        /// <summary>Registers every Mediarq handler, behavior and validator discovered at compile time.</summary>");
-        sb.AppendLine("        internal static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
+        sb.Append("        ").Append(accessibility).AppendLine(" static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
         sb.AppendLine("        {");
 
         foreach (var reg in registrations.Where(r => r.Kind != HandlerKind.Request).OrderBy(r => r.ServiceType + "|" + r.ImplType, StringComparer.Ordinal))
