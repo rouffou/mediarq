@@ -46,10 +46,8 @@
 
   <ItemGroup>
     <!-- Build the source generator and pack it as an analyzer; its output assembly is not referenced at runtime. -->
-    <ProjectReference Include="..\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
-                      ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <None Include="..\Mediarq.SourceGenerators\bin\$(Configuration)\netstandard2.0\Mediarq.SourceGenerators.dll"
-          Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <ProjectReference Include="..\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="..\Mediarq.SourceGenerators\bin\$(Configuration)\netstandard2.0\Mediarq.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
