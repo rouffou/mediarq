@@ -1,15 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Resolvers;
 
 namespace Mediarq.Core.Mediators;
 
 /// <summary>
-/// Non-generic entry point the <see cref="Mediator"/> calls to publish a notification.
-/// Implementations are cached per concrete notification type.
+/// Non-generic entry point the <see cref="Mediator"/> calls to publish a notification. An abstract class
+/// (rather than an interface) so the call dispatches through a vtable slot. Implementations are cached
+/// per concrete notification type.
 /// </summary>
-internal interface INotificationHandlerWrapper
+[SuppressMessage("Major Code Smell", "S1694:An abstract class should have both abstract and concrete methods",
+    Justification = "Intentionally an abstract class, not an interface: vtable dispatch is cheaper than interface dispatch on the publish hot path.")]
+internal abstract class NotificationHandlerWrapper
 {
-    Task Handle(
+    public abstract Task Handle(
         object notification,
         IHandlerResolver handlerResolver,
         INotificationPublisher notificationPublisher,
@@ -22,10 +26,10 @@ internal interface INotificationHandlerWrapper
 /// on the publish path.
 /// </summary>
 /// <typeparam name="TNotification">The concrete notification type.</typeparam>
-internal sealed class NotificationHandlerWrapperImpl<TNotification> : INotificationHandlerWrapper
+internal sealed class NotificationHandlerWrapperImpl<TNotification> : NotificationHandlerWrapper
     where TNotification : INotification
 {
-    public Task Handle(
+    public override Task Handle(
         object notification,
         IHandlerResolver handlerResolver,
         INotificationPublisher notificationPublisher,

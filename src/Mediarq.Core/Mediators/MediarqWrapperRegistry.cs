@@ -19,7 +19,7 @@ namespace Mediarq.Core.Mediators;
 public sealed class MediarqWrapperRegistry
 {
     private readonly ConcurrentDictionary<Type, object> _requestWrappers = new();
-    private readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> _notificationWrappers = new();
+    private readonly ConcurrentDictionary<Type, NotificationHandlerWrapper> _notificationWrappers = new();
     private readonly ConcurrentDictionary<Type, object> _streamWrappers = new();
 
     /// <summary>
@@ -64,18 +64,18 @@ public sealed class MediarqWrapperRegistry
     }
 
     /// <summary>Gets the cached request wrapper for <paramref name="requestType"/>, if registered.</summary>
-    internal IRequestHandlerWrapper<TResponse>? GetRequestWrapper<TResponse>(Type requestType)
+    internal RequestHandlerWrapper<TResponse>? GetRequestWrapper<TResponse>(Type requestType)
         => _requestWrappers.TryGetValue(requestType, out var wrapper)
-            ? (IRequestHandlerWrapper<TResponse>)wrapper
+            ? (RequestHandlerWrapper<TResponse>)wrapper
             : null;
 
     /// <summary>Gets the cached stream wrapper for <paramref name="requestType"/>, if registered.</summary>
-    internal IStreamRequestHandlerWrapper<TResponse>? GetStreamWrapper<TResponse>(Type requestType)
+    internal StreamRequestHandlerWrapper<TResponse>? GetStreamWrapper<TResponse>(Type requestType)
         => _streamWrappers.TryGetValue(requestType, out var wrapper)
-            ? (IStreamRequestHandlerWrapper<TResponse>)wrapper
+            ? (StreamRequestHandlerWrapper<TResponse>)wrapper
             : null;
 
     /// <summary>Gets the cached notification wrapper for <paramref name="notificationType"/>, if registered.</summary>
-    internal INotificationHandlerWrapper? GetNotificationWrapper(Type notificationType)
+    internal NotificationHandlerWrapper? GetNotificationWrapper(Type notificationType)
         => _notificationWrappers.TryGetValue(notificationType, out var wrapper) ? wrapper : null;
 }

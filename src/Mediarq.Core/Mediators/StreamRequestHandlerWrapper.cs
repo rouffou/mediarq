@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Streaming;
@@ -7,12 +8,15 @@ namespace Mediarq.Core.Mediators;
 
 /// <summary>
 /// Generic over the streamed item type, exposing the entry point the <see cref="Mediator"/> calls to
-/// stream a request. Implementations are cached per concrete stream-request type.
+/// stream a request. An abstract class (rather than an interface) so the call dispatches through a
+/// vtable slot. Implementations are cached per concrete stream-request type.
 /// </summary>
 /// <typeparam name="TResponse">The type of each streamed item.</typeparam>
-internal interface IStreamRequestHandlerWrapper<out TResponse>
+[SuppressMessage("Major Code Smell", "S1694:An abstract class should have both abstract and concrete methods",
+    Justification = "Intentionally an abstract class, not an interface: vtable dispatch is cheaper than interface dispatch on the streaming hot path.")]
+internal abstract class StreamRequestHandlerWrapper<TResponse>
 {
-    IAsyncEnumerable<TResponse> Handle(
+    public abstract IAsyncEnumerable<TResponse> Handle(
         object request,
         IHandlerResolver handlerResolver,
         IStreamPipelineExecutor? pipelineExecutor,
@@ -26,10 +30,10 @@ internal interface IStreamRequestHandlerWrapper<out TResponse>
 /// </summary>
 /// <typeparam name="TRequest">The concrete stream-request type.</typeparam>
 /// <typeparam name="TResponse">The type of each streamed item.</typeparam>
-internal sealed class StreamRequestHandlerWrapperImpl<TRequest, TResponse> : IStreamRequestHandlerWrapper<TResponse>
+internal sealed class StreamRequestHandlerWrapperImpl<TRequest, TResponse> : StreamRequestHandlerWrapper<TResponse>
     where TRequest : IStreamRequest<TResponse>
 {
-    public IAsyncEnumerable<TResponse> Handle(
+    public override IAsyncEnumerable<TResponse> Handle(
         object request,
         IHandlerResolver handlerResolver,
         IStreamPipelineExecutor? pipelineExecutor,
