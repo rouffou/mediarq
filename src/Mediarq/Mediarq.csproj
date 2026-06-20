@@ -15,7 +15,7 @@
     <PackageId>Mediarq</PackageId>
     <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
-    <Description>Meta-package bundling Mediarq.Core and every official Mediarq extension: ASP.NET Core, FluentValidation, DataAnnotations, Caching, Diagnostics, UnitOfWork, EntityFrameworkCore, Polly and MassTransit. Install this for everything, or reference individual packages to keep dependencies minimal.</Description>
+    <Description>Meta-package bundling Mediarq.Core and every official Mediarq extension: ASP.NET Core, FluentValidation, DataAnnotations, Caching, Diagnostics, OpenTelemetry, UnitOfWork, EntityFrameworkCore, Polly and MassTransit. Install this for everything, or reference individual packages to keep dependencies minimal.</Description>
     <PackageTags>mediator;cqrs;ddd;pipeline;notifications;dotnet</PackageTags>
     <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Mediarq.DataAnnotations\Mediarq.DataAnnotations.csproj" />
     <ProjectReference Include="..\Mediarq.Caching\Mediarq.Caching.csproj" />
     <ProjectReference Include="..\Mediarq.Diagnostics\Mediarq.Diagnostics.csproj" />
+    <ProjectReference Include="..\Mediarq.OpenTelemetry\Mediarq.OpenTelemetry.csproj" />
     <ProjectReference Include="..\Mediarq.UnitOfWork\Mediarq.UnitOfWork.csproj" />
     <ProjectReference Include="..\Mediarq.EntityFrameworkCore\Mediarq.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Mediarq.Polly\Mediarq.Polly.csproj" />
