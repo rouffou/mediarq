@@ -79,14 +79,19 @@ the validation pipeline builds `Result<T>` failures from generated factories. Th
 > The scan-based `AddMediarq(...)` is convenient but uses reflection and is annotated
 > `[RequiresUnreferencedCode]`; prefer `AddMediarqCore()` + `AddMediarqHandlers()` for trimming/AOT.
 
-The generated `AddMediarqHandlers()` is `internal` by default. To call it from another assembly, make
-it public via MSBuild:
+The generated `AddMediarqHandlers()` is `internal` and lives in the `Mediarq.Extensions` namespace by
+default. Override either via MSBuild:
 
 ```xml
 <PropertyGroup>
   <MediarqGeneratedAccessibility>public</MediarqGeneratedAccessibility>
+  <MediarqGeneratedNamespace>MyApp.Generated</MediarqGeneratedNamespace>
 </PropertyGroup>
 ```
+
+The generator also emits compile-time diagnostics: `MQ001` (multiple handlers for one request), `MQ002`
+(a command/query with no handler in the assembly), and `MQ003` (a validator whose target is neither a
+request nor a notification, so it can never run).
 
 ## Commands & queries (with a result)
 
