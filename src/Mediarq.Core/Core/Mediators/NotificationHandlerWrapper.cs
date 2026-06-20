@@ -42,8 +42,12 @@ internal sealed class NotificationHandlerWrapperImpl<TNotification> : INotificat
             return Task.CompletedTask;
         }
 
+        // Handlers implementing IOrderedNotificationHandler run by ascending Order; others keep their
+        // registration order (stable sort) and run after, defaulting to int.MaxValue.
+        var orderedHandlers = handlers.OrderBy(h => h is IOrderedNotificationHandler ordered ? ordered.Order : int.MaxValue);
+
         var callbacks = new List<Func<CancellationToken, Task>>(handlers.Count);
-        foreach (var handler in handlers)
+        foreach (var handler in orderedHandlers)
         {
             var captured = handler;
             callbacks.Add(ct => captured.Handle(typedNotification, ct));

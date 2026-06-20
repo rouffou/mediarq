@@ -65,4 +65,35 @@ public class MediatorNotificationTests
 
         await act.Should().NotThrowAsync();
     }
+
+    [Fact]
+    public async Task Publish_Invokes_Handlers_By_Ascending_Order()
+    {
+        var log = new List<int>();
+        // Registered in reverse order on purpose (Order 2 before Order 1).
+        _resolver
+            .Setup(r => r.ResolveAll<INotificationHandler<SampleNotification>>())
+            .Returns(new INotificationHandler<SampleNotification>[] { new OrderedHandler(2, log), new OrderedHandler(1, log) });
+
+        var mediator = new Mediator(
+            Mock.Of<IRequestContextFactory>(),
+            Mock.Of<IPipelineExecutor>(),
+            _resolver.Object,
+            new SequentialNotificationPublisher());
+
+        await mediator.Publish(new SampleNotification("x"));
+
+        log.Should().Equal(1, 2);
+    }
+
+    private sealed class OrderedHandler(int order, List<int> log) : INotificationHandler<SampleNotification>, IOrderedNotificationHandler
+    {
+        public int Order => order;
+
+        public Task Handle(SampleNotification notification, CancellationToken cancellationToken = default)
+        {
+            log.Add(order);
+            return Task.CompletedTask;
+        }
+    }
 }
