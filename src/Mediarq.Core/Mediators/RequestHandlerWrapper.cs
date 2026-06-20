@@ -43,11 +43,8 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestH
         var handler = handlerResolver.Resolve<IRequestHandler<TRequest, TResponse>>()
             ?? throw new HandlerNotFoundException(typeof(TRequest));
 
-        RequestContext<TRequest, TResponse> context = requestContextFactory.Create<TRequest, TResponse>(typedRequest, cancellationToken);
-
-        return pipelineExecutor.ExecuteAsync(
-            context,
-            ct => handler.Handle(typedRequest, ct),
-            cancellationToken);
+        // The executor creates the request context lazily — only when a behavior is active — so a request
+        // with no active behavior is dispatched straight to the handler with no extra allocation.
+        return pipelineExecutor.ExecuteAsync(typedRequest, handler, requestContextFactory, cancellationToken);
     }
 }

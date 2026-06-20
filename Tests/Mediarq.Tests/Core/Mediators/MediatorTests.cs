@@ -135,26 +135,19 @@ public class MediatorTests
     {
         // Arrange
         var request = new TestCommand("Hello");
-        var context = new RequestContext<TestCommand, Result<string>>(request, Guid.NewGuid().ToString(), CancellationToken.None);
         var expected = Result.Success("OK");
-
-        // Mock handler behavior
-        _mockHandler
-            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success("OK"));
 
         _mockHandlerResolver
             .Setup(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>())
             .Returns(_mockHandler.Object);
 
-        _mockRequestContextFactory
-            .Setup(f => f.Create<TestCommand, Result<string>>(request, It.IsAny<CancellationToken>()))
-            .Returns(context);
-
+        // The mediator now hands the resolved handler and the context factory to the executor, which
+        // creates the context lazily — so the executor is invoked through the request/handler overload.
         _mockPipelineExecutor
             .Setup(p => p.ExecuteAsync(
-                context,
-                It.IsAny<Func<CancellationToken, Task<Result<string>>>>(),
+                request,
+                _mockHandler.Object,
+                _mockRequestContextFactory.Object,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
@@ -165,10 +158,10 @@ public class MediatorTests
         result.Should().Be(expected);
 
         _mockHandlerResolver.Verify(r => r.Resolve<IRequestHandler<TestCommand, Result<string>>>(), Times.Once);
-        _mockRequestContextFactory.Verify(f => f.Create<TestCommand, Result<string>>(request, It.IsAny<CancellationToken>()), Times.Once);
         _mockPipelineExecutor.Verify(p => p.ExecuteAsync(
-            context,
-            It.IsAny<Func<CancellationToken, Task<Result<string>>>>(),
+            request,
+            _mockHandler.Object,
+            _mockRequestContextFactory.Object,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -178,9 +171,13 @@ public class MediatorTests
         // Arrange
         var request = new TestCommand("Fail");
 
-        _mockRequestContextFactory
-            .Setup(f => f.Create<TestCommand, Result<string>>(request, It.IsAny<CancellationToken>()))
-            .Throws(new Exception("Failure in factory"));
+        _mockPipelineExecutor
+            .Setup(p => p.ExecuteAsync(
+                request,
+                It.IsAny<IRequestHandler<TestCommand, Result<string>>>(),
+                It.IsAny<IRequestContextFactory>(),
+                It.IsAny<CancellationToken>()))
+            .Throws(new Exception("Failure in executor"));
 
         // Act + Assert
         await FluentActions

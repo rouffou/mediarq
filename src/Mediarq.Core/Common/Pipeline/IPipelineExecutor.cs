@@ -65,4 +65,28 @@ public interface IPipelineExecutor
         Func<CancellationToken, Task<TResponse>> handlerDelegate,
         CancellationToken cancellationToken = default)
         where TRequest : ICommandOrQuery<TResponse>;
+
+    /// <summary>
+    /// Executes the request pipeline, creating the <see cref="RequestContext{TRequest, TResponse}"/>
+    /// lazily so the hot path pays for it only when a behavior is actually going to observe it.
+    /// </summary>
+    /// <typeparam name="TRequest">The request type. Must implement <see cref="ICommandOrQuery{TResponse}"/>.</typeparam>
+    /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
+    /// <param name="request">The request to handle.</param>
+    /// <param name="handler">The resolved handler invoked once all active behaviors have run.</param>
+    /// <param name="contextFactory">
+    /// The factory used to create the request context — only invoked when at least one behavior is active.
+    /// </param>
+    /// <param name="cancellationToken">A token to observe for cancellation.</param>
+    /// <returns>A task producing the response of type <typeparamref name="TResponse"/>.</returns>
+    /// <remarks>
+    /// When no behavior is active for the request type, the handler is invoked directly, with neither a
+    /// request-context allocation nor a delegate chain — keeping the dispatch close to a bare handler call.
+    /// </remarks>
+    Task<TResponse> ExecuteAsync<TRequest, TResponse>(
+        TRequest request,
+        IRequestHandler<TRequest, TResponse> handler,
+        IRequestContextFactory contextFactory,
+        CancellationToken cancellationToken = default)
+        where TRequest : ICommandOrQuery<TResponse>;
 }

@@ -23,7 +23,7 @@ namespace Mediarq.Core.Common.Pipeline.Behaviors;
 /// Timing is measured through the injected <see cref="IClock"/> abstraction so the
 /// behavior remains deterministically testable.
 /// </remarks>
-public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
     private const long ThresholdMilliseconds = 500;
@@ -51,6 +51,12 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         _logger = logger;
         _clock = clock;
     }
+
+    /// <summary>
+    /// Active only when warning-level logging is enabled; the behavior only ever emits a warning for a
+    /// slow request, so with warnings disabled there is nothing to report and the executor skips it.
+    /// </summary>
+    public bool IsActive => _logger.IsEnabled(LogLevel.Warning);
 
     /// <summary>
     /// Intercepts the request handling process to measure execution time

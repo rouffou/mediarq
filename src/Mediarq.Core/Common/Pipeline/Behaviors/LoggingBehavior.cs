@@ -21,7 +21,7 @@ namespace Mediarq.Core.Common.Pipeline.Behaviors;
 /// such as the request type, unique identifier, and execution timestamps.  
 /// Useful for monitoring request flow and debugging distributed systems.
 /// </remarks>
-public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
     private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
@@ -39,6 +39,12 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     {
         _logger = logger;
     }
+
+    /// <summary>
+    /// Active only when information-level logging is enabled; otherwise the behavior would log nothing,
+    /// so the executor skips it and the request avoids an extra pipeline frame.
+    /// </summary>
+    public bool IsActive => _logger.IsEnabled(LogLevel.Information);
 
     /// <summary>
     /// Intercepts the execution of a request to log start and completion details.

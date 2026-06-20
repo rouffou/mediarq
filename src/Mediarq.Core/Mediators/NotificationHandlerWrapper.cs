@@ -66,11 +66,13 @@ internal sealed class NotificationHandlerWrapperImpl<TNotification> : INotificat
             }
         }
 
-        var callbacks = new List<Func<CancellationToken, Task>>(count);
+        // A fixed-size array (sized to the known handler count) avoids the List wrapper object.
+        var callbacks = new Func<CancellationToken, Task>[count];
+        var index = 0;
         foreach (var handler in orderedHandlers)
         {
             var captured = handler;
-            callbacks.Add(ct => captured.Handle(typedNotification, ct));
+            callbacks[index++] = ct => captured.Handle(typedNotification, ct);
         }
 
         // The configured INotificationPublisher decides how handlers are invoked (parallel, sequential, ...).
