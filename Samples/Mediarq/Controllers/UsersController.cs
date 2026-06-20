@@ -1,4 +1,5 @@
-﻿using Mediarq.Core.Mediators;
+﻿using Mediarq.AspNetCore;
+using Mediarq.Core.Mediators;
 using Mediarq.Samples.Queries;
 using Mediarq.Samples.Commands;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,8 @@ public class UsersController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserCommand command)
-    {
-        var result = await mediator.Send(command);
-        return Ok(result);
-    }
+        // Map the Result straight to an IActionResult (200/OK or ProblemDetails on failure).
+        => (await mediator.Send(command)).ToActionResult();
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUserById(Guid id)
