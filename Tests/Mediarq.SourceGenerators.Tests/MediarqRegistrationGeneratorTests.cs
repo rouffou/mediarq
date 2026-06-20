@@ -1,15 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Mediarq.SourceGenerators.Tests;
 
 public class MediarqRegistrationGeneratorTests
 {
-    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source)
+    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source, string? accessibility = null)
     {
         // Ensure the Mediarq assembly (which declares the marker interfaces) is loaded and referenced,
         // along with Microsoft.Extensions.DependencyInjection.Abstractions (for ServiceLifetime).
@@ -30,12 +32,31 @@ public class MediarqRegistrationGeneratorTests
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MediarqRegistrationGenerator().AsSourceGenerator());
+        AnalyzerConfigOptionsProvider? optionsProvider = accessibility is null
+            ? null
+            : new TestOptionsProvider(new Dictionary<string, string> { ["build_property.MediarqGeneratedAccessibility"] = accessibility });
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            [new MediarqRegistrationGenerator().AsSourceGenerator()],
+            optionsProvider: optionsProvider);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
 
         var result = driver.GetRunResult();
         var generated = result.GeneratedTrees.Length > 0 ? result.GeneratedTrees[0].ToString() : string.Empty;
         return (generated, result.Diagnostics);
+    }
+
+    private sealed class TestOptionsProvider(Dictionary<string, string> globals) : AnalyzerConfigOptionsProvider
+    {
+        public override AnalyzerConfigOptions GlobalOptions { get; } = new TestOptions(globals);
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => TestOptions.Empty;
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => TestOptions.Empty;
+
+        private sealed class TestOptions(Dictionary<string, string> values) : AnalyzerConfigOptions
+        {
+            public static readonly TestOptions Empty = new([]);
+            public override bool TryGetValue(string key, out string value) => values.TryGetValue(key, out value!);
+        }
     }
 
     [Fact]
@@ -210,6 +231,41 @@ public class MediarqRegistrationGeneratorTests
         diagnostics.Should().BeEmpty();
         generated.Should().Contain("services.AddSingleton<global::Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<global::Demo.Ping, global::Mediarq.Core.Common.Results.Result<string>>, global::Demo.PingHandler>();");
     }
+
+    [Fact]
+    public void AddMediarqHandlers_Is_Internal_By_Default()
+    {
+        var (generated, _) = Run(PingSource);
+
+        generated.Should().Contain("internal static class MediarqGeneratedRegistration");
+        generated.Should().Contain("internal static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers");
+    }
+
+    [Fact]
+    public void AddMediarqHandlers_Is_Public_When_Configured()
+    {
+        var (generated, _) = Run(PingSource, accessibility: "public");
+
+        generated.Should().Contain("public static class MediarqGeneratedRegistration");
+        generated.Should().Contain("public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers");
+    }
+
+    private const string PingSource = """
+        using Mediarq.Core.Common.Requests.Command;
+        using Mediarq.Core.Common.Results;
+        using System.Threading;
+        using System.Threading.Tasks;
+
+        namespace Demo;
+
+        public record Ping(string Text) : ICommand<Result<string>>;
+
+        public sealed class PingHandler : ICommandHandler<Ping, Result<string>>
+        {
+            public Task<Result<string>> Handle(Ping request, CancellationToken cancellationToken = default)
+                => Task.FromResult(Result.Success(request.Text));
+        }
+        """;
 
     [Fact]
     public void Generates_Empty_Method_When_No_Handlers()
