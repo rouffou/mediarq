@@ -39,6 +39,14 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor OrphanValidator = new(
+        id: "MQ003",
+        title: "Validator targets a type that is never validated",
+        messageFormat: "Validator for '{0}' will never run: Mediarq only validates requests (ICommandOrQuery<T>) and notifications (INotification). Make the validated type a request/notification, or remove the validator.",
+        category: "Mediarq",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -57,7 +65,18 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             provider.GlobalOptions.TryGetValue("build_property.MediarqGeneratedAccessibility", out var value) &&
             string.Equals(value, "public", System.StringComparison.OrdinalIgnoreCase));
 
-        context.RegisterSourceOutput(registrations.Combine(isPublic), static (spc, pair) => Emit(spc, pair.Left, pair.Right));
+        // Optional: the namespace of the generated registration class. Set <MediarqGeneratedNamespace>...</...>
+        // in the consumer; defaults to "Mediarq.Extensions".
+        var generatedNamespace = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) =>
+            provider.GlobalOptions.TryGetValue("build_property.MediarqGeneratedNamespace", out var value) &&
+            !string.IsNullOrWhiteSpace(value)
+                ? value!.Trim()
+                : "Mediarq.Extensions");
+
+        var options = isPublic.Combine(generatedNamespace);
+
+        context.RegisterSourceOutput(registrations.Combine(options),
+            static (spc, pair) => Emit(spc, pair.Left, pair.Right.Left, pair.Right.Right));
     }
 
     private static EquatableArray<HandlerRegistration> Transform(GeneratorSyntaxContext ctx, CancellationToken cancellationToken)
@@ -110,7 +129,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     ResponseType: null,
                     NotificationType: null,
                     ResponseIsGenericResult: false,
-                    Lifetime: lifetime));
+                    Lifetime: lifetime,
+                    IsOrphanValidator: false));
             }
             else
             {
@@ -118,6 +138,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                 string? responseType = null;
                 string? notificationType = null;
                 bool responseIsGenericResult = false;
+                bool isOrphanValidator = false;
 
                 if (kind == HandlerKind.RequestHandler && iface.TypeArguments.Length == 2)
                 {
@@ -134,6 +155,15 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                 {
                     notificationType = iface.TypeArguments[0].ToDisplayString(FullyQualified);
                 }
+                else if (kind == HandlerKind.Validator && iface.TypeArguments.Length == 1)
+                {
+                    // A validator only runs when its target is a mediated type (request or notification).
+                    // Otherwise it is orphaned — flag it for MQ003. RequestType carries the validated type
+                    // for the diagnostic message.
+                    var validatedType = iface.TypeArguments[0];
+                    requestType = validatedType.ToDisplayString(FullyQualified);
+                    isOrphanValidator = !IsMediatedType(validatedType);
+                }
 
                 list.Add(new HandlerRegistration(
                     iface.ToDisplayString(FullyQualified),
@@ -144,7 +174,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                     ResponseType: responseType,
                     NotificationType: notificationType,
                     ResponseIsGenericResult: responseIsGenericResult,
-                    Lifetime: lifetime));
+                    Lifetime: lifetime,
+                    IsOrphanValidator: isOrphanValidator));
             }
         }
 
@@ -162,7 +193,8 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
                 ResponseType: null,
                 NotificationType: null,
                 ResponseIsGenericResult: false,
-                Lifetime: "Scoped"));
+                Lifetime: "Scoped",
+                IsOrphanValidator: false));
         }
 
         return new EquatableArray<HandlerRegistration>(list.ToImmutableArray());
@@ -175,6 +207,34 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             var definition = iface.OriginalDefinition;
             if (definition.MetadataName == "ICommandOrQuery`1" &&
                 definition.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Requests.Abstraction")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // True when the type takes part in the Mediarq pipeline as a request (ICommandOrQuery<T>) or a
+    // notification (INotification) — the only places a validator is ever invoked.
+    private static bool IsMediatedType(ITypeSymbol type)
+    {
+        if (type is ITypeParameterSymbol)
+        {
+            // Open-generic validated type (e.g. IValidator<T>): cannot tell, do not flag.
+            return true;
+        }
+
+        foreach (var iface in type.AllInterfaces)
+        {
+            var definition = iface.OriginalDefinition;
+            var ns = definition.ContainingNamespace?.ToDisplayString();
+            if (definition.MetadataName == "ICommandOrQuery`1" && ns == "Mediarq.Core.Common.Requests.Abstraction")
+            {
+                return true;
+            }
+
+            if (definition.MetadataName == "INotification" && ns == "Mediarq.Core.Common.Requests.Notifications")
             {
                 return true;
             }
@@ -238,7 +298,7 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         _ => HandlerKind.Other,
     };
 
-    private static void Emit(SourceProductionContext context, EquatableArray<HandlerRegistration> registrations, bool isPublic)
+    private static void Emit(SourceProductionContext context, EquatableArray<HandlerRegistration> registrations, bool isPublic, string generatedNamespace)
     {
         var accessibility = isPublic ? "public" : "internal";
 
@@ -263,12 +323,19 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             }
         }
 
+        // Diagnose a validator whose target is neither a request nor a notification (MQ003): it can
+        // never be executed by the pipeline.
+        foreach (var orphan in registrations.Where(r => r.Kind == HandlerKind.Validator && r.IsOrphanValidator && r.RequestType != null))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(OrphanValidator, Location.None, orphan.RequestType));
+        }
+
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
         sb.AppendLine("#nullable enable");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine();
-        sb.AppendLine("namespace Mediarq.Extensions");
+        sb.Append("namespace ").AppendLine(generatedNamespace);
         sb.AppendLine("{");
         sb.AppendLine("    /// <summary>Compile-time generated Mediarq handler, behavior and validator registrations.</summary>");
         sb.Append("    ").Append(accessibility).AppendLine(" static class MediarqGeneratedRegistration");
@@ -393,4 +460,5 @@ internal readonly record struct HandlerRegistration(
     string? ResponseType,
     string? NotificationType,
     bool ResponseIsGenericResult,
-    string Lifetime);
+    string Lifetime,
+    bool IsOrphanValidator);
