@@ -11,7 +11,7 @@ namespace Mediarq.SourceGenerators.Tests;
 
 public class MediarqRegistrationGeneratorTests
 {
-    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source, string? accessibility = null)
+    private static CSharpCompilation CreateCompilation(string source)
     {
         // Ensure the Mediarq assembly (which declares the marker interfaces) is loaded and referenced,
         // along with Microsoft.Extensions.DependencyInjection.Abstractions (for ServiceLifetime).
@@ -26,11 +26,16 @@ public class MediarqRegistrationGeneratorTests
             .Distinct()
             .Select(p => MetadataReference.CreateFromFile(p));
 
-        var compilation = CSharpCompilation.Create(
+        return CSharpCompilation.Create(
             "GenTest",
             [CSharpSyntaxTree.ParseText(source)],
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source, string? accessibility = null)
+    {
+        var compilation = CreateCompilation(source);
 
         AnalyzerConfigOptionsProvider? optionsProvider = accessibility is null
             ? null
@@ -248,6 +253,29 @@ public class MediarqRegistrationGeneratorTests
 
         generated.Should().Contain("public static class MediarqGeneratedRegistration");
         generated.Should().Contain("public static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers");
+    }
+
+    [Fact]
+    public void Generator_Caches_Output_When_Input_Unchanged()
+    {
+        var compilation = CreateCompilation(PingSource);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            [new MediarqRegistrationGenerator().AsSourceGenerator()],
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
+        // First run, then re-run with an equivalent compilation (a clone shares the syntax trees).
+        driver = driver.RunGenerators(compilation);
+        driver = driver.RunGenerators(compilation.Clone());
+
+        var result = driver.GetRunResult().Results[0];
+        var outputs = result.TrackedOutputSteps
+            .SelectMany(step => step.Value)
+            .SelectMany(run => run.Outputs)
+            .ToList();
+
+        outputs.Should().NotBeEmpty();
+        outputs.Should().OnlyContain(o =>
+            o.Reason == IncrementalStepRunReason.Cached || o.Reason == IncrementalStepRunReason.Unchanged);
     }
 
     private const string PingSource = """
