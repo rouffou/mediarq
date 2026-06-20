@@ -1,4 +1,5 @@
 using Mediarq.Core.Common.Contexts;
+using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Pipeline.Behaviors;
 using Mediarq.Core.Common.Requests.Abstraction;
@@ -200,6 +201,21 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        return services;
+    }
+
+    /// <summary>
+    /// Opt-in: registers the <see cref="TimeoutBehavior{TRequest, TResponse}"/> that bounds how long a
+    /// request implementing <see cref="ITimeoutRequest"/> may take, throwing
+    /// <see cref="RequestTimeoutException"/> when the timeout is exceeded. The behavior is inert for
+    /// request types that do not implement <see cref="ITimeoutRequest"/>.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The same service collection, enabling fluent chaining.</returns>
+    public static IServiceCollection AddMediarqTimeout(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TimeoutBehavior<,>));
         return services;
     }
 
