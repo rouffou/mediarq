@@ -1,5 +1,10 @@
 # Mediarq
 
+[![CI](https://github.com/rouffou/mediarq/actions/workflows/ci.yml/badge.svg)](https://github.com/rouffou/mediarq/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/Mediarq.svg)](https://www.nuget.org/packages/Mediarq)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-8%20%7C%209%20%7C%2010-512BD4.svg)](https://dotnet.microsoft.com/)
+
 A lightweight, dependency-free **CQRS mediator for .NET** — a free alternative to MediatR with
 commands, queries, no-result commands, notifications, a composable pipeline of behaviors, and
 built-in validation and `Result` types. Designed for domain-driven and CQRS architectures.
@@ -20,8 +25,14 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 ## Installation
 
 ```bash
-dotnet add package Mediarq
+dotnet add package Mediarq        # meta-package: core + every official extension
+# or, for the core only:
+dotnet add package Mediarq.Core   # mediator, pipeline, results, source generator
 ```
+
+The **`Mediarq`** meta-package bundles `Mediarq.Core` with all optional extensions (see
+[Extension packages](#extension-packages)); reference `Mediarq.Core` plus only the extensions you
+need to keep dependencies minimal.
 
 ## Getting started
 
@@ -64,6 +75,15 @@ the validation pipeline builds `Result<T>` failures from generated factories. Th
 
 > The scan-based `AddMediarq(...)` is convenient but uses reflection and is annotated
 > `[RequiresUnreferencedCode]`; prefer `AddMediarqCore()` + `AddMediarqHandlers()` for trimming/AOT.
+
+The generated `AddMediarqHandlers()` is `internal` by default. To call it from another assembly, make
+it public via MSBuild:
+
+```xml
+<PropertyGroup>
+  <MediarqGeneratedAccessibility>public</MediarqGeneratedAccessibility>
+</PropertyGroup>
+```
 
 ## Commands & queries (with a result)
 
@@ -235,10 +255,14 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Polly` | Retry / timeout / circuit breaker for `IResilientRequest` via Polly (`AddMediarqResilience`) |
 | `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
 
-Exception handling is built in: implement `IRequestExceptionHandler<TRequest, TResponse>` to turn an
-exception into a response (typically a failed `Result`). Handlers can opt into a DI lifetime with
-`[RegisterHandler(ServiceLifetime.Singleton)]`, and validation messages can be localized via
-`IValidationMessageResolver`.
+Built into `Mediarq.Core`:
+
+- **Exception handling** — implement `IRequestExceptionHandler<TRequest, TResponse>` to turn an exception into a response (typically a failed `Result`).
+- **Pre/post processors** — `IRequestPreProcessor<TRequest>` and `IRequestPostProcessor<TRequest, TResponse>` run around the handler.
+- **Lifetime control** — opt a handler into a DI lifetime with `[RegisterHandler(ServiceLifetime.Singleton)]`.
+- **Validation localization** — translate messages via `IValidationMessageResolver`.
+- **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, plus cross async `MapAsync`/`BindAsync` overloads.
+- **`AggregateExceptionNotificationPublisher`** — runs every notification handler and surfaces *all* failures.
 
 ## License
 

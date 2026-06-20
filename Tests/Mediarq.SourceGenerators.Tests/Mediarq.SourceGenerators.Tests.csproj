@@ -21,7 +21,7 @@
   <ItemGroup>
     <!-- Normal reference (not analyzer): the tests instantiate and drive the generator directly. -->
     <ProjectReference Include="..\..\src\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj" />
-    <ProjectReference Include="..\..\src\Mediarq\Mediarq.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Core\Mediarq.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

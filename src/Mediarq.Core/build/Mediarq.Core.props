@@ -1,0 +1,8 @@
+<Project>
+  <!-- Make the MediarqGeneratedAccessibility property visible to the Mediarq source generator,
+       so consumers can set <MediarqGeneratedAccessibility>public</MediarqGeneratedAccessibility>
+       to make the generated AddMediarqHandlers() public (default: internal). -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="MediarqGeneratedAccessibility" />
+  </ItemGroup>
+</Project>

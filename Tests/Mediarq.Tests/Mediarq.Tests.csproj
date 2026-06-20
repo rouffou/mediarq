@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Mediarq\Mediarq.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Core\Mediarq.Core.csproj" />
     <ProjectReference Include="..\..\src\Mediarq.FluentValidation\Mediarq.FluentValidation.csproj" />
     <!-- Reference the source generator as an analyzer so AddMediarqHandlers() is generated for this assembly. -->
     <ProjectReference Include="..\..\src\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
