@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Mediarq.Core.Common.Requests.Abstraction;
 using Mediarq.Core.Common.Requests.Notifications;
+using Mediarq.Core.Common.Requests.Streaming;
 
 namespace Mediarq.Core.Mediators;
 
@@ -19,6 +20,7 @@ public sealed class MediarqWrapperRegistry
 {
     private readonly ConcurrentDictionary<Type, object> _requestWrappers = new();
     private readonly ConcurrentDictionary<Type, INotificationHandlerWrapper> _notificationWrappers = new();
+    private readonly ConcurrentDictionary<Type, object> _streamWrappers = new();
 
     /// <summary>
     /// Registers the dispatch wrapper for a request type. Called by generated code with both type
@@ -47,10 +49,30 @@ public sealed class MediarqWrapperRegistry
         return this;
     }
 
+    /// <summary>
+    /// Registers the dispatch wrapper for a stream-request type. Called by generated code with both
+    /// type arguments known, so the wrapper is instantiated with no reflection.
+    /// </summary>
+    /// <typeparam name="TRequest">The concrete stream-request type.</typeparam>
+    /// <typeparam name="TResponse">The type of each streamed item.</typeparam>
+    /// <returns>The same registry, enabling fluent chaining.</returns>
+    public MediarqWrapperRegistry AddStream<TRequest, TResponse>()
+        where TRequest : IStreamRequest<TResponse>
+    {
+        _streamWrappers.TryAdd(typeof(TRequest), new StreamRequestHandlerWrapperImpl<TRequest, TResponse>());
+        return this;
+    }
+
     /// <summary>Gets the cached request wrapper for <paramref name="requestType"/>, if registered.</summary>
     internal IRequestHandlerWrapper<TResponse>? GetRequestWrapper<TResponse>(Type requestType)
         => _requestWrappers.TryGetValue(requestType, out var wrapper)
             ? (IRequestHandlerWrapper<TResponse>)wrapper
+            : null;
+
+    /// <summary>Gets the cached stream wrapper for <paramref name="requestType"/>, if registered.</summary>
+    internal IStreamRequestHandlerWrapper<TResponse>? GetStreamWrapper<TResponse>(Type requestType)
+        => _streamWrappers.TryGetValue(requestType, out var wrapper)
+            ? (IStreamRequestHandlerWrapper<TResponse>)wrapper
             : null;
 
     /// <summary>Gets the cached notification wrapper for <paramref name="notificationType"/>, if registered.</summary>

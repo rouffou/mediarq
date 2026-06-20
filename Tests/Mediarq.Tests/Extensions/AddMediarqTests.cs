@@ -101,6 +101,22 @@ public class AddMediarqTests
         result.Error.Message.Should().Be("boom");
     }
 
+    [Fact]
+    public async Task Streams_Items_Through_CreateStream()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var items = new List<int>();
+        await foreach (var item in mediator.CreateStream(new CountStream(3)))
+        {
+            items.Add(item);
+        }
+
+        items.Should().Equal(1, 2, 3);
+    }
+
     // --- Compile-time generated registration path (AddMediarqCore + generated AddMediarqHandlers) ---
 
     private static ServiceProvider BuildGeneratedProvider()
@@ -165,5 +181,21 @@ public class AddMediarqTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Message.Should().Be("kaboom");
+    }
+
+    [Fact]
+    public async Task Generated_Registration_Streams_Items()
+    {
+        using var provider = BuildGeneratedProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        var items = new List<int>();
+        await foreach (var item in mediator.CreateStream(new CountStream(4)))
+        {
+            items.Add(item);
+        }
+
+        items.Should().Equal(1, 2, 3, 4);
     }
 }

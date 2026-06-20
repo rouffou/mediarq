@@ -87,6 +87,27 @@ public class ValidationBehaviorTests
     }
 
     [Fact]
+    public async Task Handle_Should_Localize_Message_When_Resolver_Provided()
+    {
+        var mockValidator = new Mock<IValidator<TestCommand>>();
+        mockValidator
+            .Setup(v => v.ValidateAsync(It.IsAny<TestCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ValidationResult.Failure(new[] { new ValidationPropertyError("Name", "Name is required") }) });
+
+        var resolver = new Mock<IValidationMessageResolver>();
+        resolver.Setup(r => r.Resolve("Name", "Name is required")).Returns("Nom requis");
+
+        var behavior = new ValidationBehavior<TestCommand, Result>(new[] { mockValidator.Object }, resolver.Object);
+        _mockContextResult.SetupGet(c => c.Request).Returns(new TestCommand(string.Empty));
+
+        var response = await behavior.Handle(_mockContextResult.Object, () => Task.FromResult(Result.Success()));
+
+        response.IsFailure.Should().BeTrue();
+        var validationError = (ValidationError)response.Error;
+        validationError.Errors.Should().ContainSingle().Which.Message.Should().Be("Nom requis");
+    }
+
+    [Fact]
     public async Task Handle_Should_ReturnFailure_When_ValidationFails_For_ResultT()
     {
         var mockValidator = new Mock<IValidator<TestCommandWithValue>>();
