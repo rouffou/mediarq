@@ -249,6 +249,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 |---|---|
 | `Mediarq.AspNetCore` | Map `Result` / `ResultError` → `IResult` and RFC 7807 ProblemDetails |
 | `Mediarq.FluentValidation` | Run FluentValidation validators in the Mediarq pipeline |
+| `Mediarq.DataAnnotations` | Validate requests with `System.ComponentModel.DataAnnotations` attributes (`AddMediarqDataAnnotations`) |
 | `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
 | `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |
@@ -263,7 +264,7 @@ Built into `Mediarq.Core`:
 - **Ordered notifications** — a notification handler can implement `IOrderedNotificationHandler` for a deterministic order.
 - **Lifetime control** — opt a handler into a DI lifetime with `[RegisterHandler(ServiceLifetime.Singleton)]`.
 - **Validation localization** — translate messages via `IValidationMessageResolver`.
-- **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, plus cross async `MapAsync`/`BindAsync` overloads.
+- **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, `Recover`, `OrElse`, `ToResult`, plus cross async `MapAsync`/`BindAsync` overloads.
 - **`AggregateExceptionNotificationPublisher`** — runs every notification handler and surfaces *all* failures.
 
 ## License

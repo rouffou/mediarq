@@ -220,4 +220,34 @@ public static class ResultExtensions
         value = default;
         return false;
     }
+
+    /// <summary>
+    /// Turns a failed result into a successful one using <paramref name="fallback"/>; a success is returned unchanged.
+    /// </summary>
+    public static Result<T> Recover<T>(this Result<T> result, Func<ResultError, T> fallback)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(fallback);
+        return result.IsSuccess ? result : Result.Success(fallback(result.Error));
+    }
+
+    /// <summary>
+    /// Returns <paramref name="alternative"/> applied to the error when the result failed; a success is returned unchanged.
+    /// </summary>
+    public static Result<T> OrElse<T>(this Result<T> result, Func<ResultError, Result<T>> alternative)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(alternative);
+        return result.IsSuccess ? result : alternative(result.Error);
+    }
+
+    /// <summary>
+    /// Wraps a reference value into a result: success when non-null, otherwise a failure with <paramref name="error"/>.
+    /// </summary>
+    public static Result<T> ToResult<T>(this T? value, ResultError error)
+        where T : class
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return value is not null ? Result.Success(value) : Result.Failure<T>(error);
+    }
 }

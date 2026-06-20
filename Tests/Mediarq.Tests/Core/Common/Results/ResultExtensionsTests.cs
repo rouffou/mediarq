@@ -110,4 +110,25 @@ public class ResultExtensionsTests
 
         Result.Failure<int>(Error).TryGetValue(out _).Should().BeFalse();
     }
+
+    [Fact]
+    public void Recover_Turns_Failure_Into_Success()
+    {
+        Result.Failure<int>(Error).Recover(_ => 99).Value.Should().Be(99);
+        Result.Success(1).Recover(_ => 99).Value.Should().Be(1);
+    }
+
+    [Fact]
+    public void OrElse_Returns_Alternative_On_Failure()
+    {
+        Result.Failure<int>(Error).OrElse(_ => Result.Success(7)).Value.Should().Be(7);
+        Result.Success(1).OrElse(_ => Result.Success(7)).Value.Should().Be(1);
+    }
+
+    [Fact]
+    public void ToResult_Wraps_NonNull_Value()
+    {
+        "hi".ToResult(Error).IsSuccess.Should().BeTrue();
+        ((string)null).ToResult(Error).IsFailure.Should().BeTrue();
+    }
 }
