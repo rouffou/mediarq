@@ -177,8 +177,13 @@ logging and performance tracking are **opt-in**:
 ```csharp
 services.AddMediarq(/* ... */)
         .AddMediarqRequestLogging()       // LoggingBehavior
-        .AddMediarqPerformanceTracking(); // PerformanceBehavior
+        .AddMediarqPerformanceTracking()  // PerformanceBehavior
+        .AddMediarqTimeout();             // TimeoutBehavior
 ```
+
+`AddMediarqTimeout()` bounds requests that implement `ITimeoutRequest`: if handling exceeds the
+request's `Timeout`, a `RequestTimeoutException` is thrown (a pessimistic timeout — it frees the caller,
+so handlers should also honor their `CancellationToken`). It is inert for other request types.
 
 Add your own by implementing `IPipelineBehavior<TRequest, TResponse>`:
 
