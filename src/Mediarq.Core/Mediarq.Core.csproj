@@ -54,6 +54,8 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <!-- Exposes MediarqGeneratedAccessibility to the source generator in consumers (auto-imported as build/{PackageId}.props). -->
+    <None Include="build\Mediarq.Core.props" Pack="true" PackagePath="build\" />
   </ItemGroup>
 
 </Project>

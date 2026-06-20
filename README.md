@@ -76,6 +76,15 @@ the validation pipeline builds `Result<T>` failures from generated factories. Th
 > The scan-based `AddMediarq(...)` is convenient but uses reflection and is annotated
 > `[RequiresUnreferencedCode]`; prefer `AddMediarqCore()` + `AddMediarqHandlers()` for trimming/AOT.
 
+The generated `AddMediarqHandlers()` is `internal` by default. To call it from another assembly, make
+it public via MSBuild:
+
+```xml
+<PropertyGroup>
+  <MediarqGeneratedAccessibility>public</MediarqGeneratedAccessibility>
+</PropertyGroup>
+```
+
 ## Commands & queries (with a result)
 
 ```csharp
