@@ -91,6 +91,9 @@ public static class ServiceCollectionExtensions
             .AddClasses(c => c.AssignableTo(typeof(IPipelineBehavior<,>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
+            .AddClasses(c => c.AssignableTo(typeof(IStreamPipelineBehavior<,>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime()
             .AddClasses(c => c.AssignableTo(typeof(IValidator<>)))
                 .AsImplementedInterfaces()
                 .WithScopedLifetime()
@@ -155,6 +158,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IClock, SystemClock>();
         services.TryAddScoped<IRequestContextFactory, RequestContextFactory>();
         services.TryAddScoped<IPipelineExecutor, PipelineExecutor>();
+        services.TryAddScoped<IStreamPipelineExecutor, StreamPipelineExecutor>();
         services.TryAddSingleton<INotificationPublisher, ParallelNotificationPublisher>();
 
         if (isHttp)

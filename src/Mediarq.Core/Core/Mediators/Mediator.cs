@@ -47,6 +47,7 @@ public class Mediator : IMediator
     private readonly IHandlerResolver _handlerResolver;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly MediarqWrapperRegistry? _wrapperRegistry;
+    private readonly IStreamPipelineExecutor? _streamPipelineExecutor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Mediator"/> class.
@@ -68,6 +69,10 @@ public class Mediator : IMediator
     /// notification dispatch is fully reflection-free. When <see langword="null"/>, wrappers are
     /// built reflectively on first use and cached.
     /// </param>
+    /// <param name="streamPipelineExecutor">
+    /// Optional executor that wraps streaming requests with <see cref="IStreamPipelineBehavior{TRequest, TResponse}"/>.
+    /// When <see langword="null"/>, <see cref="CreateStream{TResponse}"/> invokes the handler directly.
+    /// </param>
     /// <exception cref="ArgumentNullException">
     /// Thrown if any of the required constructor parameters are <see langword="null"/>.
     /// </exception>
@@ -76,7 +81,8 @@ public class Mediator : IMediator
         IPipelineExecutor pipelineExecutor,
         IHandlerResolver handlerResolver,
         INotificationPublisher notificationPublisher,
-        MediarqWrapperRegistry? wrapperRegistry = null)
+        MediarqWrapperRegistry? wrapperRegistry = null,
+        IStreamPipelineExecutor? streamPipelineExecutor = null)
     {
         ArgumentNullException.ThrowIfNull(handlerResolver);
         ArgumentNullException.ThrowIfNull(requestContextFactory);
@@ -88,6 +94,7 @@ public class Mediator : IMediator
         _handlerResolver = handlerResolver;
         _notificationPublisher = notificationPublisher;
         _wrapperRegistry = wrapperRegistry;
+        _streamPipelineExecutor = streamPipelineExecutor;
     }
 
     /// <inheritdoc />
@@ -151,7 +158,7 @@ public class Mediator : IMediator
         var wrapper = _wrapperRegistry?.GetStreamWrapper<TResponse>(requestType)
             ?? GetOrCreateStreamWrapper<TResponse>(requestType);
 
-        return wrapper.Handle(request, _handlerResolver, cancellationToken);
+        return wrapper.Handle(request, _handlerResolver, _streamPipelineExecutor, cancellationToken);
     }
 
     // Reflective fallback used only without a registry (assembly-scan mode). Built once per type and cached.
