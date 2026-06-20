@@ -36,17 +36,37 @@ internal sealed class NotificationHandlerWrapperImpl<TNotification> : INotificat
         IReadOnlyList<INotificationHandler<TNotification>> handlers =
             handlerResolver.ResolveAll<INotificationHandler<TNotification>>();
 
-        if (handlers.Count == 0)
+        var count = handlers.Count;
+        if (count == 0)
         {
             // Publishing a notification with no registered handler is a no-op.
             return Task.CompletedTask;
         }
 
-        // Handlers implementing IOrderedNotificationHandler run by ascending Order; others keep their
-        // registration order (stable sort) and run after, defaulting to int.MaxValue.
-        var orderedHandlers = handlers.OrderBy(h => h is IOrderedNotificationHandler ordered ? ordered.Order : int.MaxValue);
+        if (count == 1)
+        {
+            // Single handler: ordering is moot, so skip the LINQ OrderBy and the List; a one-element
+            // array still flows through the publisher (preserving any decorator, e.g. diagnostics).
+            var only = handlers[0];
+            var single = new Func<CancellationToken, Task>[] { ct => only.Handle(typedNotification, ct) };
+            return notificationPublisher.Publish(single, cancellationToken);
+        }
 
-        var callbacks = new List<Func<CancellationToken, Task>>(handlers.Count);
+        // Handlers implementing IOrderedNotificationHandler run by ascending Order; others keep their
+        // registration order (stable sort) and run after, defaulting to int.MaxValue. The OrderBy is
+        // only paid for when at least one handler actually opts into ordering — otherwise registration
+        // order is already correct and the LINQ allocation is avoided.
+        IEnumerable<INotificationHandler<TNotification>> orderedHandlers = handlers;
+        for (var i = 0; i < count; i++)
+        {
+            if (handlers[i] is IOrderedNotificationHandler)
+            {
+                orderedHandlers = handlers.OrderBy(h => h is IOrderedNotificationHandler ordered ? ordered.Order : int.MaxValue);
+                break;
+            }
+        }
+
+        var callbacks = new List<Func<CancellationToken, Task>>(count);
         foreach (var handler in orderedHandlers)
         {
             var captured = handler;
