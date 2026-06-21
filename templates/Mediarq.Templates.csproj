@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>Mediarq.Templates</PackageId>
+    <Version>1.0.0</Version>
+    <Title>Mediarq templates</Title>
+    <Authors>Nicolas Rouffart</Authors>
+    <Description>dotnet new templates for Mediarq. Includes 'mediarq-feature' which scaffolds a command, its handler and a validator.</Description>
+    <PackageTags>dotnet-new;templates;mediarq;cqrs;mediator</PackageTags>
+    <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ship the template content; never compile it as part of this project. -->
+    <Content Include="feature\**\*" Exclude="feature\**\bin\**;feature\**\obj\**" />
+    <Compile Remove="**\*" />
+  </ItemGroup>
+
+</Project>

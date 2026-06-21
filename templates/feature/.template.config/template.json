@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Nicolas Rouffart",
+  "classifications": [ "Mediarq", "CQRS", "Web" ],
+  "identity": "Mediarq.Feature.CSharp",
+  "name": "Mediarq feature (command, handler, validator)",
+  "shortName": "mediarq-feature",
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  },
+  "sourceName": "Sample",
+  "preferNameDirectory": false,
+  "symbols": {
+    "namespace": {
+      "type": "parameter",
+      "datatype": "string",
+      "replaces": "Mediarq.App.Features",
+      "defaultValue": "Mediarq.App.Features",
+      "description": "The namespace of the generated files."
+    }
+  }
+}
