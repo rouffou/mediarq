@@ -315,6 +315,24 @@ Built into `Mediarq.Core`:
 - **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, `Recover`, `OrElse`, `ToResult`, plus cross async `MapAsync`/`BindAsync` overloads.
 - **`AggregateExceptionNotificationPublisher`** — runs every notification handler and surfaces *all* failures.
 
+## Samples
+
+Three runnable samples under [Samples/](Samples) (see [Samples/README.md](Samples/README.md)):
+
+- **[Mediarq.Samples.Quickstart](Samples/Mediarq.Samples.Quickstart)** — a console tour of the core
+  in-process features (commands/queries/void, notifications, streaming, validation, behaviors,
+  pre/post processors, exception handling, timeout, `Result` combinators).
+- **[Mediarq.Samples.WebApi](Samples/Mediarq.Samples.WebApi)** — an ASP.NET Core "Orders" API wiring the
+  extensions end-to-end (`Result` → HTTP, FluentValidation/DataAnnotations, caching, idempotency,
+  EF Core unit of work + transactional outbox, Polly, diagnostics/OpenTelemetry, MassTransit).
+- **[Mediarq.AotSample](Samples/Mediarq.AotSample)** — the reflection-free path, published with Native AOT.
+
+```bash
+dotnet run --project Samples/Mediarq.Samples.Quickstart
+dotnet run --project Samples/Mediarq.Samples.WebApi      # then open /scalar/v1
+dotnet run --project Samples/Mediarq.AotSample
+```
+
 ## License
 
 MIT © Nicolas Rouffart
