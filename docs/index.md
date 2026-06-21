@@ -28,11 +28,19 @@ commands, queries, notifications, a composable pipeline of behaviors, built-in v
 
 ## Guides
 
+New here? Start with **Concepts**, then build **Your first app**.
+
+- [Concepts](guides/concepts.md) — commands vs queries vs notifications, `Result`, the pipeline
+- [Your first app](guides/your-first-app.md) — a working API, step by step
+- [Wiring extensions](guides/wiring-extensions.md) — register the core and each optional package
+- [Writing a behavior](guides/writing-a-behavior.md) — custom cross-cutting logic
+- [Testing](guides/testing.md) — unit- and integration-test handlers, validators, behaviors
 - [Migrating from MediatR](guides/migrating-from-mediatr.md)
 - [Native AOT & trimming](guides/native-aot.md)
-- [Writing a behavior](guides/writing-a-behavior.md)
+- [Troubleshooting](guides/troubleshooting.md) — when something silently doesn't fire
 
 ## Getting started
 
-See the [README](https://github.com/rouffou/mediarq#readme) for usage, and the **API** section for
-the full reference generated from the XML documentation.
+See the [README](https://github.com/rouffou/mediarq#readme) for usage, the **Guides** above for
+task-focused walkthroughs, and the **API** section for the full reference generated from the XML
+documentation.

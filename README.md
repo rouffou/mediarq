@@ -333,6 +333,17 @@ dotnet run --project Samples/Mediarq.Samples.WebApi      # then open /scalar/v1
 dotnet run --project Samples/Mediarq.AotSample
 ```
 
+## Documentation
+
+Task-focused guides live under [docs/guides](docs/guides) (and on the docs site). If you're starting
+from scratch with no one to ask, read them in this order:
+
+1. [Concepts](docs/guides/concepts.md) — commands vs queries vs notifications, `Result`, the pipeline.
+2. [Your first app](docs/guides/your-first-app.md) — build a working API step by step.
+3. [Wiring extensions](docs/guides/wiring-extensions.md) — register the core and each optional package (with the prerequisites and gotchas).
+4. [Writing a behavior](docs/guides/writing-a-behavior.md) · [Testing](docs/guides/testing.md) · [Migrating from MediatR](docs/guides/migrating-from-mediatr.md) · [Native AOT & trimming](docs/guides/native-aot.md).
+5. [Troubleshooting](docs/guides/troubleshooting.md) — when something silently doesn't fire (start here when stuck).
+
 ## License
 
 MIT © Nicolas Rouffart

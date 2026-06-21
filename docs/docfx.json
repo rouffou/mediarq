@@ -26,7 +26,7 @@
   "build": {
     "content": [
       { "files": [ "api/**.yml", "api/index.md" ] },
-      { "files": [ "*.md", "toc.yml" ] }
+      { "files": [ "*.md", "guides/**.md", "toc.yml" ] }
     ],
     "dest": "_site",
     "globalMetadata": {
