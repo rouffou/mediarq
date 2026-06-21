@@ -38,6 +38,7 @@ jobs:
           dotnet pack src/Mediarq.MassTransit/Mediarq.MassTransit.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack templates/Mediarq.Templates.csproj -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Caching/Mediarq.Caching.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Idempotency/Mediarq.Idempotency.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Diagnostics/Mediarq.Diagnostics.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.OpenTelemetry/Mediarq.OpenTelemetry.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.UnitOfWork/Mediarq.UnitOfWork.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
