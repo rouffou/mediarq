@@ -1,4 +1,12 @@
 - name: Home
   href: index.md
+- name: Guides
+  items:
+    - name: Migrating from MediatR
+      href: guides/migrating-from-mediatr.md
+    - name: Native AOT & trimming
+      href: guides/native-aot.md
+    - name: Writing a behavior
+      href: guides/writing-a-behavior.md
 - name: API
   href: api/

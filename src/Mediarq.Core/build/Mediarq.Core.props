@@ -1,8 +1,11 @@
 <Project>
-  <!-- Make the MediarqGeneratedAccessibility property visible to the Mediarq source generator,
-       so consumers can set <MediarqGeneratedAccessibility>public</MediarqGeneratedAccessibility>
-       to make the generated AddMediarqHandlers() public (default: internal). -->
+  <!-- Make Mediarq generator options visible to the source generator:
+       - MediarqGeneratedAccessibility: set to "public" to make the generated AddMediarqHandlers()
+         public instead of internal (so it can be called from another assembly).
+       - MediarqGeneratedNamespace: the namespace of the generated registration class
+         (default: Mediarq.Extensions). -->
   <ItemGroup>
     <CompilerVisibleProperty Include="MediarqGeneratedAccessibility" />
+    <CompilerVisibleProperty Include="MediarqGeneratedNamespace" />
   </ItemGroup>
 </Project>

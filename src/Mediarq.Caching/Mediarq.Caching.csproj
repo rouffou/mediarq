@@ -12,21 +12,26 @@
     <PackageId>Mediarq.Caching</PackageId>
     <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
-    <Description>In-memory caching pipeline behavior for Mediarq: memoize responses of ICacheableRequest via IMemoryCache.</Description>
-    <PackageTags>mediarq;cqrs;cache;memorycache;pipeline;dotnet</PackageTags>
+    <Description>Caching pipeline behaviors for Mediarq: memoize responses of ICacheableRequest via IMemoryCache (in-memory) or IDistributedCache (e.g. Redis).</Description>
+    <PackageTags>mediarq;cqrs;cache;memorycache;distributedcache;redis;pipeline;dotnet</PackageTags>
     <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Mediarq.Core\Mediarq.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

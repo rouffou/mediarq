@@ -160,3 +160,17 @@ public sealed class CountStreamHandler : IStreamRequestHandler<CountStream, int>
         }
     }
 }
+
+public sealed class CountStreamLoggingBehavior(ExecutionTrace trace) : IStreamPipelineBehavior<CountStream, int>
+{
+    public async IAsyncEnumerable<int> Handle(CountStream request, Func<IAsyncEnumerable<int>> continuation, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        trace.Entries.Add("stream:before");
+        await foreach (var item in continuation().WithCancellation(cancellationToken))
+        {
+            yield return item;
+        }
+
+        trace.Entries.Add("stream:after");
+    }
+}
