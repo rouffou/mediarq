@@ -38,6 +38,15 @@ integrations — `Mediarq.EntityFrameworkCore`, `Mediarq.OpenTelemetry`, `Mediar
 [Extension packages](#extension-packages)). Reference `Mediarq.Core` plus only the extensions you
 need to keep dependencies minimal.
 
+### Scaffolding (`dotnet new`)
+
+Install the templates and scaffold a feature (a command, its handler and a validator) in one command:
+
+```bash
+dotnet new install Mediarq.Templates
+dotnet new mediarq-feature -n CreateUser --namespace MyApp.Users
+```
+
 ## Getting started
 
 Register Mediarq, passing the assemblies that contain your handlers, behaviors and validators:
