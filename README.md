@@ -284,7 +284,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.AspNetCore` | Map `Result` / `ResultError` → `IResult` and RFC 7807 ProblemDetails |
 | `Mediarq.FluentValidation` | Run FluentValidation validators in the Mediarq pipeline |
 | `Mediarq.DataAnnotations` | Validate requests with `System.ComponentModel.DataAnnotations` attributes (`AddMediarqDataAnnotations`) |
-| `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) |
+| `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) or `IDistributedCache` / Redis (`AddMediarqDistributedCaching`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
 | `Mediarq.OpenTelemetry` | One-line `AddMediarqInstrumentation()` on the tracer/meter provider builders |
 | `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |
