@@ -1,6 +1,7 @@
 # Mediarq
 
 [![CI](https://github.com/rouffou/mediarq/actions/workflows/ci.yml/badge.svg)](https://github.com/rouffou/mediarq/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/rouffou/mediarq/branch/main/graph/badge.svg)](https://codecov.io/gh/rouffou/mediarq)
 [![NuGet](https://img.shields.io/nuget/v/Mediarq.svg)](https://www.nuget.org/packages/Mediarq)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-8%20%7C%209%20%7C%2010-512BD4.svg)](https://dotnet.microsoft.com/)
