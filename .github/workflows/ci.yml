@@ -33,6 +33,15 @@ jobs:
           path: ./coverage/**/coverage.cobertura.xml
           if-no-files-found: warn
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./coverage
+          files: '**/coverage.cobertura.xml'
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   aot:
     name: Native AOT publish (reflection-free path)
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
@@ -31,8 +31,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="Scrutor" Version="6.1.0" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
@@ -46,10 +46,8 @@
 
   <ItemGroup>
     <!-- Build the source generator and pack it as an analyzer; its output assembly is not referenced at runtime. -->
-    <ProjectReference Include="..\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj"
-                      ReferenceOutputAssembly="false" PrivateAssets="all" />
-    <None Include="..\Mediarq.SourceGenerators\bin\$(Configuration)\netstandard2.0\Mediarq.SourceGenerators.dll"
-          Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <ProjectReference Include="..\Mediarq.SourceGenerators\Mediarq.SourceGenerators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="..\Mediarq.SourceGenerators\bin\$(Configuration)\netstandard2.0\Mediarq.SourceGenerators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

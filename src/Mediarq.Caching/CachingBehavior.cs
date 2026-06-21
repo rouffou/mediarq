@@ -11,9 +11,12 @@ namespace Mediarq.Caching;
 /// </summary>
 /// <typeparam name="TRequest">The request type.</typeparam>
 /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
-public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public sealed class CachingBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
+    private static readonly bool RequestIsCacheable = typeof(ICacheableRequest).IsAssignableFrom(typeof(TRequest));
+
     private readonly IMemoryCache _cache;
 
     /// <summary>
@@ -27,16 +30,16 @@ public sealed class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRe
         _cache = cache;
     }
 
+    /// <summary>Active only for request types that implement <see cref="ICacheableRequest"/>.</summary>
+    public bool IsActive => RequestIsCacheable;
+
     /// <inheritdoc />
     public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handle);
 
-        if (context.Request is not ICacheableRequest cacheable)
-        {
-            return await handle().ConfigureAwait(false);
-        }
+        var cacheable = (ICacheableRequest)context.Request!;
 
         if (_cache.TryGetValue(cacheable.CacheKey, out TResponse? cached) && cached is not null)
         {

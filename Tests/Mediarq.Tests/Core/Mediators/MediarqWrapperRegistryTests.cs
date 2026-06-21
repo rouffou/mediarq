@@ -37,19 +37,13 @@ public class MediarqWrapperRegistryTests
 
         var resolver = new Mock<IHandlerResolver>();
         resolver.Setup(r => r.Resolve<IRequestHandler<RegPing, Result<string>>>()).Returns(handler.Object);
+        resolver.Setup(r => r.ResolveAll<IPipelineBehavior<RegPing, Result<string>>>()).Returns([]);
 
         var request = new RegPing("x");
-        var context = new RequestContext<RegPing, Result<string>>(request, "user");
 
         var factory = new Mock<IRequestContextFactory>();
-        factory.Setup(f => f.Create<RegPing, Result<string>>(request, It.IsAny<CancellationToken>())).Returns(context);
 
-        var executor = new Mock<IPipelineExecutor>();
-        executor
-            .Setup(p => p.ExecuteAsync(context, It.IsAny<Func<CancellationToken, Task<Result<string>>>>(), It.IsAny<CancellationToken>()))
-            .Returns((RequestContext<RegPing, Result<string>> _, Func<CancellationToken, Task<Result<string>>> next, CancellationToken ct) => next(ct));
-
-        var mediator = new Mediator(factory.Object, executor.Object, resolver.Object, new ParallelNotificationPublisher(), registry);
+        var mediator = new Mediator(factory.Object, resolver.Object, new ParallelNotificationPublisher(), registry);
 
         var result = await mediator.Send(request);
 
@@ -72,7 +66,6 @@ public class MediarqWrapperRegistryTests
 
         var mediator = new Mediator(
             Mock.Of<IRequestContextFactory>(),
-            Mock.Of<IPipelineExecutor>(),
             resolver.Object,
             new ParallelNotificationPublisher(),
             registry);

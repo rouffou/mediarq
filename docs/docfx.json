@@ -9,10 +9,13 @@
             "Mediarq/Mediarq.csproj",
             "Mediarq.AspNetCore/Mediarq.AspNetCore.csproj",
             "Mediarq.FluentValidation/Mediarq.FluentValidation.csproj",
+            "Mediarq.DataAnnotations/Mediarq.DataAnnotations.csproj",
             "Mediarq.MassTransit/Mediarq.MassTransit.csproj",
             "Mediarq.Caching/Mediarq.Caching.csproj",
             "Mediarq.Diagnostics/Mediarq.Diagnostics.csproj",
+            "Mediarq.OpenTelemetry/Mediarq.OpenTelemetry.csproj",
             "Mediarq.UnitOfWork/Mediarq.UnitOfWork.csproj",
+            "Mediarq.EntityFrameworkCore/Mediarq.EntityFrameworkCore.csproj",
             "Mediarq.Polly/Mediarq.Polly.csproj"
           ]
         }

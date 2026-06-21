@@ -1,4 +1,5 @@
 using Mediarq.Core.Common.Contexts;
+using Mediarq.Core.Common.Exceptions;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Pipeline.Behaviors;
 using Mediarq.Core.Common.Requests.Abstraction;
@@ -56,10 +57,11 @@ public static class ServiceCollectionExtensions
 
         AddCoreServices(services, isHttp);
 
-        // Always scan the Mediarq assembly itself (for the built-in pipeline behaviors), plus the
-        // caller-provided assemblies. When none are supplied, fall back to the entry assembly so a
-        // consumer's handlers in the startup project are discovered automatically.
-        var scanTargets = new HashSet<Assembly> { typeof(ServiceCollectionExtensions).Assembly };
+        // Scan the caller-provided assemblies; when none are supplied, fall back to the entry assembly so
+        // a consumer's handlers in the startup project are discovered automatically. The Mediarq assembly
+        // is intentionally NOT scanned: its built-in behaviors are registered conditionally below, so an
+        // app that has no validators/processors/exception-handlers pays nothing for them per request.
+        var scanTargets = new HashSet<Assembly>();
 
         if (assemblies is { Length: > 0 })
         {
@@ -78,34 +80,63 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        services.Scan(scan => scan
-            .FromAssemblies(scanTargets)
-            .AddClasses(c => c.AssignableToAny(
-                typeof(IRequestHandler<,>),
-                typeof(ICommandHandler<,>),
-                typeof(IQueryHandler<,>),
-                typeof(INotificationHandler<>)
-            ))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IPipelineBehavior<,>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IValidator<>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IRequestExceptionHandler<,>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IStreamRequestHandler<,>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IRequestPreProcessor<>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime()
-            .AddClasses(c => c.AssignableTo(typeof(IRequestPostProcessor<,>)))
-                .AsImplementedInterfaces()
-                .WithScopedLifetime());
+        if (scanTargets.Count > 0)
+        {
+            services.Scan(scan => scan
+                .FromAssemblies(scanTargets)
+                .AddClasses(c => c.AssignableToAny(
+                    typeof(IRequestHandler<,>),
+                    typeof(ICommandHandler<,>),
+                    typeof(IQueryHandler<,>),
+                    typeof(INotificationHandler<>)
+                ))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IPipelineBehavior<,>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IStreamPipelineBehavior<,>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IValidator<>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IRequestExceptionHandler<,>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IStreamRequestHandler<,>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IRequestPreProcessor<>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+                .AddClasses(c => c.AssignableTo(typeof(IRequestPostProcessor<,>)))
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime());
+        }
+
+        // Register the built-in plumbing behaviors only when a matching companion was discovered, so an
+        // idle pipeline resolves no behavior at all. Logging/performance are opt-in (see
+        // AddMediarqRequestLogging / AddMediarqPerformanceTracking).
+        if (HasOpenGenericService(services, typeof(IRequestExceptionHandler<,>)))
+        {
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
+        }
+
+        if (HasOpenGenericService(services, typeof(IValidator<>)))
+        {
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        }
+
+        if (HasOpenGenericService(services, typeof(IRequestPreProcessor<>)))
+        {
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
+        }
+
+        if (HasOpenGenericService(services, typeof(IRequestPostProcessor<,>)))
+        {
+            services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
+        }
 
         return services;
     }
@@ -132,22 +163,82 @@ public static class ServiceCollectionExtensions
 
         AddCoreServices(services, isHttp);
 
-        // The built-in behaviors live in the Mediarq assembly; register them explicitly since this
-        // entry point does not scan any assembly.
+        // The built-in plumbing behaviors live in the Mediarq assembly; register them explicitly since
+        // this entry point does not scan any assembly. They are conditional behaviors, so each is omitted
+        // from the pipeline at run time for request types that have no validator/processor/exception
+        // handler — keeping the hot path cost-free while remaining available when needed.
+        // Order: exception (outermost) -> validation -> pre -> handler -> post.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestExceptionProcessorBehavior<,>));
-        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
-        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        // Registered after validation so they wrap closest to the handler: validate -> pre -> handler -> post.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(RequestPostProcessorBehavior<,>));
 
         return services;
     }
 
+    /// <summary>
+    /// Opt-in: registers the <see cref="LoggingBehavior{TRequest, TResponse}"/> that logs request start
+    /// and completion. Not registered by default — add it when you want request logging. The behavior is
+    /// active only when information-level logging is enabled.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The same service collection, enabling fluent chaining.</returns>
+    public static IServiceCollection AddMediarqRequestLogging(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        return services;
+    }
+
+    /// <summary>
+    /// Opt-in: registers the <see cref="PerformanceBehavior{TRequest, TResponse}"/> that warns when a
+    /// request runs longer than the threshold. Not registered by default — add it when you want
+    /// performance tracking. The behavior is active only when warning-level logging is enabled.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The same service collection, enabling fluent chaining.</returns>
+    public static IServiceCollection AddMediarqPerformanceTracking(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        return services;
+    }
+
+    /// <summary>
+    /// Opt-in: registers the <see cref="TimeoutBehavior{TRequest, TResponse}"/> that bounds how long a
+    /// request implementing <see cref="ITimeoutRequest"/> may take, throwing
+    /// <see cref="RequestTimeoutException"/> when the timeout is exceeded. The behavior is inert for
+    /// request types that do not implement <see cref="ITimeoutRequest"/>.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The same service collection, enabling fluent chaining.</returns>
+    public static IServiceCollection AddMediarqTimeout(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TimeoutBehavior<,>));
+        return services;
+    }
+
+    // True when any registration's service type is a closed form of the given open generic (e.g. a
+    // concrete IValidator<SomeCommand> for typeof(IValidator<>)). Used to register a built-in plumbing
+    // behavior only when there is something for it to do.
+    private static bool HasOpenGenericService(IServiceCollection services, Type openGeneric)
+    {
+        for (var i = 0; i < services.Count; i++)
+        {
+            var serviceType = services[i].ServiceType;
+            if (serviceType.IsGenericType && serviceType.GetGenericTypeDefinition() == openGeneric)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static void AddCoreServices(IServiceCollection services, bool isHttp)
     {
-        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp.GetService));
+        services.AddScoped<IHandlerResolver>(sp => new HandlerResolver(sp));
         services.AddScoped<IMediator, Mediator>();
         services.AddScoped<ISender>(sp => sp.GetRequiredService<IMediator>());
         services.AddScoped<IPublisher>(sp => sp.GetRequiredService<IMediator>());
@@ -155,6 +246,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IClock, SystemClock>();
         services.TryAddScoped<IRequestContextFactory, RequestContextFactory>();
         services.TryAddScoped<IPipelineExecutor, PipelineExecutor>();
+        services.TryAddScoped<IStreamPipelineExecutor, StreamPipelineExecutor>();
         services.TryAddSingleton<INotificationPublisher, ParallelNotificationPublisher>();
 
         if (isHttp)
