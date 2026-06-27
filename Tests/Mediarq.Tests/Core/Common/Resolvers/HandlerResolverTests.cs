@@ -1,3 +1,4 @@
+#nullable enable
 using FluentAssertions;
 using Mediarq.Core.Common.Resolvers;
 
@@ -8,8 +9,15 @@ public class HandlerResolverTests
     [Fact]
     public void CannotConstructWithNullResolver()
     {
-        FluentActions.Invoking(() => new HandlerResolver(null!))
+        FluentActions.Invoking(() => new HandlerResolver((Func<Type, object?>)null!))
             .Should().Throw<ArgumentNullException>().WithParameterName("resolver");
+    }
+
+    [Fact]
+    public void CannotConstructWithNullServiceProvider()
+    {
+        FluentActions.Invoking(() => new HandlerResolver((IServiceProvider)null!))
+            .Should().Throw<ArgumentNullException>().WithParameterName("serviceProvider");
     }
 
     [Fact]

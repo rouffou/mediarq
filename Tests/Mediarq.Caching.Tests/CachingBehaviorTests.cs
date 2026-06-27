@@ -46,23 +46,14 @@ public class CachingBehaviorTests
     }
 
     [Fact]
-    public async Task PassesThrough_NonCacheable_Request()
+    public void IsActive_True_For_Cacheable_False_Otherwise()
     {
         using var cache = new MemoryCache(new MemoryCacheOptions());
-        var behavior = Behavior<PlainQuery, Result<string>>(cache);
-        var context = new RequestContext<PlainQuery, Result<string>>(new PlainQuery(), "user");
 
-        var calls = 0;
-        Task<Result<string>> Handle()
-        {
-            calls++;
-            return Task.FromResult(Result.Success("value"));
-        }
-
-        await behavior.Handle(context, Handle);
-        await behavior.Handle(context, Handle);
-
-        calls.Should().Be(2);
+        // The executor only runs the behavior for cacheable request types; non-cacheable requests are
+        // skipped entirely (so the behavior never sees them).
+        Behavior<CachedQuery, Result<string>>(cache).IsActive.Should().BeTrue();
+        Behavior<PlainQuery, Result<string>>(cache).IsActive.Should().BeFalse();
     }
 
     [Fact]

@@ -33,13 +33,26 @@ public class MediarqRegistrationGeneratorTests
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
     }
 
-    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source, string? accessibility = null)
+    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source, string? accessibility = null, string? generatedNamespace = null)
     {
         var compilation = CreateCompilation(source);
 
-        AnalyzerConfigOptionsProvider? optionsProvider = accessibility is null
-            ? null
-            : new TestOptionsProvider(new Dictionary<string, string> { ["build_property.MediarqGeneratedAccessibility"] = accessibility });
+        AnalyzerConfigOptionsProvider? optionsProvider = null;
+        if (accessibility is not null || generatedNamespace is not null)
+        {
+            var globals = new Dictionary<string, string>();
+            if (accessibility is not null)
+            {
+                globals["build_property.MediarqGeneratedAccessibility"] = accessibility;
+            }
+
+            if (generatedNamespace is not null)
+            {
+                globals["build_property.MediarqGeneratedNamespace"] = generatedNamespace;
+            }
+
+            optionsProvider = new TestOptionsProvider(globals);
+        }
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             [new MediarqRegistrationGenerator().AsSourceGenerator()],
@@ -294,6 +307,69 @@ public class MediarqRegistrationGeneratorTests
                 => Task.FromResult(Result.Success(request.Text));
         }
         """;
+
+    [Fact]
+    public void Reports_MQ003_For_Orphan_Validator()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Validators;
+            using System.Collections.Generic;
+
+            namespace Demo;
+
+            // Plain type — neither a request nor a notification.
+            public sealed class Address { public string City { get; set; } = ""; }
+
+            public sealed class AddressValidator : IValidator<Address>
+            {
+                public IEnumerable<ValidationResult> Validate(Address instance) { yield return ValidationResult.Success(); }
+            }
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().Contain(d => d.Id == "MQ003");
+    }
+
+    [Fact]
+    public void Does_Not_Report_MQ003_For_Request_Validator()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Command;
+            using Mediarq.Core.Common.Requests.Validators;
+            using Mediarq.Core.Common.Results;
+            using System.Collections.Generic;
+
+            namespace Demo;
+
+            public record CreateUser(string Name) : ICommand<Result<string>>;
+
+            public sealed class CreateUserValidator : IValidator<CreateUser>
+            {
+                public IEnumerable<ValidationResult> Validate(CreateUser instance) { yield return ValidationResult.Success(); }
+            }
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().NotContain(d => d.Id == "MQ003");
+    }
+
+    [Fact]
+    public void Generates_Custom_Namespace_When_Configured()
+    {
+        var (generated, _) = Run(PingSource, generatedNamespace: "MyApp.Generated");
+
+        generated.Should().Contain("namespace MyApp.Generated");
+    }
+
+    [Fact]
+    public void Generates_Default_Namespace_When_Not_Configured()
+    {
+        var (generated, _) = Run(PingSource);
+
+        generated.Should().Contain("namespace Mediarq.Extensions");
+    }
 
     [Fact]
     public void Generates_Empty_Method_When_No_Handlers()

@@ -1,4 +1,22 @@
 - name: Home
   href: index.md
+- name: Guides
+  items:
+    - name: Concepts
+      href: guides/concepts.md
+    - name: Your first app
+      href: guides/your-first-app.md
+    - name: Wiring extensions
+      href: guides/wiring-extensions.md
+    - name: Writing a behavior
+      href: guides/writing-a-behavior.md
+    - name: Testing
+      href: guides/testing.md
+    - name: Migrating from MediatR
+      href: guides/migrating-from-mediatr.md
+    - name: Native AOT & trimming
+      href: guides/native-aot.md
+    - name: Troubleshooting
+      href: guides/troubleshooting.md
 - name: API
   href: api/

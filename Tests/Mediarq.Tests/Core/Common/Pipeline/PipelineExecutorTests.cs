@@ -203,10 +203,109 @@ public class PipelineExecutorTests
         log.Should().ContainInOrder("Before B1", "Before B2", "After B2", "After B1");
     }
 
+    [Fact]
+    public async Task ExecuteAsync_Should_Skip_Inactive_Conditional_Behaviors()
+    {
+        // Arrange — one inactive conditional behavior and one active plain behavior.
+        var log = new List<string>();
+        var behaviors = new IPipelineBehavior<TestCommandWithValue, Result<string>>[]
+        {
+            new ConditionalBehavior(isActive: false, "Inactive", log),
+            new OrderedBehavior(1, "Active", log),
+        };
+
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(behaviors);
+
+        var executor = new PipelineExecutor(resolver.Object);
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), "user");
+
+        // Act
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+
+        // Assert — only the active behavior ran.
+        log.Should().ContainInOrder("Before Active", "After Active");
+        log.Should().NotContain(e => e.Contains("Inactive"));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LazyContext_Invokes_Handler_Directly_When_No_Active_Behavior()
+    {
+        // Arrange — one inactive conditional behavior, so nothing should run before the handler.
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(new IPipelineBehavior<TestCommandWithValue, Result<string>>[] { new ConditionalBehavior(isActive: false, "Inactive", []) });
+
+        var handler = new Mock<Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TestCommandWithValue, Result<string>>>();
+        handler.Setup(h => h.Handle(It.IsAny<TestCommandWithValue>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync(Result.Success("OK"));
+
+        var factory = new Mock<IRequestContextFactory>();
+
+        var executor = new PipelineExecutor(resolver.Object);
+
+        // Act
+        var result = await executor.ExecuteAsync(new TestCommandWithValue("x"), handler.Object, factory.Object, CancellationToken.None);
+
+        // Assert — handler ran and the context was never created (no active behavior needed it).
+        result.Value.Should().Be("OK");
+        handler.Verify(h => h.Handle(It.IsAny<TestCommandWithValue>(), It.IsAny<CancellationToken>()), Times.Once);
+        factory.Verify(f => f.Create<TestCommandWithValue, Result<string>>(It.IsAny<TestCommandWithValue>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LazyContext_Creates_Context_When_A_Behavior_Is_Active()
+    {
+        // Arrange — an active behavior, so the executor must create the context for it.
+        var log = new List<string>();
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(new IPipelineBehavior<TestCommandWithValue, Result<string>>[] { new OrderedBehavior(1, "Active", log) });
+
+        var request = new TestCommandWithValue("x");
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(request, "user");
+        var factory = new Mock<IRequestContextFactory>();
+        factory.Setup(f => f.Create<TestCommandWithValue, Result<string>>(request, It.IsAny<CancellationToken>())).Returns(context);
+
+        var handler = new Mock<Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TestCommandWithValue, Result<string>>>();
+        handler.Setup(h => h.Handle(request, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success("OK"));
+
+        var executor = new PipelineExecutor(resolver.Object);
+
+        // Act
+        var result = await executor.ExecuteAsync(request, handler.Object, factory.Object, CancellationToken.None);
+
+        // Assert
+        result.Value.Should().Be("OK");
+        log.Should().ContainInOrder("Before Active", "After Active");
+        factory.Verify(f => f.Create<TestCommandWithValue, Result<string>>(request, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private sealed class OrderedBehavior(int order, string name, List<string> log)
         : IPipelineBehavior<TestCommandWithValue, Result<string>>, IOrderBehavior
     {
         public int Order { get; } = order;
+
+        public async Task<Result<string>> Handle(
+            IMutableRequestContext<TestCommandWithValue, Result<string>> context,
+            Func<Task<Result<string>>> handle,
+            CancellationToken cancellationToken = default)
+        {
+            log.Add($"Before {name}");
+            var result = await handle();
+            log.Add($"After {name}");
+            return result;
+        }
+    }
+
+    private sealed class ConditionalBehavior(bool isActive, string name, List<string> log)
+        : IPipelineBehavior<TestCommandWithValue, Result<string>>, IConditionalPipelineBehavior
+    {
+        public bool IsActive { get; } = isActive;
 
         public async Task<Result<string>> Handle(
             IMutableRequestContext<TestCommandWithValue, Result<string>> context,

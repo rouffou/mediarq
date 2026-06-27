@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 jobs:
   build-and-test:
@@ -32,6 +32,18 @@ jobs:
           name: coverage
           path: ./coverage/**/coverage.cobertura.xml
           if-no-files-found: warn
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          slug: rouffou/mediarq
+          directory: ./coverage
+          files: '**/coverage.cobertura.xml'
+          flags: unittests
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   aot:
     name: Native AOT publish (reflection-free path)

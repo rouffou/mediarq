@@ -1,6 +1,7 @@
 # Mediarq
 
 [![CI](https://github.com/rouffou/mediarq/actions/workflows/ci.yml/badge.svg)](https://github.com/rouffou/mediarq/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/rouffou/mediarq/branch/main/graph/badge.svg)](https://codecov.io/gh/rouffou/mediarq)
 [![NuGet](https://img.shields.io/nuget/v/Mediarq.svg)](https://www.nuget.org/packages/Mediarq)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-8%20%7C%209%20%7C%2010-512BD4.svg)](https://dotnet.microsoft.com/)
@@ -25,14 +26,26 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 ## Installation
 
 ```bash
-dotnet add package Mediarq        # meta-package: core + every official extension
+dotnet add package Mediarq        # lean meta-package: core + lightweight extensions
 # or, for the core only:
 dotnet add package Mediarq.Core   # mediator, pipeline, results, source generator
 ```
 
-The **`Mediarq`** meta-package bundles `Mediarq.Core` with all optional extensions (see
-[Extension packages](#extension-packages)); reference `Mediarq.Core` plus only the extensions you
+The **`Mediarq`** meta-package bundles `Mediarq.Core` with the lightweight extensions (ASP.NET Core,
+FluentValidation, DataAnnotations, Caching, Diagnostics, UnitOfWork). Heavy or opinionated
+integrations — `Mediarq.EntityFrameworkCore`, `Mediarq.OpenTelemetry`, `Mediarq.MassTransit` and
+`Mediarq.Polly` — ship separately and are installed explicitly when needed (see
+[Extension packages](#extension-packages)). Reference `Mediarq.Core` plus only the extensions you
 need to keep dependencies minimal.
+
+### Scaffolding (`dotnet new`)
+
+Install the templates and scaffold a feature (a command, its handler and a validator) in one command:
+
+```bash
+dotnet new install Mediarq.Templates
+dotnet new mediarq-feature -n CreateUser --namespace MyApp.Users
+```
 
 ## Getting started
 
@@ -76,14 +89,19 @@ the validation pipeline builds `Result<T>` failures from generated factories. Th
 > The scan-based `AddMediarq(...)` is convenient but uses reflection and is annotated
 > `[RequiresUnreferencedCode]`; prefer `AddMediarqCore()` + `AddMediarqHandlers()` for trimming/AOT.
 
-The generated `AddMediarqHandlers()` is `internal` by default. To call it from another assembly, make
-it public via MSBuild:
+The generated `AddMediarqHandlers()` is `internal` and lives in the `Mediarq.Extensions` namespace by
+default. Override either via MSBuild:
 
 ```xml
 <PropertyGroup>
   <MediarqGeneratedAccessibility>public</MediarqGeneratedAccessibility>
+  <MediarqGeneratedNamespace>MyApp.Generated</MediarqGeneratedNamespace>
 </PropertyGroup>
 ```
+
+The generator also emits compile-time diagnostics: `MQ001` (multiple handlers for one request), `MQ002`
+(a command/query with no handler in the assembly), and `MQ003` (a validator whose target is neither a
+request nor a notification, so it can never run).
 
 ## Commands & queries (with a result)
 
@@ -166,8 +184,23 @@ the bus.
 
 ## Pipeline behaviors
 
-Cross-cutting logic wraps the handler. Mediarq ships with `LoggingBehavior`, `PerformanceBehavior`
-and `ValidationBehavior`. Add your own by implementing `IPipelineBehavior<TRequest, TResponse>`:
+Cross-cutting logic wraps the handler. The pipeline is **lean by default**: the built-in
+`ValidationBehavior`, pre/post-processor and exception behaviors register only when you actually have a
+validator / processor / exception handler, so an idle request resolves no behavior at all. Request
+logging and performance tracking are **opt-in**:
+
+```csharp
+services.AddMediarq(/* ... */)
+        .AddMediarqRequestLogging()       // LoggingBehavior
+        .AddMediarqPerformanceTracking()  // PerformanceBehavior
+        .AddMediarqTimeout();             // TimeoutBehavior
+```
+
+`AddMediarqTimeout()` bounds requests that implement `ITimeoutRequest`: if handling exceeds the
+request's `Timeout`, a `RequestTimeoutException` is thrown (a pessimistic timeout — it frees the caller,
+so handlers should also honor their `CancellationToken`). It is inert for other request types.
+
+Add your own by implementing `IPipelineBehavior<TRequest, TResponse>`:
 
 ```csharp
 public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
@@ -198,6 +231,13 @@ public class AuditBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TR
 }
 ```
 
+A behavior can also opt out of the pipeline per request type by implementing
+`IConditionalPipelineBehavior` and returning `IsActive => false` — the executor then omits it entirely,
+adding neither an async frame nor a delegate. The built-in behaviors use this so an idle pipeline costs
+nothing: validation/pre/post/exception activate only when a validator, processor or exception handler is
+registered, and logging/performance only when the matching log level is enabled. As a result, dispatch
+for a request with no active behavior goes straight to the handler — allocations are on par with MediatR.
+
 ## Validation
 
 Implement `IValidator<TRequest>`; the `ValidationBehavior` runs all validators before the handler
@@ -215,6 +255,10 @@ public class CreateUserCommandValidator : IValidator<CreateUserCommand>
     }
 }
 ```
+
+Notifications are validated too: define an `IValidator<TNotification>` and it runs automatically before
+the notification is published. Because a notification has no return value, an invalid one throws a
+`NotificationValidationException` (carrying the property errors) instead of returning a failed `Result`.
 
 ## The `Result` type
 
@@ -249,9 +293,14 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 |---|---|
 | `Mediarq.AspNetCore` | Map `Result` / `ResultError` → `IResult` and RFC 7807 ProblemDetails |
 | `Mediarq.FluentValidation` | Run FluentValidation validators in the Mediarq pipeline |
-| `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) |
+| `Mediarq.DataAnnotations` | Validate requests with `System.ComponentModel.DataAnnotations` attributes (`AddMediarqDataAnnotations`) |
+| `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) or `IDistributedCache` / Redis (`AddMediarqDistributedCaching`) |
+| `Mediarq.Idempotency` | Run `IIdempotentRequest` at most once per key, replaying the stored result (`AddMediarqIdempotency`) |
+| `Mediarq.Outbox` | Transactional outbox over EF Core: enqueue notifications and publish them reliably (`AddMediarqOutbox`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
+| `Mediarq.OpenTelemetry` | One-line `AddMediarqInstrumentation()` on the tracer/meter provider builders |
 | `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |
+| `Mediarq.EntityFrameworkCore` | `EfCoreUnitOfWork<TContext>` over a `DbContext` (`AddMediarqEntityFrameworkCore`) |
 | `Mediarq.Polly` | Retry / timeout / circuit breaker for `IResilientRequest` via Polly (`AddMediarqResilience`) |
 | `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
 
@@ -259,10 +308,41 @@ Built into `Mediarq.Core`:
 
 - **Exception handling** — implement `IRequestExceptionHandler<TRequest, TResponse>` to turn an exception into a response (typically a failed `Result`).
 - **Pre/post processors** — `IRequestPreProcessor<TRequest>` and `IRequestPostProcessor<TRequest, TResponse>` run around the handler.
+- **Streaming pipeline** — `IStreamPipelineBehavior<TRequest, TResponse>` wraps `CreateStream` with the same ordering as `Send` behaviors.
+- **Ordered notifications** — a notification handler can implement `IOrderedNotificationHandler` for a deterministic order.
 - **Lifetime control** — opt a handler into a DI lifetime with `[RegisterHandler(ServiceLifetime.Singleton)]`.
 - **Validation localization** — translate messages via `IValidationMessageResolver`.
-- **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, plus cross async `MapAsync`/`BindAsync` overloads.
+- **More `Result` combinators** — `Combine`, `Try`/`TryAsync`, `TryGetValue`, `Recover`, `OrElse`, `ToResult`, plus cross async `MapAsync`/`BindAsync` overloads.
 - **`AggregateExceptionNotificationPublisher`** — runs every notification handler and surfaces *all* failures.
+
+## Samples
+
+Three runnable samples under [Samples/](Samples) (see [Samples/README.md](Samples/README.md)):
+
+- **[Mediarq.Samples.Quickstart](Samples/Mediarq.Samples.Quickstart)** — a console tour of the core
+  in-process features (commands/queries/void, notifications, streaming, validation, behaviors,
+  pre/post processors, exception handling, timeout, `Result` combinators).
+- **[Mediarq.Samples.WebApi](Samples/Mediarq.Samples.WebApi)** — an ASP.NET Core "Orders" API wiring the
+  extensions end-to-end (`Result` → HTTP, FluentValidation/DataAnnotations, caching, idempotency,
+  EF Core unit of work + transactional outbox, Polly, diagnostics/OpenTelemetry, MassTransit).
+- **[Mediarq.AotSample](Samples/Mediarq.AotSample)** — the reflection-free path, published with Native AOT.
+
+```bash
+dotnet run --project Samples/Mediarq.Samples.Quickstart
+dotnet run --project Samples/Mediarq.Samples.WebApi      # then open /scalar/v1
+dotnet run --project Samples/Mediarq.AotSample
+```
+
+## Documentation
+
+Task-focused guides live under [docs/guides](docs/guides) (and on the docs site). If you're starting
+from scratch with no one to ask, read them in this order:
+
+1. [Concepts](docs/guides/concepts.md) — commands vs queries vs notifications, `Result`, the pipeline.
+2. [Your first app](docs/guides/your-first-app.md) — build a working API step by step.
+3. [Wiring extensions](docs/guides/wiring-extensions.md) — register the core and each optional package (with the prerequisites and gotchas).
+4. [Writing a behavior](docs/guides/writing-a-behavior.md) · [Testing](docs/guides/testing.md) · [Migrating from MediatR](docs/guides/migrating-from-mediatr.md) · [Native AOT & trimming](docs/guides/native-aot.md).
+5. [Troubleshooting](docs/guides/troubleshooting.md) — when something silently doesn't fire (start here when stuck).
 
 ## License
 
