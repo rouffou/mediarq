@@ -27,7 +27,10 @@ public sealed class ConfirmOrderHandler(AppDbContext db, ILogger<ConfirmOrderHan
             return Result.Failure(ResultError.NotFound("Order.NotFound", $"Order {request.OrderId} was not found."));
 
         // Only logged on the first call for a given key; replays skip the handler entirely.
-        logger.LogInformation("Confirming order {OrderId} (key {Key})", request.OrderId, request.IdempotencyKey);
+        var sanitizedKey = request.IdempotencyKey
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty);
+        logger.LogInformation("Confirming order {OrderId} (key {Key})", request.OrderId, sanitizedKey);
 
         order.Status = OrderStatus.Confirmed;
         await db.SaveChangesAsync(cancellationToken);
