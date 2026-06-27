@@ -26,6 +26,7 @@ public sealed class ConfirmOrderHandler(AppDbContext db, ILogger<ConfirmOrderHan
         if (order is null)
             return Result.Failure(ResultError.NotFound("Order.NotFound", $"Order {request.OrderId} was not found."));
 
+        // Strip CR/LF from the user-supplied key before logging to prevent log forging (CWE-117).
         // Only logged on the first call for a given key; replays skip the handler entirely.
         var sanitizedKey = request.IdempotencyKey
             .Replace("\r", string.Empty)
