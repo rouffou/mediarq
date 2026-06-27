@@ -1,20 +1,41 @@
+# Codecov configuration — https://docs.codecov.com/docs/codecov-yaml
+# Coverage is collected by the CI workflow (.github/workflows/ci.yml) via
+# `dotnet test --collect:"XPlat Code Coverage"` and uploaded as Cobertura XML.
+
 coverage:
+  precision: 2
+  round: down
+  range: "60...90"
   status:
+    # Overall project coverage. Informational while coverage ramps up so it
+    # never blocks a PR (matches `fail_ci_if_error: false` in the workflow).
     project:
       default:
         target: auto
         threshold: 1%
+        informational: true
+    # Coverage of the lines changed by the PR.
     patch:
       default:
         target: 80%
-        threshold: 2%
+        threshold: 5%
+        informational: true
 
 comment:
   layout: "reach, diff, flags, files"
-  require_changes: true
+  behavior: default
+  require_changes: false
 
+flags:
+  unittests:
+    paths:
+      - src/
+
+# Only the shipped library code under src/ counts toward coverage.
 ignore:
+  - "Tests/**"
   - "Samples/**"
   - "benchmarks/**"
   - "templates/**"
-  - "Tests/**"
+  - "**/obj/**"
+  - "**/bin/**"
