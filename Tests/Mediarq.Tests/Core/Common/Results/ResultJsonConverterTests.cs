@@ -58,5 +58,67 @@ public class ResultJsonConverterTests
         restored.Error.Should().Be(error);
     }
 
+    [Fact]
+    public void Read_Treats_Null_Error_As_None()
+    {
+        // Exercises the null-error branch of the converter without hitting the
+        // "a failure must have an error" guard.
+        const string json = """{"isSuccess":true,"error":null}""";
+
+        var restored = JsonSerializer.Deserialize<Result>(json, Options)!;
+
+        restored.IsSuccess.Should().BeTrue();
+        restored.Error.Should().Be(ResultError.None);
+    }
+
+    [Fact]
+    public void Read_Ignores_Unknown_Properties()
+    {
+        // Extra/unknown properties must be skipped, not throw.
+        const string json = """{"isSuccess":true,"extra":{"nested":[1,2,3]},"error":null}""";
+
+        var restored = JsonSerializer.Deserialize<Result>(json, Options)!;
+
+        restored.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ResultOfT_Read_Ignores_Unknown_Properties()
+    {
+        const string json = """{"isSuccess":true,"value":{"number":7,"text":"x"},"unknown":42,"error":null}""";
+
+        var restored = JsonSerializer.Deserialize<Result<Payload>>(json, Options)!;
+
+        restored.IsSuccess.Should().BeTrue();
+        restored.Value.Should().Be(new Payload(7, "x"));
+    }
+
+    [Fact]
+    public void Read_Throws_When_Json_Is_Not_An_Object()
+    {
+        var act = () => JsonSerializer.Deserialize<Result>("[]", Options);
+
+        act.Should().Throw<JsonException>();
+    }
+
+    [Fact]
+    public void ResultOfT_Read_Throws_When_Json_Is_Not_An_Object()
+    {
+        var act = () => JsonSerializer.Deserialize<Result<Payload>>("\"oops\"", Options);
+
+        act.Should().Throw<JsonException>();
+    }
+
+    [Fact]
+    public void Factory_CanConvert_Matches_Only_Result_Types()
+    {
+        var factory = new ResultJsonConverterFactory();
+
+        factory.CanConvert(typeof(Result)).Should().BeTrue();
+        factory.CanConvert(typeof(Result<int>)).Should().BeTrue();
+        factory.CanConvert(typeof(string)).Should().BeFalse();
+        factory.CanConvert(typeof(List<int>)).Should().BeFalse();
+    }
+
     private sealed record Payload(int Number, string Text);
 }
