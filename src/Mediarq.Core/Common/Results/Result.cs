@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace Mediarq.Core.Common.Results;
 
@@ -15,6 +16,7 @@ namespace Mediarq.Core.Common.Results;
 /// Use this type for commands or operations that do not return a specific value.
 /// For operations producing a value, use the generic version <see cref="Result{T}"/>.
 /// </remarks>
+[JsonConverter(typeof(ResultJsonConverterFactory))]
 public class Result
 {
     /// <summary>
@@ -111,6 +113,7 @@ public class Result
 /// It provides implicit conversions from <typeparamref name="TValue"/> and <see cref="ResultError"/> 
 /// to simplify usage in functional or command/query pipelines.
 /// </remarks>
+[JsonConverter(typeof(ResultJsonConverterFactory))]
 public class Result<TValue> : Result
 {
     private readonly TValue? _value;

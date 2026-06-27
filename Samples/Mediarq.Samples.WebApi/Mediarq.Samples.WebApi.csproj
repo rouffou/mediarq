@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Mediarq.Samples.WebApi</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Web / docs UI -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.9.0" />
+    <!-- EF Core (in-memory) backs the unit of work and the transactional outbox -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
+    <!-- Validation, resilience, messaging and observability used by the showcase -->
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="MassTransit" Version="8.3.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.16.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Mediarq.Core\Mediarq.Core.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.AspNetCore\Mediarq.AspNetCore.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.FluentValidation\Mediarq.FluentValidation.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.DataAnnotations\Mediarq.DataAnnotations.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Caching\Mediarq.Caching.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Idempotency\Mediarq.Idempotency.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.EntityFrameworkCore\Mediarq.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Outbox\Mediarq.Outbox.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Diagnostics\Mediarq.Diagnostics.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.OpenTelemetry\Mediarq.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Polly\Mediarq.Polly.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.MassTransit\Mediarq.MassTransit.csproj" />
+  </ItemGroup>
+
+</Project>
