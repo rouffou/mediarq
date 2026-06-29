@@ -4,6 +4,32 @@ Mediarq covers the same building blocks as MediatR — requests, handlers, notif
 pipeline — with a few deliberate differences: a railway-oriented `Result` type, a source generator for
 reflection-free (Native-AOT friendly) dispatch, and a lean default pipeline.
 
+## Automated migration (analyzer + code fix)
+
+The `Mediarq.Analyzers` package ships a Roslyn analyzer and code fix that do most of the rewrite for you.
+Add it to a project that still references MediatR:
+
+```xml
+<PackageReference Include="Mediarq.Analyzers" Version="1.*" PrivateAssets="all" />
+```
+
+It reports **`MQ100`** (informational) on every MediatR type that has a Mediarq equivalent and offers a
+code fix that rewrites the type and adds the right `using`:
+
+| MediatR type | Code fix result |
+|---|---|
+| `IRequest` | `ICommand` |
+| `IRequest<T>` | `ICommand<T>` **or** `IQuery<T>` (you pick) |
+| `IRequestHandler<,>` / `IRequestHandler<>` | `IRequestHandler<,>` / `IRequestHandler<>` (Mediarq namespace) |
+| `INotification` / `INotificationHandler<>` | same names, Mediarq namespace |
+| `IPipelineBehavior<,>` | same name, Mediarq namespace (mind the different `Handle` signature) |
+| `IStreamRequest<T>` / `IStreamRequestHandler<,>` | same names, Mediarq namespace |
+| `ISender` / `IPublisher` / `IMediator` | same names, Mediarq namespace |
+
+Apply the fixes (per occurrence, per file or for the whole solution via *Fix all*), then drop the MediatR
+package. Two things the analyzer deliberately leaves to you: choosing `ICommand` vs `IQuery` for an
+`IRequest<T>`, and adapting any `IPipelineBehavior` to Mediarq's `Handle` signature (see below).
+
 ## Concept mapping
 
 | MediatR | Mediarq |
