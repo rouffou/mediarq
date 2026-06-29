@@ -137,3 +137,6 @@ See [Writing a behavior](writing-a-behavior.md) for ordering and conditional beh
 - **`Result` instead of exceptions** for expected failures (validation, not-found, conflicts).
 - **Source generator.** For trimming/Native AOT, prefer `AddMediarqCore()` + `AddMediarqHandlers()`.
   See [Native AOT](native-aot.md).
+
+For a full capability-by-capability comparison (including the few deliberate gaps), see the
+[MediatR parity audit](mediatr-parity.md).
