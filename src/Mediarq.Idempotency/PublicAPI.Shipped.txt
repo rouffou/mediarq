@@ -1,0 +1,10 @@
+#nullable enable
+Mediarq.Idempotency.IIdempotentRequest
+Mediarq.Idempotency.IIdempotentRequest.IdempotencyDuration.get -> System.TimeSpan?
+Mediarq.Idempotency.IIdempotentRequest.IdempotencyKey.get -> string!
+Mediarq.Idempotency.IdempotencyBehavior<TRequest, TResponse>
+Mediarq.Idempotency.IdempotencyBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Idempotency.IdempotencyBehavior<TRequest, TResponse>.IdempotencyBehavior(Microsoft.Extensions.Caching.Distributed.IDistributedCache! cache, Mediarq.Caching.IMediarqCacheSerializer! serializer) -> void
+Mediarq.Idempotency.IdempotencyBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Idempotency.IdempotencyServiceCollectionExtensions
+static Mediarq.Idempotency.IdempotencyServiceCollectionExtensions.AddMediarqIdempotency(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

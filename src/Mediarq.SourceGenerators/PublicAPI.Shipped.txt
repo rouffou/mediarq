@@ -1,0 +1,4 @@
+#nullable enable
+Mediarq.SourceGenerators.MediarqRegistrationGenerator
+Mediarq.SourceGenerators.MediarqRegistrationGenerator.Initialize(Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext context) -> void
+Mediarq.SourceGenerators.MediarqRegistrationGenerator.MediarqRegistrationGenerator() -> void

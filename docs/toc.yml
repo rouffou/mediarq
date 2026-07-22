@@ -18,6 +18,8 @@
       href: guides/mediatr-parity.md
     - name: Native AOT & trimming
       href: guides/native-aot.md
+    - name: Versioning & public API policy
+      href: guides/versioning.md
     - name: Troubleshooting
       href: guides/troubleshooting.md
 - name: API

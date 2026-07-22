@@ -1,0 +1,4 @@
+#nullable enable
+Mediarq.OpenTelemetry.MediarqInstrumentationExtensions
+static Mediarq.OpenTelemetry.MediarqInstrumentationExtensions.AddMediarqInstrumentation(this OpenTelemetry.Metrics.MeterProviderBuilder! builder) -> OpenTelemetry.Metrics.MeterProviderBuilder!
+static Mediarq.OpenTelemetry.MediarqInstrumentationExtensions.AddMediarqInstrumentation(this OpenTelemetry.Trace.TracerProviderBuilder! builder) -> OpenTelemetry.Trace.TracerProviderBuilder!

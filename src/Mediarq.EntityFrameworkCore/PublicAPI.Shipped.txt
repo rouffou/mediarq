@@ -1,0 +1,6 @@
+#nullable enable
+Mediarq.EntityFrameworkCore.EfCoreUnitOfWork<TContext>
+Mediarq.EntityFrameworkCore.EfCoreUnitOfWork<TContext>.EfCoreUnitOfWork(TContext! context) -> void
+Mediarq.EntityFrameworkCore.EfCoreUnitOfWork<TContext>.SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+Mediarq.EntityFrameworkCore.EntityFrameworkCoreServiceCollectionExtensions
+static Mediarq.EntityFrameworkCore.EntityFrameworkCoreServiceCollectionExtensions.AddMediarqEntityFrameworkCore<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
