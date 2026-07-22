@@ -1,0 +1,17 @@
+#nullable enable
+Mediarq.Diagnostics.DiagnosticsBehavior<TRequest, TResponse>
+Mediarq.Diagnostics.DiagnosticsBehavior<TRequest, TResponse>.DiagnosticsBehavior() -> void
+Mediarq.Diagnostics.DiagnosticsBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Diagnostics.DiagnosticsBehavior<TRequest, TResponse>.Order.get -> int
+Mediarq.Diagnostics.DiagnosticsNotificationPublisher
+Mediarq.Diagnostics.DiagnosticsNotificationPublisher.DiagnosticsNotificationPublisher(Mediarq.Core.Common.Requests.Notifications.INotificationPublisher! inner) -> void
+Mediarq.Diagnostics.DiagnosticsNotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>!>! handlers, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Mediarq.Diagnostics.DiagnosticsServiceCollectionExtensions
+Mediarq.Diagnostics.MediarqDiagnostics
+Mediarq.Diagnostics.StreamDiagnosticsBehavior<TRequest, TResponse>
+Mediarq.Diagnostics.StreamDiagnosticsBehavior<TRequest, TResponse>.Handle(TRequest request, System.Func<System.Collections.Generic.IAsyncEnumerable<TResponse>!>! continuation, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Diagnostics.StreamDiagnosticsBehavior<TRequest, TResponse>.Order.get -> int
+Mediarq.Diagnostics.StreamDiagnosticsBehavior<TRequest, TResponse>.StreamDiagnosticsBehavior() -> void
+const Mediarq.Diagnostics.MediarqDiagnostics.SourceName = "Mediarq" -> string!
+static Mediarq.Diagnostics.DiagnosticsServiceCollectionExtensions.AddMediarqDiagnostics(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static readonly Mediarq.Diagnostics.MediarqDiagnostics.ActivitySource -> System.Diagnostics.ActivitySource!

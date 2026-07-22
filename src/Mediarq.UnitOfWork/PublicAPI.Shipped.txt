@@ -1,0 +1,10 @@
+#nullable enable
+Mediarq.UnitOfWork.ITransactionalRequest
+Mediarq.UnitOfWork.IUnitOfWork
+Mediarq.UnitOfWork.IUnitOfWork.SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+Mediarq.UnitOfWork.UnitOfWorkBehavior<TRequest, TResponse>
+Mediarq.UnitOfWork.UnitOfWorkBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.UnitOfWork.UnitOfWorkBehavior<TRequest, TResponse>.UnitOfWorkBehavior(Mediarq.UnitOfWork.IUnitOfWork! unitOfWork) -> void
+Mediarq.UnitOfWork.UnitOfWorkServiceCollectionExtensions
+static Mediarq.UnitOfWork.UnitOfWorkServiceCollectionExtensions.AddMediarqUnitOfWork(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.UnitOfWork.UnitOfWorkServiceCollectionExtensions.AddMediarqUnitOfWork<TUnitOfWork>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

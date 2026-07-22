@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Applies to every package under src/. Tracks each package's public API surface in
+    PublicAPI.Shipped.txt / PublicAPI.Unshipped.txt (RS0016/RS0017), so an accidental public API
+    change is caught at build time instead of silently breaking SemVer for consumers.
+    See docs/guides/versioning.md for the workflow.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

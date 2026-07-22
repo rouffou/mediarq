@@ -37,6 +37,7 @@ New here? Start with **Concepts**, then build **Your first app**.
 - [Testing](guides/testing.md) — unit- and integration-test handlers, validators, behaviors
 - [Migrating from MediatR](guides/migrating-from-mediatr.md)
 - [Native AOT & trimming](guides/native-aot.md)
+- [Versioning & public API policy](guides/versioning.md) — SemVer rules and the `PublicAPI.*.txt` workflow
 - [Troubleshooting](guides/troubleshooting.md) — when something silently doesn't fire
 
 ## Getting started
