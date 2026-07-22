@@ -1,0 +1,12 @@
+#nullable enable
+Mediarq.AspNetCore.ResultActionResultExtensions
+Mediarq.AspNetCore.ResultHttpExtensions
+static Mediarq.AspNetCore.ResultActionResultExtensions.ToActionResult(this Mediarq.Core.Common.Results.Result! result, System.Action<Microsoft.AspNetCore.Mvc.ProblemDetails!>? configureProblem = null) -> Microsoft.AspNetCore.Mvc.IActionResult!
+static Mediarq.AspNetCore.ResultActionResultExtensions.ToActionResult<T>(this Mediarq.Core.Common.Results.Result<T>! result, System.Action<Microsoft.AspNetCore.Mvc.ProblemDetails!>? configureProblem = null) -> Microsoft.AspNetCore.Mvc.IActionResult!
+static Mediarq.AspNetCore.ResultActionResultExtensions.ToActionResultAsync(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result!>! resultTask, System.Action<Microsoft.AspNetCore.Mvc.ProblemDetails!>? configureProblem = null) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static Mediarq.AspNetCore.ResultActionResultExtensions.ToActionResultAsync<T>(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<T>!>! resultTask, System.Action<Microsoft.AspNetCore.Mvc.ProblemDetails!>? configureProblem = null) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult!>!
+static Mediarq.AspNetCore.ResultHttpExtensions.ToHttpResult(this Mediarq.Core.Common.Results.Result! result) -> Microsoft.AspNetCore.Http.IResult!
+static Mediarq.AspNetCore.ResultHttpExtensions.ToHttpResult<T>(this Mediarq.Core.Common.Results.Result<T>! result) -> Microsoft.AspNetCore.Http.IResult!
+static Mediarq.AspNetCore.ResultHttpExtensions.ToHttpResultAsync(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static Mediarq.AspNetCore.ResultHttpExtensions.ToHttpResultAsync<T>(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<T>!>! resultTask) -> System.Threading.Tasks.Task<Microsoft.AspNetCore.Http.IResult!>!
+static Mediarq.AspNetCore.ResultHttpExtensions.ToStatusCode(this Mediarq.Core.Common.Results.ErrorType errorType) -> int

@@ -1,0 +1,8 @@
+#nullable enable
+Mediarq.MassTransit.IIntegrationEvent
+Mediarq.MassTransit.MassTransitNotificationForwarder<TNotification>
+Mediarq.MassTransit.MassTransitNotificationForwarder<TNotification>.Handle(TNotification! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.MassTransit.MassTransitNotificationForwarder<TNotification>.MassTransitNotificationForwarder(MassTransit.IPublishEndpoint! publishEndpoint) -> void
+Mediarq.MassTransit.MassTransitServiceCollectionExtensions
+static Mediarq.MassTransit.MassTransitServiceCollectionExtensions.AddMediarqMassTransitForwarding(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.MassTransit.MassTransitServiceCollectionExtensions.AddMediarqMassTransitForwarding<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

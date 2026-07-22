@@ -1,0 +1,7 @@
+#nullable enable
+Mediarq.FluentValidation.FluentValidationServiceCollectionExtensions
+Mediarq.FluentValidation.FluentValidationValidator<T>
+Mediarq.FluentValidation.FluentValidationValidator<T>.FluentValidationValidator(System.Collections.Generic.IEnumerable<FluentValidation.IValidator<T>!>! validators) -> void
+Mediarq.FluentValidation.FluentValidationValidator<T>.Validate(T instance) -> System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationResult!>!
+Mediarq.FluentValidation.FluentValidationValidator<T>.ValidateAsync(T instance, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationResult!>!>!
+static Mediarq.FluentValidation.FluentValidationServiceCollectionExtensions.AddMediarqFluentValidation(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

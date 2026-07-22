@@ -1,0 +1,6 @@
+#nullable enable
+Mediarq.DataAnnotations.DataAnnotationsServiceCollectionExtensions
+Mediarq.DataAnnotations.DataAnnotationsValidator<T>
+Mediarq.DataAnnotations.DataAnnotationsValidator<T>.DataAnnotationsValidator() -> void
+Mediarq.DataAnnotations.DataAnnotationsValidator<T>.Validate(T instance) -> System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationResult!>!
+static Mediarq.DataAnnotations.DataAnnotationsServiceCollectionExtensions.AddMediarqDataAnnotations(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
