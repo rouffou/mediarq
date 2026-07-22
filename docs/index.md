@@ -25,6 +25,9 @@ commands, queries, notifications, a composable pipeline of behaviors, built-in v
 | `Mediarq.EntityFrameworkCore` | `IUnitOfWork` over a `DbContext` |
 | `Mediarq.Polly` | Resilience (retry/timeout/circuit breaker) via Polly |
 | `Mediarq.MassTransit` | Publish notifications out-of-process on a MassTransit bus |
+| `Mediarq.Idempotency` | Run a request at most once per key (`IIdempotentRequest`) |
+| `Mediarq.Idempotency.EntityFrameworkCore` | EF Core-backed `IDistributedCache` for `Mediarq.Idempotency`, no Redis required |
+| `Mediarq.Outbox` | Transactional outbox over EF Core (capture + reliable background publish) |
 
 ## Guides
 
