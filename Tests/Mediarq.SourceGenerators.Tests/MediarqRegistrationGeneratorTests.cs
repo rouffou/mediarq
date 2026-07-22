@@ -146,6 +146,45 @@ public class MediarqRegistrationGeneratorTests
     }
 
     [Fact]
+    public void Generates_Notification_Wrapper_For_Notification_Without_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Notifications;
+
+            namespace Demo;
+
+            public record OrderPlaced(int Id) : INotification;
+            """;
+
+        var (generated, diagnostics) = Run(source);
+
+        diagnostics.Should().BeEmpty();
+        generated.Should().Contain("registry.AddNotification<global::Demo.OrderPlaced>();");
+        // No handler exists, so nothing should be registered in the DI container for it.
+        generated.Should().NotContain("AddScoped");
+        generated.Should().NotContain("AddSingleton<");
+    }
+
+    [Fact]
+    public void Generates_Stream_Wrapper_For_Stream_Request_Without_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Streaming;
+
+            namespace Demo;
+
+            public record Ticks(int N) : IStreamRequest<int>;
+            """;
+
+        var (generated, diagnostics) = Run(source);
+
+        diagnostics.Should().BeEmpty();
+        generated.Should().Contain("registry.AddStream<global::Demo.Ticks, int>();");
+        generated.Should().NotContain("AddScoped");
+        generated.Should().NotContain("AddSingleton<");
+    }
+
+    [Fact]
     public void Reports_MQ001_For_Multiple_Handlers_Of_Same_Request()
     {
         const string source = """
