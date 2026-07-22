@@ -179,22 +179,59 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             }
         }
 
-        // Not a handler/behavior/validator but a declared command/query: track it so a missing
-        // handler can be diagnosed (MQ002).
-        if (list.Count == 0 && !type.IsGenericType && ImplementsCommandOrQuery(type))
+        // Not itself a handler/behavior/validator. Track declared command/query, notification and
+        // stream-request types too, even without an in-assembly handler, so every dispatchable type
+        // gets a compile-time wrapper. Without this, Publish/CreateStream would fall back to the
+        // reflective wrapper (Activator.CreateInstance/MakeGenericType) for these types, defeating the
+        // AOT-safe guarantee of the generated registration. Commands/queries are the exception: a
+        // missing handler is always an error there, so they are only tracked for the MQ002 diagnostic.
+        if (list.Count == 0 && !type.IsGenericType)
         {
-            var requestFqn = type.ToDisplayString(FullyQualified);
-            list.Add(new HandlerRegistration(
-                requestFqn,
-                string.Empty,
-                IsOpenGeneric: false,
-                Kind: HandlerKind.Request,
-                RequestType: requestFqn,
-                ResponseType: null,
-                NotificationType: null,
-                ResponseIsGenericResult: false,
-                Lifetime: "Scoped",
-                IsOrphanValidator: false));
+            if (ImplementsCommandOrQuery(type))
+            {
+                var requestFqn = type.ToDisplayString(FullyQualified);
+                list.Add(new HandlerRegistration(
+                    requestFqn,
+                    string.Empty,
+                    IsOpenGeneric: false,
+                    Kind: HandlerKind.Request,
+                    RequestType: requestFqn,
+                    ResponseType: null,
+                    NotificationType: null,
+                    ResponseIsGenericResult: false,
+                    Lifetime: "Scoped",
+                    IsOrphanValidator: false));
+            }
+            else if (ImplementsNotification(type))
+            {
+                var notificationFqn = type.ToDisplayString(FullyQualified);
+                list.Add(new HandlerRegistration(
+                    notificationFqn,
+                    string.Empty,
+                    IsOpenGeneric: false,
+                    Kind: HandlerKind.NotificationDeclaration,
+                    RequestType: null,
+                    ResponseType: null,
+                    NotificationType: notificationFqn,
+                    ResponseIsGenericResult: false,
+                    Lifetime: "Scoped",
+                    IsOrphanValidator: false));
+            }
+            else if (TryGetStreamRequestResponseType(type, out var streamResponseType))
+            {
+                var requestFqn = type.ToDisplayString(FullyQualified);
+                list.Add(new HandlerRegistration(
+                    requestFqn,
+                    string.Empty,
+                    IsOpenGeneric: false,
+                    Kind: HandlerKind.StreamDeclaration,
+                    RequestType: requestFqn,
+                    ResponseType: streamResponseType!.ToDisplayString(FullyQualified),
+                    NotificationType: null,
+                    ResponseIsGenericResult: false,
+                    Lifetime: "Scoped",
+                    IsOrphanValidator: false));
+            }
         }
 
         return new EquatableArray<HandlerRegistration>(list.ToImmutableArray());
@@ -240,6 +277,41 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             }
         }
 
+        return false;
+    }
+
+    // True when the type is itself a notification (implements INotification directly), as opposed to
+    // an INotificationHandler<T> that handles one.
+    private static bool ImplementsNotification(INamedTypeSymbol type)
+    {
+        foreach (var iface in type.AllInterfaces)
+        {
+            if (iface.MetadataName == "INotification" &&
+                iface.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Requests.Notifications")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // True when the type is itself a stream request (implements IStreamRequest<TResponse> directly);
+    // outputs the streamed item type.
+    private static bool TryGetStreamRequestResponseType(INamedTypeSymbol type, out ITypeSymbol? responseType)
+    {
+        foreach (var iface in type.AllInterfaces)
+        {
+            var definition = iface.OriginalDefinition;
+            if (definition.MetadataName == "IStreamRequest`1" &&
+                definition.ContainingNamespace?.ToDisplayString() == "Mediarq.Core.Common.Requests.Streaming")
+            {
+                responseType = iface.TypeArguments[0];
+                return true;
+            }
+        }
+
+        responseType = null;
         return false;
     }
 
@@ -344,7 +416,9 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         sb.Append("        ").Append(accessibility).AppendLine(" static global::Microsoft.Extensions.DependencyInjection.IServiceCollection AddMediarqHandlers(this global::Microsoft.Extensions.DependencyInjection.IServiceCollection services)");
         sb.AppendLine("        {");
 
-        foreach (var reg in registrations.Where(r => r.Kind != HandlerKind.Request).OrderBy(r => r.ServiceType + "|" + r.ImplType, StringComparer.Ordinal))
+        foreach (var reg in registrations
+            .Where(r => r.Kind is not (HandlerKind.Request or HandlerKind.NotificationDeclaration or HandlerKind.StreamDeclaration))
+            .OrderBy(r => r.ServiceType + "|" + r.ImplType, StringComparer.Ordinal))
         {
             if (reg.IsOpenGeneric)
             {
@@ -375,15 +449,19 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
             .OrderBy(s => s, StringComparer.Ordinal)
             .ToList();
 
+        // Include declared-but-unhandled notification/stream types (HandlerKind.*Declaration) so every
+        // concrete type gets a wrapper, not just the ones with a handler discovered in this assembly.
         var notificationWrappers = registrations
-            .Where(r => r.Kind == HandlerKind.NotificationHandler && !r.IsOpenGeneric && r.NotificationType != null)
+            .Where(r => r.Kind is HandlerKind.NotificationHandler or HandlerKind.NotificationDeclaration
+                && !r.IsOpenGeneric && r.NotificationType != null)
             .Select(r => r.NotificationType!)
             .Distinct()
             .OrderBy(s => s, StringComparer.Ordinal)
             .ToList();
 
         var streamWrappers = registrations
-            .Where(r => r.Kind == HandlerKind.StreamHandler && !r.IsOpenGeneric && r.RequestType != null && r.ResponseType != null)
+            .Where(r => r.Kind is HandlerKind.StreamHandler or HandlerKind.StreamDeclaration
+                && !r.IsOpenGeneric && r.RequestType != null && r.ResponseType != null)
             .Select(r => r.RequestType + "|" + r.ResponseType)
             .Distinct()
             .OrderBy(s => s, StringComparer.Ordinal)
@@ -448,6 +526,12 @@ internal enum HandlerKind
 
     /// <summary>A declared command/query (implements ICommandOrQuery&lt;T&gt;), tracked only to diagnose a missing handler.</summary>
     Request,
+
+    /// <summary>A declared notification (implements INotification) with no in-assembly handler; still gets a dispatch wrapper.</summary>
+    NotificationDeclaration,
+
+    /// <summary>A declared stream request (implements IStreamRequest&lt;T&gt;) with no in-assembly handler; still gets a dispatch wrapper.</summary>
+    StreamDeclaration,
 }
 
 /// <summary>One discovered DI registration to emit.</summary>
