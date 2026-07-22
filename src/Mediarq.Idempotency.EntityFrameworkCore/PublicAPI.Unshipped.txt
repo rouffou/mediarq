@@ -1,0 +1,35 @@
+#nullable enable
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.EfCoreDistributedCache(TContext! context) -> void
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.Get(string! key) -> byte[]?
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.GetAsync(string! key, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<byte[]?>!
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.Refresh(string! key) -> void
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.RefreshAsync(string! key, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.Remove(string! key) -> void
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.RemoveAsync(string! key, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.Set(string! key, byte[]! value, Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions! options) -> void
+Mediarq.Idempotency.EntityFrameworkCore.EfCoreDistributedCache<TContext>.SetAsync(string! key, byte[]! value, Microsoft.Extensions.Caching.Distributed.DistributedCacheEntryOptions! options, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheCleanupService<TContext>
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheCleanupService<TContext>.IdempotencyCacheCleanupService(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory! scopeFactory, Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions! options, Microsoft.Extensions.Logging.ILogger<Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheCleanupService<TContext!>!>? logger = null) -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.AbsoluteExpiration.get -> System.DateTimeOffset?
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.AbsoluteExpiration.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.ExpiresAtUtc.get -> System.DateTimeOffset?
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.ExpiresAtUtc.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.IdempotencyCacheEntry() -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.Key.get -> string!
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.Key.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.SlidingExpiration.get -> System.TimeSpan?
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.SlidingExpiration.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.Value.get -> byte[]!
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheEntry.Value.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheModelBuilderExtensions
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions.CleanupBatchSize.get -> int
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions.CleanupBatchSize.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions.CleanupInterval.get -> System.TimeSpan
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions.CleanupInterval.set -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions.IdempotencyCacheOptions() -> void
+Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheServiceCollectionExtensions
+static Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheModelBuilderExtensions.ApplyMediarqIdempotencyCache(this Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> Microsoft.EntityFrameworkCore.ModelBuilder!
+static Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheServiceCollectionExtensions.AddMediarqIdempotencyEntityFrameworkCore<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Mediarq.Idempotency.EntityFrameworkCore.IdempotencyCacheOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
