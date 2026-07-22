@@ -25,6 +25,26 @@ generator doesn't see). Add the handler, or ignore if intentional.
 Your `IValidator<T>` is for a `T` that is never dispatched, so it can never run. Point it at a request
 or notification type.
 
+## Lifetime
+
+### Build warning `MQ200` — Singleton depends on a shorter-lived type
+A handler, behavior or validator marked `[RegisterHandler(ServiceLifetime.Singleton)]` constructor-injects
+a `DbContext`, or another Mediarq type explicitly marked `Scoped`/`Transient`. That dependency is resolved
+**once** and captured for the app's whole lifetime instead of once per scope/request — the classic
+*captive dependency* bug (a `DbContext` shared and mutated concurrently across requests, or stale data
+from a scoped service that should have been refreshed).
+
+Fix by either:
+- Lowering the Singleton's lifetime to `Scoped` (the default — just remove the attribute, or pass
+  `ServiceLifetime.Scoped`), if it doesn't actually need to be a Singleton; or
+- Injecting `IServiceScopeFactory` / `IServiceProvider` instead and resolving the scoped dependency inside
+  a short-lived scope created per use, instead of depending on it directly.
+
+This analyzer only compares **explicit** lifetimes (`[RegisterHandler(...)]` on both sides, or a
+`DbContext`-derived parameter type) — it has no visibility into a consumer's arbitrary
+`services.AddScoped<T>()` calls outside the Mediarq registration model, so it stays silent rather than
+guess and risk a false positive.
+
 ## Validation
 
 ### My validation never runs (no error, the handler just runs)
