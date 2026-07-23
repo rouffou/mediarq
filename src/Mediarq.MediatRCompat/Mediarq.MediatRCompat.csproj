@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Mediarq.MediatRCompat</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nicolas Rouffart</Authors>
+    <Description>Optional MediatR compatibility shim for incremental migration to Mediarq: keep your
+      existing MediatR.IRequest/IRequestHandler/INotification/INotificationHandler/IStreamRequest
+      classes unchanged, wire them through Mediarq's dispatch pipeline via AddMediarqMediatRCompat(),
+      and convert handlers to native Mediarq types file by file (e.g. with Mediarq.Analyzers) at your
+      own pace.</Description>
+    <PackageTags>mediarq;cqrs;mediatr;migration;compatibility;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mediarq.Core\Mediarq.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Mediarq.MediatRCompat.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
