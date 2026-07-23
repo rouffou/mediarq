@@ -30,6 +30,16 @@ Apply the fixes (per occurrence, per file or for the whole solution via *Fix all
 package. Two things the analyzer deliberately leaves to you: choosing `ICommand` vs `IQuery` for an
 `IRequest<T>`, and adapting any `IPipelineBehavior` to Mediarq's `Handle` signature (see below).
 
+### Incremental migration (large codebases)
+
+Rewriting every request/handler in one pass isn't always practical. `Mediarq.MediatRCompat` lets you
+switch your DI registration to Mediarq immediately — so every request already flows through Mediarq's
+pipeline — while your existing `MediatR.IRequest`/`IRequestHandler`/`INotification`/`INotificationHandler`
+classes keep compiling and running completely unchanged. Convert handlers to native Mediarq types file by
+file (with the analyzer above) at your own pace, then drop `Mediarq.MediatRCompat` and the MediatR
+package once nothing references them. See the
+[package README](https://www.nuget.org/packages/Mediarq.MediatRCompat) for setup.
+
 ## Concept mapping
 
 | MediatR | Mediarq |

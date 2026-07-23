@@ -296,6 +296,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.DataAnnotations` | Validate requests with `System.ComponentModel.DataAnnotations` attributes (`AddMediarqDataAnnotations`) |
 | `Mediarq.Caching` | Memoize responses of `ICacheableRequest` via `IMemoryCache` (`AddMediarqCaching`) or `IDistributedCache` / Redis (`AddMediarqDistributedCaching`) |
 | `Mediarq.Idempotency` | Run `IIdempotentRequest` at most once per key, replaying the stored result (`AddMediarqIdempotency`) |
+| `Mediarq.Idempotency.EntityFrameworkCore` | EF Core-backed `IDistributedCache` for `Mediarq.Idempotency`, no Redis required (`AddMediarqIdempotencyEntityFrameworkCore`) |
 | `Mediarq.Outbox` | Transactional outbox over EF Core: enqueue notifications and publish them reliably (`AddMediarqOutbox`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
 | `Mediarq.OpenTelemetry` | One-line `AddMediarqInstrumentation()` on the tracer/meter provider builders |
@@ -303,6 +304,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.EntityFrameworkCore` | `EfCoreUnitOfWork<TContext>` over a `DbContext` (`AddMediarqEntityFrameworkCore`) |
 | `Mediarq.Polly` | Retry / timeout / circuit breaker for `IResilientRequest` via Polly (`AddMediarqResilience`) |
 | `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
+| `Mediarq.MediatRCompat` | Optional MediatR compatibility shim for incremental migration (`AddMediarqMediatRCompat`) |
 
 Built into `Mediarq.Core`:
 

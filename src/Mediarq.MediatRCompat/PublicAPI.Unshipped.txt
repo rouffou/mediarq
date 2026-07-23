@@ -1,0 +1,12 @@
+#nullable enable
+Mediarq.MediatRCompat.MediatRCompatMediator
+Mediarq.MediatRCompat.MediatRCompatMediator.CreateStream(object! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<object?>!
+Mediarq.MediatRCompat.MediatRCompatMediator.CreateStream<TResponse>(MediatR.IStreamRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.MediatRCompat.MediatRCompatMediator.MediatRCompatMediator(Mediarq.Core.Mediators.ISender! sender, Mediarq.Core.Mediators.IPublisher! publisher) -> void
+Mediarq.MediatRCompat.MediatRCompatMediator.Publish(object! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.MediatRCompat.MediatRCompatMediator.Publish<TNotification>(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.MediatRCompat.MediatRCompatMediator.Send(object! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<object?>!
+Mediarq.MediatRCompat.MediatRCompatMediator.Send<TRequest>(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.MediatRCompat.MediatRCompatMediator.Send<TResponse>(MediatR.IRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.MediatRCompat.ServiceCollectionExtensions
+static Mediarq.MediatRCompat.ServiceCollectionExtensions.AddMediarqMediatRCompat(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
