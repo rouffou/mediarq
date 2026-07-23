@@ -25,6 +25,10 @@ commands, queries, notifications, a composable pipeline of behaviors, built-in v
 | `Mediarq.EntityFrameworkCore` | `IUnitOfWork` over a `DbContext` |
 | `Mediarq.Polly` | Resilience (retry/timeout/circuit breaker) via Polly |
 | `Mediarq.MassTransit` | Publish notifications out-of-process on a MassTransit bus |
+| `Mediarq.Idempotency` | Run a request at most once per key (`IIdempotentRequest`) |
+| `Mediarq.Idempotency.EntityFrameworkCore` | EF Core-backed `IDistributedCache` for `Mediarq.Idempotency`, no Redis required |
+| `Mediarq.Outbox` | Transactional outbox over EF Core (capture + reliable background publish) |
+| `Mediarq.MediatRCompat` | Optional MediatR compatibility shim for incremental migration |
 
 ## Guides
 
@@ -37,6 +41,7 @@ New here? Start with **Concepts**, then build **Your first app**.
 - [Testing](guides/testing.md) — unit- and integration-test handlers, validators, behaviors
 - [Migrating from MediatR](guides/migrating-from-mediatr.md)
 - [Native AOT & trimming](guides/native-aot.md)
+- [Versioning & public API policy](guides/versioning.md) — SemVer rules and the `PublicAPI.*.txt` workflow
 - [Troubleshooting](guides/troubleshooting.md) — when something silently doesn't fire
 
 ## Getting started

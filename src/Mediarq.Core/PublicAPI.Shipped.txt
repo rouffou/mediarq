@@ -1,0 +1,311 @@
+#nullable enable
+Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>
+Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>.AddItem(string! key, object! value) -> void
+Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>.RemoveItem(string! key) -> bool
+Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>.TryGetItem<T>(string! key, out T value) -> bool
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.CancellationToken.get -> System.Threading.CancellationToken
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.CorrelationId.get -> System.Guid
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.FinishedAt.get -> System.DateTime
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.FinishedAt.set -> void
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.Items.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>!
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.Request.get -> TRequest
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.RequestId.get -> System.Guid
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.StartedAt.get -> System.DateTime
+Mediarq.Core.Common.Contexts.IRequestContext<TRequest, TResponse>.UserId.get -> string?
+Mediarq.Core.Common.Contexts.IRequestContextFactory
+Mediarq.Core.Common.Contexts.IRequestContextFactory.Create<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>!
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.AddItem(string! key, object! value) -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.CancellationToken.get -> System.Threading.CancellationToken
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.CancellationToken.init -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.CorrelationId.get -> System.Guid
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.CorrelationId.init -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.Duration.get -> System.TimeSpan
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.FinishedAt.get -> System.DateTime
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.FinishedAt.set -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.Items.get -> System.Collections.Generic.IReadOnlyDictionary<string!, object!>!
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.RemoveItem(string! key) -> bool
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.Request.get -> TRequest
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.Request.init -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.RequestContext(TRequest request, string? userId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.RequestId.get -> System.Guid
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.RequestId.init -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.StartedAt.get -> System.DateTime
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.StartedAt.init -> void
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.TryGetItem<T>(string! key, out T value) -> bool
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.UserId.get -> string?
+Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>.UserId.init -> void
+Mediarq.Core.Common.Contexts.RequestContextFactory
+Mediarq.Core.Common.Contexts.RequestContextFactory.Create<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>!
+Mediarq.Core.Common.Contexts.RequestContextFactory.RequestContextFactory(Mediarq.Core.Common.User.IUserContext! userContext) -> void
+Mediarq.Core.Common.Exceptions.HandlerNotFoundException
+Mediarq.Core.Common.Exceptions.HandlerNotFoundException.HandlerNotFoundException(System.Type! requestType) -> void
+Mediarq.Core.Common.Exceptions.MediarqException
+Mediarq.Core.Common.Exceptions.MediarqException.MediarqException(string! message) -> void
+Mediarq.Core.Common.Exceptions.RequestTimeoutException
+Mediarq.Core.Common.Exceptions.RequestTimeoutException.RequestTimeoutException(System.Type! requestType, System.TimeSpan timeout) -> void
+Mediarq.Core.Common.Exceptions.RequestTimeoutException.RequestType.get -> System.Type!
+Mediarq.Core.Common.Exceptions.RequestTimeoutException.Timeout.get -> System.TimeSpan
+Mediarq.Core.Common.Pipeline.Behaviors.LoggingBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.LoggingBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.LoggingBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.LoggingBehavior<TRequest, TResponse>.LoggingBehavior(Microsoft.Extensions.Logging.ILogger<Mediarq.Core.Common.Pipeline.Behaviors.LoggingBehavior<TRequest, TResponse>!>! logger) -> void
+Mediarq.Core.Common.Pipeline.Behaviors.PerformanceBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.PerformanceBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.PerformanceBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.PerformanceBehavior<TRequest, TResponse>.PerformanceBehavior(Microsoft.Extensions.Logging.ILogger<Mediarq.Core.Common.Pipeline.Behaviors.PerformanceBehavior<TRequest, TResponse>!>! logger, Mediarq.Core.Common.Time.IClock! clock) -> void
+Mediarq.Core.Common.Pipeline.Behaviors.RequestExceptionProcessorBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.RequestExceptionProcessorBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.RequestExceptionProcessorBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.RequestExceptionProcessorBehavior<TRequest, TResponse>.Order.get -> int
+Mediarq.Core.Common.Pipeline.Behaviors.RequestExceptionProcessorBehavior<TRequest, TResponse>.RequestExceptionProcessorBehavior(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler<TRequest, TResponse>!>! exceptionHandlers) -> void
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPostProcessorBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPostProcessorBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPostProcessorBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPostProcessorBehavior<TRequest, TResponse>.RequestPostProcessorBehavior(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Processors.IRequestPostProcessor<TRequest, TResponse>!>! postProcessors) -> void
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPreProcessorBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPreProcessorBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPreProcessorBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.RequestPreProcessorBehavior<TRequest, TResponse>.RequestPreProcessorBehavior(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Processors.IRequestPreProcessor<TRequest>!>! preProcessors) -> void
+Mediarq.Core.Common.Pipeline.Behaviors.TimeoutBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.TimeoutBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.TimeoutBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.TimeoutBehavior<TRequest, TResponse>.Order.get -> int
+Mediarq.Core.Common.Pipeline.Behaviors.TimeoutBehavior<TRequest, TResponse>.TimeoutBehavior() -> void
+Mediarq.Core.Common.Pipeline.Behaviors.ValidationBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.Behaviors.ValidationBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.Behaviors.ValidationBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.Behaviors.ValidationBehavior<TRequest, TResponse>.ValidationBehavior(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.IValidator<TRequest>!>! validators, Mediarq.Core.Common.Requests.Validators.IValidationMessageResolver? messageResolver = null) -> void
+Mediarq.Core.Common.Pipeline.Behaviors.ValidationFailureRegistry
+Mediarq.Core.Common.Pipeline.IConditionalPipelineBehavior
+Mediarq.Core.Common.Pipeline.IConditionalPipelineBehavior.IsActive.get -> bool
+Mediarq.Core.Common.Pipeline.IOrderBehavior
+Mediarq.Core.Common.Pipeline.IOrderBehavior.Order.get -> int
+Mediarq.Core.Common.Pipeline.IPipelineBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.IPipelineBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.IPipelineExecutor
+Mediarq.Core.Common.Pipeline.IPipelineExecutor.ExecuteAsync<TRequest, TResponse>(Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>! context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResponse>!>! handlerDelegate, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.IPipelineExecutor.ExecuteAsync<TRequest, TResponse>(TRequest request, Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TRequest, TResponse>! handler, Mediarq.Core.Common.Contexts.IRequestContextFactory! contextFactory, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.IStreamPipelineBehavior<TRequest, TResponse>
+Mediarq.Core.Common.Pipeline.IStreamPipelineBehavior<TRequest, TResponse>.Handle(TRequest request, System.Func<System.Collections.Generic.IAsyncEnumerable<TResponse>!>! continuation, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Core.Common.Pipeline.IStreamPipelineExecutor
+Mediarq.Core.Common.Pipeline.IStreamPipelineExecutor.Execute<TRequest, TResponse>(TRequest request, System.Func<System.Collections.Generic.IAsyncEnumerable<TResponse>!>! handler, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Core.Common.Pipeline.PipelineExecutor
+Mediarq.Core.Common.Pipeline.PipelineExecutor.ExecuteAsync<TRequest, TResponse>(Mediarq.Core.Common.Contexts.RequestContext<TRequest, TResponse>! context, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<TResponse>!>! handlerDelegate, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.PipelineExecutor.ExecuteAsync<TRequest, TResponse>(TRequest request, Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TRequest, TResponse>! handler, Mediarq.Core.Common.Contexts.IRequestContextFactory! contextFactory, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Pipeline.PipelineExecutor.PipelineExecutor(Mediarq.Core.Common.Resolvers.IHandlerResolver! handlerResolver) -> void
+Mediarq.Core.Common.Pipeline.StreamPipelineExecutor
+Mediarq.Core.Common.Pipeline.StreamPipelineExecutor.Execute<TRequest, TResponse>(TRequest request, System.Func<System.Collections.Generic.IAsyncEnumerable<TResponse>!>! handler, System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Core.Common.Pipeline.StreamPipelineExecutor.StreamPipelineExecutor(Mediarq.Core.Common.Resolvers.IHandlerResolver! handlerResolver) -> void
+Mediarq.Core.Common.Registration.RegisterHandlerAttribute
+Mediarq.Core.Common.Registration.RegisterHandlerAttribute.Lifetime.get -> Microsoft.Extensions.DependencyInjection.ServiceLifetime
+Mediarq.Core.Common.Registration.RegisterHandlerAttribute.RegisterHandlerAttribute(Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped) -> void
+Mediarq.Core.Common.Requests.Abstraction.ICommandOrQuery<TResponse>
+Mediarq.Core.Common.Requests.Abstraction.IRequest
+Mediarq.Core.Common.Requests.Abstraction.IRequest<TResponse>
+Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TRequest, TResponse>
+Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TRequest, TResponse>.Handle(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TRequest>
+Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TRequest>.Handle(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Abstraction.ITimeoutRequest
+Mediarq.Core.Common.Requests.Abstraction.ITimeoutRequest.Timeout.get -> System.TimeSpan
+Mediarq.Core.Common.Requests.Abstraction.Unit
+Mediarq.Core.Common.Requests.Abstraction.Unit.Equals(Mediarq.Core.Common.Requests.Abstraction.Unit other) -> bool
+Mediarq.Core.Common.Requests.Abstraction.Unit.Unit() -> void
+Mediarq.Core.Common.Requests.Command.ICommand
+Mediarq.Core.Common.Requests.Command.ICommand<TResponse>
+Mediarq.Core.Common.Requests.Command.ICommandHandler<TRequest, TResponse>
+Mediarq.Core.Common.Requests.Command.ICommandHandler<TRequest>
+Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler<TRequest, TResponse>
+Mediarq.Core.Common.Requests.Exceptions.IRequestExceptionHandler<TRequest, TResponse>.Handle(TRequest request, System.Exception! exception, Mediarq.Core.Common.Requests.Exceptions.RequestExceptionHandlerState<TResponse>! state, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Exceptions.RequestExceptionHandlerState<TResponse>
+Mediarq.Core.Common.Requests.Exceptions.RequestExceptionHandlerState<TResponse>.Handled.get -> bool
+Mediarq.Core.Common.Requests.Exceptions.RequestExceptionHandlerState<TResponse>.RequestExceptionHandlerState() -> void
+Mediarq.Core.Common.Requests.Exceptions.RequestExceptionHandlerState<TResponse>.Response.get -> TResponse?
+Mediarq.Core.Common.Requests.Exceptions.RequestExceptionHandlerState<TResponse>.SetHandled(TResponse response) -> void
+Mediarq.Core.Common.Requests.Notifications.AggregateExceptionNotificationPublisher
+Mediarq.Core.Common.Requests.Notifications.AggregateExceptionNotificationPublisher.AggregateExceptionNotificationPublisher() -> void
+Mediarq.Core.Common.Requests.Notifications.AggregateExceptionNotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>!>! handlers, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Notifications.INotification
+Mediarq.Core.Common.Requests.Notifications.INotificationHandler<TNotification>
+Mediarq.Core.Common.Requests.Notifications.INotificationHandler<TNotification>.Handle(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Notifications.INotificationPublisher
+Mediarq.Core.Common.Requests.Notifications.INotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>!>! handlers, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Notifications.IOrderedNotificationHandler
+Mediarq.Core.Common.Requests.Notifications.IOrderedNotificationHandler.Order.get -> int
+Mediarq.Core.Common.Requests.Notifications.ParallelNotificationPublisher
+Mediarq.Core.Common.Requests.Notifications.ParallelNotificationPublisher.ParallelNotificationPublisher() -> void
+Mediarq.Core.Common.Requests.Notifications.ParallelNotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>!>! handlers, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Notifications.SequentialNotificationPublisher
+Mediarq.Core.Common.Requests.Notifications.SequentialNotificationPublisher.Publish(System.Collections.Generic.IReadOnlyList<System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>!>! handlers, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Notifications.SequentialNotificationPublisher.SequentialNotificationPublisher() -> void
+Mediarq.Core.Common.Requests.Processors.IRequestPostProcessor<TRequest, TResponse>
+Mediarq.Core.Common.Requests.Processors.IRequestPostProcessor<TRequest, TResponse>.Process(TRequest request, TResponse response, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Processors.IRequestPreProcessor<TRequest>
+Mediarq.Core.Common.Requests.Processors.IRequestPreProcessor<TRequest>.Process(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Common.Requests.Query.IQuery<TResponse>
+Mediarq.Core.Common.Requests.Query.IQueryHandler<TRequest, TResponse>
+Mediarq.Core.Common.Requests.Streaming.IStreamRequest<TResponse>
+Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler<TRequest, TResponse>
+Mediarq.Core.Common.Requests.Streaming.IStreamRequestHandler<TRequest, TResponse>.Handle(TRequest request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Core.Common.Requests.Validators.IValidationMessageResolver
+Mediarq.Core.Common.Requests.Validators.IValidationMessageResolver.Resolve(string! propertyName, string! message) -> string!
+Mediarq.Core.Common.Requests.Validators.IValidator<T>
+Mediarq.Core.Common.Requests.Validators.IValidator<T>.Validate(T instance) -> System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationResult!>!
+Mediarq.Core.Common.Requests.Validators.IValidator<T>.ValidateAsync(T instance, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationResult!>!>!
+Mediarq.Core.Common.Requests.Validators.NotificationValidationException
+Mediarq.Core.Common.Requests.Validators.NotificationValidationException.Errors.get -> System.Collections.Generic.IReadOnlyList<Mediarq.Core.Common.Requests.Validators.ValidationPropertyError!>!
+Mediarq.Core.Common.Requests.Validators.NotificationValidationException.NotificationType.get -> System.Type!
+Mediarq.Core.Common.Requests.Validators.NotificationValidationException.NotificationValidationException(System.Type! notificationType, System.Collections.Generic.IReadOnlyList<Mediarq.Core.Common.Requests.Validators.ValidationPropertyError!>! errors) -> void
+Mediarq.Core.Common.Requests.Validators.ValidationPropertyError
+Mediarq.Core.Common.Requests.Validators.ValidationPropertyError.ErrorMessage.get -> string!
+Mediarq.Core.Common.Requests.Validators.ValidationPropertyError.ErrorMessage.init -> void
+Mediarq.Core.Common.Requests.Validators.ValidationPropertyError.PropertyName.get -> string!
+Mediarq.Core.Common.Requests.Validators.ValidationPropertyError.PropertyName.init -> void
+Mediarq.Core.Common.Requests.Validators.ValidationPropertyError.ValidationPropertyError(string! propertyName, string! errorMessage) -> void
+Mediarq.Core.Common.Requests.Validators.ValidationResult
+Mediarq.Core.Common.Requests.Validators.ValidationResult.Errors.get -> System.Collections.Generic.List<Mediarq.Core.Common.Requests.Validators.ValidationPropertyError!>!
+Mediarq.Core.Common.Requests.Validators.ValidationResult.IsValid.get -> bool
+Mediarq.Core.Common.Requests.Validators.ValidationResult.ValidationResult() -> void
+Mediarq.Core.Common.Requests.Validators.ValidationResult.ValidationResult(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationPropertyError!>! errors) -> void
+Mediarq.Core.Common.Resolvers.HandlerResolver
+Mediarq.Core.Common.Resolvers.HandlerResolver.HandlerResolver(System.Func<System.Type!, object?>! resolver) -> void
+Mediarq.Core.Common.Resolvers.HandlerResolver.HandlerResolver(System.IServiceProvider! serviceProvider) -> void
+Mediarq.Core.Common.Resolvers.HandlerResolver.Resolve(System.Type! handlerType) -> object?
+Mediarq.Core.Common.Resolvers.HandlerResolver.Resolve<TService>() -> TService?
+Mediarq.Core.Common.Resolvers.HandlerResolver.ResolveAll(System.Type! handlerType) -> System.Collections.Generic.IEnumerable<object!>!
+Mediarq.Core.Common.Resolvers.HandlerResolver.ResolveAll<TService>() -> System.Collections.Generic.IReadOnlyList<TService>!
+Mediarq.Core.Common.Resolvers.IHandlerResolver
+Mediarq.Core.Common.Resolvers.IHandlerResolver.Resolve(System.Type! handlerType) -> object?
+Mediarq.Core.Common.Resolvers.IHandlerResolver.Resolve<TService>() -> TService?
+Mediarq.Core.Common.Resolvers.IHandlerResolver.ResolveAll(System.Type! handlerType) -> System.Collections.Generic.IEnumerable<object!>!
+Mediarq.Core.Common.Resolvers.IHandlerResolver.ResolveAll<TService>() -> System.Collections.Generic.IReadOnlyList<TService>!
+Mediarq.Core.Common.Resolvers.TypeResponseExtensions
+Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ErrorType.Conflict = 4 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ErrorType.Failure = 0 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ErrorType.NotFound = 3 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ErrorType.Problem = 2 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ErrorType.Unauthorized = 5 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ErrorType.Validation = 1 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.Result
+Mediarq.Core.Common.Results.Result.Error.get -> Mediarq.Core.Common.Results.ResultError!
+Mediarq.Core.Common.Results.Result.Error.init -> void
+Mediarq.Core.Common.Results.Result.IsFailure.get -> bool
+Mediarq.Core.Common.Results.Result.IsSuccess.get -> bool
+Mediarq.Core.Common.Results.Result.IsSuccess.init -> void
+Mediarq.Core.Common.Results.Result.Result(bool isSuccess, Mediarq.Core.Common.Results.ResultError! error) -> void
+Mediarq.Core.Common.Results.Result<TValue>
+Mediarq.Core.Common.Results.Result<TValue>.Result(TValue? value, bool isSuccess, Mediarq.Core.Common.Results.ResultError! error) -> void
+Mediarq.Core.Common.Results.Result<TValue>.Value.get -> TValue
+Mediarq.Core.Common.Results.ResultError
+Mediarq.Core.Common.Results.ResultError.Code.get -> string!
+Mediarq.Core.Common.Results.ResultError.Code.init -> void
+Mediarq.Core.Common.Results.ResultError.Message.get -> string!
+Mediarq.Core.Common.Results.ResultError.Message.init -> void
+Mediarq.Core.Common.Results.ResultError.ResultError(string! code, string! message, Mediarq.Core.Common.Results.ErrorType type) -> void
+Mediarq.Core.Common.Results.ResultError.Type.get -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.ResultError.Type.init -> void
+Mediarq.Core.Common.Results.ResultExtensions
+Mediarq.Core.Common.Results.ResultJsonConverterFactory
+Mediarq.Core.Common.Results.ResultJsonConverterFactory.ResultJsonConverterFactory() -> void
+Mediarq.Core.Common.Results.ValidationError
+Mediarq.Core.Common.Results.ValidationError.Errors.get -> Mediarq.Core.Common.Results.ResultError![]!
+Mediarq.Core.Common.Results.ValidationError.Errors.init -> void
+Mediarq.Core.Common.Results.ValidationError.ValidationError(Mediarq.Core.Common.Results.ResultError![]! errors) -> void
+Mediarq.Core.Common.Time.IClock
+Mediarq.Core.Common.Time.IClock.UtcNow.get -> System.DateTime
+Mediarq.Core.Common.Time.SystemClock
+Mediarq.Core.Common.Time.SystemClock.SystemClock() -> void
+Mediarq.Core.Common.Time.SystemClock.UtcNow.get -> System.DateTime
+Mediarq.Core.Common.User.DefaultUserContext
+Mediarq.Core.Common.User.DefaultUserContext.DefaultUserContext(string? userId = null, string! userName = "system", System.Collections.Generic.IEnumerable<string!>? roles = null) -> void
+Mediarq.Core.Common.User.DefaultUserContext.Roles.get -> System.Collections.Generic.IEnumerable<string!>!
+Mediarq.Core.Common.User.DefaultUserContext.Roles.init -> void
+Mediarq.Core.Common.User.DefaultUserContext.UserId.get -> string!
+Mediarq.Core.Common.User.DefaultUserContext.UserId.init -> void
+Mediarq.Core.Common.User.DefaultUserContext.UserName.get -> string!
+Mediarq.Core.Common.User.DefaultUserContext.UserName.init -> void
+Mediarq.Core.Common.User.HttpUserContext
+Mediarq.Core.Common.User.HttpUserContext.HttpUserContext(Microsoft.AspNetCore.Http.IHttpContextAccessor! httpContextAccessor) -> void
+Mediarq.Core.Common.User.HttpUserContext.Roles.get -> System.Collections.Generic.IEnumerable<string!>!
+Mediarq.Core.Common.User.HttpUserContext.UserId.get -> string?
+Mediarq.Core.Common.User.HttpUserContext.UserName.get -> string?
+Mediarq.Core.Common.User.IUserContext
+Mediarq.Core.Common.User.IUserContext.Roles.get -> System.Collections.Generic.IEnumerable<string!>!
+Mediarq.Core.Common.User.IUserContext.UserId.get -> string?
+Mediarq.Core.Common.User.IUserContext.UserName.get -> string?
+Mediarq.Core.Mediators.IMediator
+Mediarq.Core.Mediators.IPublisher
+Mediarq.Core.Mediators.IPublisher.Publish<TNotification>(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Mediators.ISender
+Mediarq.Core.Mediators.ISender.CreateStream<TResponse>(Mediarq.Core.Common.Requests.Streaming.IStreamRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Core.Mediators.ISender.Send(Mediarq.Core.Common.Requests.Command.ICommand! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Mediators.ISender.Send<TResponse>(Mediarq.Core.Common.Requests.Abstraction.ICommandOrQuery<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Core.Mediators.MediarqWrapperRegistry
+Mediarq.Core.Mediators.MediarqWrapperRegistry.Add<TRequest, TResponse>() -> Mediarq.Core.Mediators.MediarqWrapperRegistry!
+Mediarq.Core.Mediators.MediarqWrapperRegistry.AddNotification<TNotification>() -> Mediarq.Core.Mediators.MediarqWrapperRegistry!
+Mediarq.Core.Mediators.MediarqWrapperRegistry.AddStream<TRequest, TResponse>() -> Mediarq.Core.Mediators.MediarqWrapperRegistry!
+Mediarq.Core.Mediators.MediarqWrapperRegistry.MediarqWrapperRegistry() -> void
+Mediarq.Core.Mediators.Mediator
+Mediarq.Core.Mediators.Mediator.CreateStream<TResponse>(Mediarq.Core.Common.Requests.Streaming.IStreamRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Core.Mediators.Mediator.Mediator(Mediarq.Core.Common.Contexts.IRequestContextFactory! requestContextFactory, Mediarq.Core.Common.Resolvers.IHandlerResolver! handlerResolver, Mediarq.Core.Common.Requests.Notifications.INotificationPublisher! notificationPublisher, Mediarq.Core.Mediators.MediarqWrapperRegistry? wrapperRegistry = null, Mediarq.Core.Common.Pipeline.IStreamPipelineExecutor? streamPipelineExecutor = null) -> void
+Mediarq.Core.Mediators.Mediator.Publish<TNotification>(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Mediators.Mediator.Send(Mediarq.Core.Common.Requests.Command.ICommand! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Core.Mediators.Mediator.Send<TResponse>(Mediarq.Core.Common.Requests.Abstraction.ICommandOrQuery<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Extensions.ServiceCollectionExtensions
+override Mediarq.Core.Common.Requests.Abstraction.Unit.Equals(object? obj) -> bool
+override Mediarq.Core.Common.Requests.Abstraction.Unit.GetHashCode() -> int
+override Mediarq.Core.Common.Requests.Abstraction.Unit.ToString() -> string!
+override Mediarq.Core.Common.Requests.Validators.ValidationPropertyError.ToString() -> string!
+override Mediarq.Core.Common.Results.ResultJsonConverterFactory.CanConvert(System.Type! typeToConvert) -> bool
+override Mediarq.Core.Common.Results.ResultJsonConverterFactory.CreateConverter(System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> System.Text.Json.Serialization.JsonConverter!
+static Mediarq.Core.Common.Pipeline.Behaviors.ValidationFailureRegistry.Register<TResponse>(System.Func<Mediarq.Core.Common.Results.ValidationError!, TResponse>! factory) -> void
+static Mediarq.Core.Common.Requests.Abstraction.Unit.Task.get -> System.Threading.Tasks.Task<Mediarq.Core.Common.Requests.Abstraction.Unit>!
+static Mediarq.Core.Common.Requests.Abstraction.Unit.operator !=(Mediarq.Core.Common.Requests.Abstraction.Unit left, Mediarq.Core.Common.Requests.Abstraction.Unit right) -> bool
+static Mediarq.Core.Common.Requests.Abstraction.Unit.operator ==(Mediarq.Core.Common.Requests.Abstraction.Unit left, Mediarq.Core.Common.Requests.Abstraction.Unit right) -> bool
+static Mediarq.Core.Common.Requests.Validators.ValidationResult.Failure(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Requests.Validators.ValidationPropertyError!>! errors) -> Mediarq.Core.Common.Requests.Validators.ValidationResult!
+static Mediarq.Core.Common.Requests.Validators.ValidationResult.Success() -> Mediarq.Core.Common.Requests.Validators.ValidationResult!
+static Mediarq.Core.Common.Resolvers.TypeResponseExtensions.GetResponseType(this object! request) -> System.Type!
+static Mediarq.Core.Common.Results.Result.Failure(Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result!
+static Mediarq.Core.Common.Results.Result.Failure<T>(Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.Result.Success() -> Mediarq.Core.Common.Results.Result!
+static Mediarq.Core.Common.Results.Result.Success<T>(T value) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.Result.implicit operator Mediarq.Core.Common.Results.Result!(Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result!
+static Mediarq.Core.Common.Results.Result<TValue>.ValidationFailure(Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result<TValue>!
+static Mediarq.Core.Common.Results.Result<TValue>.implicit operator Mediarq.Core.Common.Results.Result<TValue>!(Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result<TValue>!
+static Mediarq.Core.Common.Results.Result<TValue>.implicit operator Mediarq.Core.Common.Results.Result<TValue>!(TValue value) -> Mediarq.Core.Common.Results.Result<TValue>!
+static Mediarq.Core.Common.Results.ResultError.Conflict(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
+static Mediarq.Core.Common.Results.ResultError.Failure(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
+static Mediarq.Core.Common.Results.ResultError.NotFound(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
+static Mediarq.Core.Common.Results.ResultError.Problem(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
+static Mediarq.Core.Common.Results.ResultExtensions.Bind<TIn, TOut>(this Mediarq.Core.Common.Results.Result<TIn>! result, System.Func<TIn, Mediarq.Core.Common.Results.Result<TOut>!>! bind) -> Mediarq.Core.Common.Results.Result<TOut>!
+static Mediarq.Core.Common.Results.ResultExtensions.BindAsync<TIn, TOut>(this Mediarq.Core.Common.Results.Result<TIn>! result, System.Func<TIn, System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TOut>!>!>! bind) -> System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TOut>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.BindAsync<TIn, TOut>(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TIn>!>! resultTask, System.Func<TIn, System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TOut>!>!>! bind) -> System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TOut>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.Combine(params Mediarq.Core.Common.Results.Result![]! results) -> Mediarq.Core.Common.Results.Result!
+static Mediarq.Core.Common.Results.ResultExtensions.Combine<T>(params Mediarq.Core.Common.Results.Result<T>![]! results) -> Mediarq.Core.Common.Results.Result<System.Collections.Generic.IReadOnlyList<T>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.Ensure<T>(this Mediarq.Core.Common.Results.Result<T>! result, System.Func<T, bool>! predicate, Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.ResultExtensions.Map<TIn, TOut>(this Mediarq.Core.Common.Results.Result<TIn>! result, System.Func<TIn, TOut>! map) -> Mediarq.Core.Common.Results.Result<TOut>!
+static Mediarq.Core.Common.Results.ResultExtensions.MapAsync<TIn, TOut>(this Mediarq.Core.Common.Results.Result<TIn>! result, System.Func<TIn, System.Threading.Tasks.Task<TOut>!>! map) -> System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TOut>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.MapAsync<TIn, TOut>(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TIn>!>! resultTask, System.Func<TIn, TOut>! map) -> System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TOut>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.Match<TIn, TOut>(this Mediarq.Core.Common.Results.Result<TIn>! result, System.Func<TIn, TOut>! onSuccess, System.Func<Mediarq.Core.Common.Results.ResultError!, TOut>! onFailure) -> TOut
+static Mediarq.Core.Common.Results.ResultExtensions.Match<TOut>(this Mediarq.Core.Common.Results.Result! result, System.Func<TOut>! onSuccess, System.Func<Mediarq.Core.Common.Results.ResultError!, TOut>! onFailure) -> TOut
+static Mediarq.Core.Common.Results.ResultExtensions.MatchAsync<TIn, TOut>(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<TIn>!>! resultTask, System.Func<TIn, TOut>! onSuccess, System.Func<Mediarq.Core.Common.Results.ResultError!, TOut>! onFailure) -> System.Threading.Tasks.Task<TOut>!
+static Mediarq.Core.Common.Results.ResultExtensions.OrElse<T>(this Mediarq.Core.Common.Results.Result<T>! result, System.Func<Mediarq.Core.Common.Results.ResultError!, Mediarq.Core.Common.Results.Result<T>!>! alternative) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.ResultExtensions.Recover<T>(this Mediarq.Core.Common.Results.Result<T>! result, System.Func<Mediarq.Core.Common.Results.ResultError!, T>! fallback) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.ResultExtensions.Tap<T>(this Mediarq.Core.Common.Results.Result<T>! result, System.Action<T>! action) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.ResultExtensions.TapAsync<T>(this System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<T>!>! resultTask, System.Action<T>! action) -> System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<T>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.ToResult<T>(this T? value, Mediarq.Core.Common.Results.ResultError! error) -> Mediarq.Core.Common.Results.Result<T!>!
+static Mediarq.Core.Common.Results.ResultExtensions.Try<T>(System.Func<T>! operation, System.Func<System.Exception!, Mediarq.Core.Common.Results.ResultError!>! onError) -> Mediarq.Core.Common.Results.Result<T>!
+static Mediarq.Core.Common.Results.ResultExtensions.TryAsync<T>(System.Func<System.Threading.Tasks.Task<T>!>! operation, System.Func<System.Exception!, Mediarq.Core.Common.Results.ResultError!>! onError) -> System.Threading.Tasks.Task<Mediarq.Core.Common.Results.Result<T>!>!
+static Mediarq.Core.Common.Results.ResultExtensions.TryGetValue<T>(this Mediarq.Core.Common.Results.Result<T>! result, out T value) -> bool
+static Mediarq.Core.Common.Results.ValidationError.FromResults(System.Collections.Generic.IEnumerable<Mediarq.Core.Common.Results.Result!>! results) -> Mediarq.Core.Common.Results.ValidationError!
+static Mediarq.Extensions.ServiceCollectionExtensions.AddMediarq(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, bool isHttp = false, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Extensions.ServiceCollectionExtensions.AddMediarqCore(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, bool isHttp = false) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Extensions.ServiceCollectionExtensions.AddMediarqPerformanceTracking(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Extensions.ServiceCollectionExtensions.AddMediarqRequestLogging(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Extensions.ServiceCollectionExtensions.AddMediarqTimeout(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static readonly Mediarq.Core.Common.Requests.Abstraction.Unit.Value -> Mediarq.Core.Common.Requests.Abstraction.Unit
+static readonly Mediarq.Core.Common.Results.ResultError.None -> Mediarq.Core.Common.Results.ResultError!
+static readonly Mediarq.Core.Common.Results.ResultError.NullValue -> Mediarq.Core.Common.Results.ResultError!

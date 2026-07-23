@@ -1,0 +1,22 @@
+#nullable enable
+Mediarq.Caching.CachingBehavior<TRequest, TResponse>
+Mediarq.Caching.CachingBehavior<TRequest, TResponse>.CachingBehavior(Microsoft.Extensions.Caching.Memory.IMemoryCache! cache) -> void
+Mediarq.Caching.CachingBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Caching.CachingBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Caching.CachingServiceCollectionExtensions
+Mediarq.Caching.DistributedCachingBehavior<TRequest, TResponse>
+Mediarq.Caching.DistributedCachingBehavior<TRequest, TResponse>.DistributedCachingBehavior(Microsoft.Extensions.Caching.Distributed.IDistributedCache! cache, Mediarq.Caching.IMediarqCacheSerializer! serializer) -> void
+Mediarq.Caching.DistributedCachingBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Caching.DistributedCachingBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.Caching.ICacheableRequest
+Mediarq.Caching.ICacheableRequest.CacheDuration.get -> System.TimeSpan?
+Mediarq.Caching.ICacheableRequest.CacheKey.get -> string!
+Mediarq.Caching.IMediarqCacheSerializer
+Mediarq.Caching.IMediarqCacheSerializer.Deserialize<TValue>(byte[]! data) -> TValue?
+Mediarq.Caching.IMediarqCacheSerializer.Serialize<TValue>(TValue value) -> byte[]!
+Mediarq.Caching.JsonMediarqCacheSerializer
+Mediarq.Caching.JsonMediarqCacheSerializer.Deserialize<TValue>(byte[]! data) -> TValue?
+Mediarq.Caching.JsonMediarqCacheSerializer.JsonMediarqCacheSerializer() -> void
+Mediarq.Caching.JsonMediarqCacheSerializer.Serialize<TValue>(TValue value) -> byte[]!
+static Mediarq.Caching.CachingServiceCollectionExtensions.AddMediarqCaching(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Caching.CachingServiceCollectionExtensions.AddMediarqDistributedCaching(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

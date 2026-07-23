@@ -32,6 +32,16 @@ Call after `AddMediarq` / `AddMediarqCore`. Use a stable, caller-supplied key. T
 JSON-serialized; `Result` / `Result<T>` round-trip out of the box. For strict once-only semantics under
 high concurrency, back it with a store that supports atomic set-if-absent (e.g. Redis).
 
+## Persistent stores
+
+`IdempotencyBehavior` depends on the standard `IDistributedCache` — swap the backing store without any
+code change:
+
+- **In-memory** (single process, non-persistent): `AddDistributedMemoryCache()` — shown above.
+- **Redis**: `AddStackExchangeRedisCache(o => o.Configuration = "...")`.
+- **Your own SQL database**: [`Mediarq.Idempotency.EntityFrameworkCore`](https://www.nuget.org/packages/Mediarq.Idempotency.EntityFrameworkCore)
+  — `AddMediarqIdempotencyEntityFrameworkCore<TContext>()`, no Redis required.
+
 ## Learn more
 
 [Wiring extensions](https://github.com/rouffou/mediarq/blob/main/docs/guides/wiring-extensions.md) ·

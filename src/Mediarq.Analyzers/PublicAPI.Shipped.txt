@@ -1,0 +1,11 @@
+#nullable enable
+Mediarq.Analyzers.MediatRMigrationAnalyzer
+Mediarq.Analyzers.MediatRMigrationAnalyzer.MediatRMigrationAnalyzer() -> void
+Mediarq.Analyzers.MediatRMigrationCodeFixProvider
+Mediarq.Analyzers.MediatRMigrationCodeFixProvider.MediatRMigrationCodeFixProvider() -> void
+const Mediarq.Analyzers.MediatRMigrationAnalyzer.DiagnosticId = "MQ100" -> string!
+override Mediarq.Analyzers.MediatRMigrationAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Mediarq.Analyzers.MediatRMigrationAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override Mediarq.Analyzers.MediatRMigrationCodeFixProvider.FixableDiagnosticIds.get -> System.Collections.Immutable.ImmutableArray<string!>
+override Mediarq.Analyzers.MediatRMigrationCodeFixProvider.GetFixAllProvider() -> Microsoft.CodeAnalysis.CodeFixes.FixAllProvider!
+override Mediarq.Analyzers.MediatRMigrationCodeFixProvider.RegisterCodeFixesAsync(Microsoft.CodeAnalysis.CodeFixes.CodeFixContext context) -> System.Threading.Tasks.Task!

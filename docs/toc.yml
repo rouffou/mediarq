@@ -14,8 +14,12 @@
       href: guides/testing.md
     - name: Migrating from MediatR
       href: guides/migrating-from-mediatr.md
+    - name: MediatR parity audit
+      href: guides/mediatr-parity.md
     - name: Native AOT & trimming
       href: guides/native-aot.md
+    - name: Versioning & public API policy
+      href: guides/versioning.md
     - name: Troubleshooting
       href: guides/troubleshooting.md
 - name: API
