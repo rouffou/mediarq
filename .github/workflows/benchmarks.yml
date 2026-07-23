@@ -66,6 +66,11 @@ jobs:
           output-file-path: BenchmarkDotNet.Artifacts/results/SendBenchmarks-report-full-compressed.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name == 'push' }}
+          # save-data-file defaults to true, which commits (but doesn't push) to the local gh-pages
+          # checkout -- harmless for a single step, but a second step in the same job then fails to
+          # re-fetch gh-pages (its local ref has diverged from origin with nothing pushed to reconcile
+          # it). On a PR run we only want to compare/report, never write, so this must be explicit.
+          save-data-file: ${{ github.event_name == 'push' }}
           fail-on-alert: false
           comment-on-alert: true
           alert-threshold: '150%'
@@ -78,6 +83,11 @@ jobs:
           output-file-path: BenchmarkDotNet.Artifacts/results/PublishBenchmarks-report-full-compressed.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name == 'push' }}
+          # save-data-file defaults to true, which commits (but doesn't push) to the local gh-pages
+          # checkout -- harmless for a single step, but a second step in the same job then fails to
+          # re-fetch gh-pages (its local ref has diverged from origin with nothing pushed to reconcile
+          # it). On a PR run we only want to compare/report, never write, so this must be explicit.
+          save-data-file: ${{ github.event_name == 'push' }}
           fail-on-alert: false
           comment-on-alert: true
           alert-threshold: '150%'
