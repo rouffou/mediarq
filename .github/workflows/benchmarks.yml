@@ -2,10 +2,24 @@ name: Benchmarks
 
 # Report-only performance check on the hot dispatch path (Mediarq.Benchmarks): runs BenchmarkDotNet in
 # CI, publishes the full results as a build artifact, and comments on the PR when a benchmark drifts
-# from the committed baseline. Never fails the build — GitHub-hosted runners are shared/noisy, so a hard
+# from its historical trend. Never fails the build — GitHub-hosted runners are shared/noisy, so a hard
 # regression gate here would produce false positives; this is a signal for review, not a merge blocker.
+#
+# History is kept in a `gh-pages` branch (benchmark-action/github-action-benchmark's own data format —
+# not something to hand-edit), used purely as a data store here. It does NOT collide with the DocFX site:
+# GitHub Pages is configured to deploy from GitHub Actions (see docs.yml), not from a branch, so this
+# branch is just storage, never served.
+#
+# A push to dev/main advances that history; a pull_request only compares against it (read-only).
 
 on:
+  push:
+    branches: [ dev, main ]
+    paths:
+      - 'src/Mediarq.Core/**'
+      - 'src/Mediarq/**'
+      - 'benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
   pull_request:
     branches: [ dev, main ]
     paths:
@@ -14,14 +28,9 @@ on:
       - 'benchmarks/**'
       - '.github/workflows/benchmarks.yml'
   workflow_dispatch:
-    inputs:
-      refresh-baseline:
-        description: 'Also upload a refreshed baseline artifact (download and commit it yourself to benchmarks/Mediarq.Benchmarks/baseline/ to accept new numbers)'
-        type: boolean
-        default: false
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -36,7 +45,7 @@ jobs:
           dotnet-version: 10.0.x
 
       # `--job short` trades precision for a CI-sized runtime; treat these numbers as a trend signal,
-      # not authoritative — see benchmarks/Mediarq.Benchmarks/baseline/README.md.
+      # not authoritative.
       - name: Run benchmarks
         run: dotnet run -c Release --project benchmarks/Mediarq.Benchmarks -- --filter '*' --job short --exporters json
 
@@ -47,35 +56,28 @@ jobs:
           path: BenchmarkDotNet.Artifacts/results/**
           if-no-files-found: warn
 
-      - name: Compare Send dispatch against baseline
+      # auto-push only on a push to dev/main: a PR run compares against history without writing to it,
+      # so a PR's short-job, potentially-noisy numbers never become part of the trend.
+      - name: Track Send dispatch history
         uses: benchmark-action/github-action-benchmark@v1
         with:
+          name: 'Mediarq.Benchmarks - Send'
           tool: 'benchmarkdotnet'
           output-file-path: BenchmarkDotNet.Artifacts/results/SendBenchmarks-report-full-compressed.json
-          external-data-json-path: benchmarks/Mediarq.Benchmarks/baseline/send-benchmarks.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name == 'push' }}
           fail-on-alert: false
           comment-on-alert: true
           alert-threshold: '150%'
-          summary-always: false
-          save-data-file: ${{ inputs.refresh-baseline == true }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compare Publish dispatch against baseline
+      - name: Track Publish dispatch history
         uses: benchmark-action/github-action-benchmark@v1
         with:
+          name: 'Mediarq.Benchmarks - Publish'
           tool: 'benchmarkdotnet'
           output-file-path: BenchmarkDotNet.Artifacts/results/PublishBenchmarks-report-full-compressed.json
-          external-data-json-path: benchmarks/Mediarq.Benchmarks/baseline/publish-benchmarks.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name == 'push' }}
           fail-on-alert: false
           comment-on-alert: true
           alert-threshold: '150%'
-          summary-always: false
-          save-data-file: ${{ inputs.refresh-baseline == true }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload refreshed baseline (manual runs only)
-        if: ${{ inputs.refresh-baseline == true }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: refreshed-baseline
-          path: benchmarks/Mediarq.Benchmarks/baseline/*.json
