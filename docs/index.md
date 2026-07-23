@@ -28,6 +28,7 @@ commands, queries, notifications, a composable pipeline of behaviors, built-in v
 | `Mediarq.Idempotency` | Run a request at most once per key (`IIdempotentRequest`) |
 | `Mediarq.Idempotency.EntityFrameworkCore` | EF Core-backed `IDistributedCache` for `Mediarq.Idempotency`, no Redis required |
 | `Mediarq.Outbox` | Transactional outbox over EF Core (capture + reliable background publish) |
+| `Mediarq.MediatRCompat` | Optional MediatR compatibility shim for incremental migration |
 
 ## Guides
 
