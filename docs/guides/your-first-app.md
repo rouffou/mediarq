@@ -5,6 +5,7 @@ command, a query, validation and a notification. ~10 minutes. Copy each block in
 
 > Prefer to read finished code? See [Samples/Mediarq.Samples.WebApi](https://github.com/rouffou/mediarq/tree/main/Samples/Mediarq.Samples.WebApi).
 > Want a console instead of a web app? See [Samples/Mediarq.Samples.Quickstart](https://github.com/rouffou/mediarq/tree/main/Samples/Mediarq.Samples.Quickstart).
+> Want this scaffolded for you instead of typed by hand? `dotnet new install Mediarq.Templates && dotnet new mediarq-webapi -n TodoApi -o TodoApi` generates a runnable project with the same shape (commands, queries, a validator, minimal-API endpoints) — this guide walks through building it from scratch to explain each piece.
 
 ## 1. Create the project
 
