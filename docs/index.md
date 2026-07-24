@@ -41,6 +41,7 @@ New here? Start with **Concepts**, then build **Your first app**.
 - [Testing](guides/testing.md) — unit- and integration-test handlers, validators, behaviors
 - [Migrating from MediatR](guides/migrating-from-mediatr.md)
 - [Native AOT & trimming](guides/native-aot.md)
+- [A ready-to-use observability dashboard](guides/observability-dashboard.md) — import a Grafana dashboard for Mediarq.Diagnostics + OpenTelemetry messaging semantic conventions
 - [Versioning & public API policy](guides/versioning.md) — SemVer rules and the `PublicAPI.*.txt` workflow
 - [Troubleshooting](guides/troubleshooting.md) — when something silently doesn't fire
 

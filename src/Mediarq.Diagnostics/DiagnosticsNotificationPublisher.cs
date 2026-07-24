@@ -39,12 +39,16 @@ public sealed class DiagnosticsNotificationPublisher : INotificationPublisher
         try
         {
             await _inner.Publish(handlers, cancellationToken).ConfigureAwait(false);
-            MediarqDiagnostics.Record("Publish", Stopwatch.GetElapsedTime(startTimestamp), succeeded: true);
+            var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
+            MediarqDiagnostics.Record("Publish", elapsed, succeeded: true);
+            MediarqDiagnostics.RecordMessagingOperation(activity, "publish", "Publish", elapsed, batchMessageCount: handlers.Count);
             activity?.SetStatus(ActivityStatusCode.Ok);
         }
         catch (Exception exception)
         {
-            MediarqDiagnostics.Record("Publish", Stopwatch.GetElapsedTime(startTimestamp), succeeded: false);
+            var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
+            MediarqDiagnostics.Record("Publish", elapsed, succeeded: false);
+            MediarqDiagnostics.RecordMessagingOperation(activity, "publish", "Publish", elapsed, batchMessageCount: handlers.Count, errorType: exception.GetType().FullName);
             activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
             throw;
         }

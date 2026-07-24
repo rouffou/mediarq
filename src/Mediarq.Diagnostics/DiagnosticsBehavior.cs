@@ -40,13 +40,17 @@ public sealed class DiagnosticsBehavior<TRequest, TResponse> : IPipelineBehavior
         try
         {
             var response = await handle().ConfigureAwait(false);
-            MediarqDiagnostics.Record(RequestName, Stopwatch.GetElapsedTime(startTimestamp), succeeded: true);
+            var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
+            MediarqDiagnostics.Record(RequestName, elapsed, succeeded: true);
+            MediarqDiagnostics.RecordMessagingOperation(activity, "process", RequestName, elapsed, messageId: context.RequestId.ToString());
             activity?.SetStatus(ActivityStatusCode.Ok);
             return response;
         }
         catch (Exception exception)
         {
-            MediarqDiagnostics.Record(RequestName, Stopwatch.GetElapsedTime(startTimestamp), succeeded: false);
+            var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
+            MediarqDiagnostics.Record(RequestName, elapsed, succeeded: false);
+            MediarqDiagnostics.RecordMessagingOperation(activity, "process", RequestName, elapsed, messageId: context.RequestId.ToString(), errorType: exception.GetType().FullName);
             activity?.SetStatus(ActivityStatusCode.Error, exception.Message);
             throw;
         }

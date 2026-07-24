@@ -33,12 +33,13 @@ public class MediarqRegistrationGeneratorTests
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
     }
 
-    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(string source, string? accessibility = null, string? generatedNamespace = null)
+    private static (string GeneratedSource, ImmutableArray<Diagnostic> Diagnostics) Run(
+        string source, string? accessibility = null, string? generatedNamespace = null, bool? publishAot = null)
     {
         var compilation = CreateCompilation(source);
 
         AnalyzerConfigOptionsProvider? optionsProvider = null;
-        if (accessibility is not null || generatedNamespace is not null)
+        if (accessibility is not null || generatedNamespace is not null || publishAot is not null)
         {
             var globals = new Dictionary<string, string>();
             if (accessibility is not null)
@@ -49,6 +50,11 @@ public class MediarqRegistrationGeneratorTests
             if (generatedNamespace is not null)
             {
                 globals["build_property.MediarqGeneratedNamespace"] = generatedNamespace;
+            }
+
+            if (publishAot is not null)
+            {
+                globals["build_property.PublishAot"] = publishAot.Value ? "true" : "false";
             }
 
             optionsProvider = new TestOptionsProvider(globals);
@@ -392,6 +398,60 @@ public class MediarqRegistrationGeneratorTests
         var (_, diagnostics) = Run(source);
 
         diagnostics.Should().NotContain(d => d.Id == "MQ003");
+    }
+
+    private const string AddMediarqCallSite = """
+        using Mediarq.Extensions;
+        using Microsoft.Extensions.DependencyInjection;
+
+        namespace Demo;
+
+        public class Startup
+        {
+            public void Configure(IServiceCollection services)
+            {
+                services.AddMediarq(false);
+            }
+        }
+        """;
+
+    [Fact]
+    public void Reports_MQ004_When_AddMediarq_Called_In_An_Aot_Project()
+    {
+        var (_, diagnostics) = Run(AddMediarqCallSite, publishAot: true);
+
+        diagnostics.Should().Contain(d => d.Id == "MQ004");
+    }
+
+    [Fact]
+    public void Does_Not_Report_MQ004_When_Project_Is_Not_Aot()
+    {
+        var (_, diagnostics) = Run(AddMediarqCallSite, publishAot: false);
+
+        diagnostics.Should().NotContain(d => d.Id == "MQ004");
+    }
+
+    [Fact]
+    public void Does_Not_Report_MQ004_When_Not_Calling_AddMediarq()
+    {
+        const string source = """
+            using Mediarq.Extensions;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace Demo;
+
+            public class Startup
+            {
+                public void Configure(IServiceCollection services)
+                {
+                    services.AddMediarqCore();
+                }
+            }
+            """;
+
+        var (_, diagnostics) = Run(source, publishAot: true);
+
+        diagnostics.Should().NotContain(d => d.Id == "MQ004");
     }
 
     [Fact]

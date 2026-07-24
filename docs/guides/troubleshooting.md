@@ -120,6 +120,11 @@ annotated `[RequiresUnreferencedCode]`). For caching/idempotency on AOT, provide
 `IMediarqCacheSerializer`. A native publish also needs the platform C/C++ build tools on `PATH`. See
 [Native AOT & trimming](native-aot.md).
 
+### Build warning `MQ004` — reflection-based `AddMediarq` used in an AOT-published project
+Your project sets `PublishAot`/`IsAotCompatible`, but a call site still uses the reflection-based
+`AddMediarq(...)` scan. Switch it to `AddMediarqCore().AddMediarqHandlers()` — see
+[Native AOT & trimming](native-aot.md).
+
 ## Still stuck?
 
 Compare your wiring against the runnable

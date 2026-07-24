@@ -27,8 +27,15 @@ builder.Services.AddOpenTelemetry()
 
 Instruments: `mediarq.requests.count` and `mediarq.requests.duration`.
 
+Every activity and the `messaging.client.operation.duration` histogram also carry the subset of the
+[OpenTelemetry semantic conventions for messaging](https://opentelemetry.io/docs/specs/semconv/messaging/)
+that apply to an in-process mediator (`messaging.system`, `messaging.operation.type`,
+`messaging.destination.name`, `messaging.message.id`, `messaging.batch.message_count`, `error.type`) —
+additive, alongside the `mediarq.*` tags/metrics above, which are unchanged.
+
 ## Learn more
 
+[A ready-to-use observability dashboard](https://github.com/rouffou/mediarq/blob/main/docs/guides/observability-dashboard.md) ·
 [Wiring extensions](https://github.com/rouffou/mediarq/blob/main/docs/guides/wiring-extensions.md) ·
 [Full README](https://github.com/rouffou/mediarq#readme)
 

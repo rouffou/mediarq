@@ -23,6 +23,20 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 
 ---
 
+## Why Mediarq?
+
+MediatR has moved to a commercial license for many users. Mediarq is a drop-in-shaped, **100% free
+and MIT-licensed** mediator: no license tier, no revenue threshold, no future licensing risk — just a
+package you `dotnet add` and keep. It covers the same CQRS building blocks (commands, queries,
+notifications, a behavior pipeline) plus things MediatR doesn't ship out of the box: built-in `Result`
+types, reflection-free/Native AOT dispatch, and a source-generator-driven registration path.
+
+Already on MediatR? The [migration guide](docs/guides/migrating-from-mediatr.md) and its
+[analyzer code-fix provider](docs/guides/migrating-from-mediatr.md#automated-migration-analyzer--code-fix)
+convert most call sites automatically, and
+[`Mediarq.MediatRCompat`](docs/guides/migrating-from-mediatr.md#incremental-migration-large-codebases)
+lets you migrate incrementally in a mixed codebase.
+
 ## Installation
 
 ```bash
@@ -100,8 +114,9 @@ default. Override either via MSBuild:
 ```
 
 The generator also emits compile-time diagnostics: `MQ001` (multiple handlers for one request), `MQ002`
-(a command/query with no handler in the assembly), and `MQ003` (a validator whose target is neither a
-request nor a notification, so it can never run).
+(a command/query with no handler in the assembly), `MQ003` (a validator whose target is neither a
+request nor a notification, so it can never run), and `MQ004` (the reflection-based `AddMediarq(...)`
+called in a project that publishes with Native AOT).
 
 ## Commands & queries (with a result)
 
@@ -334,6 +349,10 @@ dotnet run --project Samples/Mediarq.Samples.Quickstart
 dotnet run --project Samples/Mediarq.Samples.WebApi      # then open /scalar/v1
 dotnet run --project Samples/Mediarq.AotSample
 ```
+
+> The [Quickstart sample](Samples/Mediarq.Samples.Quickstart) above is what [`assets/quickstart.tape`](assets/quickstart.tape)
+> records into a GIF via [VHS](https://github.com/charmbracelet/vhs) (`vhs assets/quickstart.tape`) — regenerate it whenever
+> the sample's console output changes.
 
 ## Documentation
 

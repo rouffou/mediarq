@@ -1,0 +1,86 @@
+name: Benchmarks
+
+# Report-only performance check on the hot dispatch path (Mediarq.Benchmarks): runs BenchmarkDotNet in
+# CI, publishes the full results as a build artifact, and comments on the PR when a benchmark drifts
+# from its historical trend. Never fails the build — GitHub-hosted runners are shared/noisy, so a hard
+# regression gate here would produce false positives; this is a signal for review, not a merge blocker.
+#
+# History is kept in a `gh-pages` branch (benchmark-action/github-action-benchmark's own data format —
+# not something to hand-edit), used purely as a data store here. It does NOT collide with the DocFX site:
+# GitHub Pages is configured to deploy from GitHub Actions (see docs.yml), not from a branch, so this
+# branch is just storage, never served.
+#
+# A push to dev/main advances that history; a pull_request only compares against it (read-only).
+#
+# Send and Publish are tracked in separate jobs (not two steps in one job): the action commits to a
+# local gh-pages checkout as part of every run regardless of save-data-file/auto-push, so a second
+# invocation in the same checkout always fails to re-fetch gh-pages against its own already-diverged
+# local ref. Separate jobs get separate, independent checkouts.
+
+on:
+  push:
+    branches: [ dev, main ]
+    paths:
+      - 'src/Mediarq.Core/**'
+      - 'src/Mediarq/**'
+      - 'benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
+  pull_request:
+    branches: [ dev, main ]
+    paths:
+      - 'src/Mediarq.Core/**'
+      - 'src/Mediarq/**'
+      - 'benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - display-name: Send
+            filter: '*SendBenchmarks*'
+            report-file: SendBenchmarks-report-full-compressed.json
+          - display-name: Publish
+            filter: '*PublishBenchmarks*'
+            report-file: PublishBenchmarks-report-full-compressed.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # `--job short` trades precision for a CI-sized runtime; treat these numbers as a trend signal,
+      # not authoritative.
+      - name: Run ${{ matrix.display-name }} benchmarks
+        run: dotnet run -c Release --project benchmarks/Mediarq.Benchmarks -- --filter '${{ matrix.filter }}' --job short --exporters json
+
+      - name: Upload full benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.display-name }}
+          path: BenchmarkDotNet.Artifacts/results/**
+          if-no-files-found: warn
+
+      # auto-push only on a push to dev/main: a PR run compares against history without writing to it,
+      # so a PR's short-job, potentially-noisy numbers never become part of the trend.
+      - name: Track ${{ matrix.display-name }} dispatch history
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: 'Mediarq.Benchmarks - ${{ matrix.display-name }}'
+          tool: 'benchmarkdotnet'
+          output-file-path: BenchmarkDotNet.Artifacts/results/${{ matrix.report-file }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name == 'push' }}
+          fail-on-alert: false
+          comment-on-alert: true
+          alert-threshold: '150%'

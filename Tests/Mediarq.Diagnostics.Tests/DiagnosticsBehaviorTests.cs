@@ -60,6 +60,75 @@ public class DiagnosticsBehaviorTests
     }
 
     [Fact]
+    public async Task Emits_Messaging_SemanticConvention_Tags_For_Request()
+    {
+        var stopped = new List<Activity>();
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == MediarqDiagnostics.SourceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStopped = stopped.Add,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        var behavior = new DiagnosticsBehavior<PingQuery, Result<string>>();
+        var context = new RequestContext<PingQuery, Result<string>>(new PingQuery(), "user");
+
+        await behavior.Handle(context, () => Task.FromResult(Result.Success("ok")));
+
+        var activity = stopped.Should().ContainSingle(a => a.OperationName == "Mediarq:PingQuery").Subject;
+        activity.GetTagItem("messaging.system").Should().Be(MediarqDiagnostics.MessagingSystem);
+        activity.GetTagItem("messaging.operation.type").Should().Be("process");
+        activity.GetTagItem("messaging.destination.name").Should().Be(nameof(PingQuery));
+        activity.GetTagItem("messaging.message.id").Should().Be(context.RequestId.ToString());
+    }
+
+    [Fact]
+    public async Task Emits_ErrorType_Tag_When_Request_Throws()
+    {
+        var stopped = new List<Activity>();
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == MediarqDiagnostics.SourceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            ActivityStopped = stopped.Add,
+        };
+        ActivitySource.AddActivityListener(listener);
+
+        var behavior = new DiagnosticsBehavior<PingQuery, Result<string>>();
+        var context = new RequestContext<PingQuery, Result<string>>(new PingQuery(), "user");
+
+        var act = () => behavior.Handle(context, Task<Result<string>> () => throw new InvalidOperationException("boom"));
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        var activity = stopped.Should().ContainSingle().Subject;
+        activity.GetTagItem("error.type").Should().Be(typeof(InvalidOperationException).FullName);
+    }
+
+    [Fact]
+    public async Task Records_Messaging_Operation_Duration_Metric_For_Request()
+    {
+        var measurements = 0;
+        using var meterListener = new MeterListener();
+        meterListener.InstrumentPublished = (instrument, l) =>
+        {
+            if (instrument.Meter.Name == MediarqDiagnostics.SourceName && instrument.Name == "messaging.client.operation.duration")
+            {
+                l.EnableMeasurementEvents(instrument);
+            }
+        };
+        meterListener.SetMeasurementEventCallback<double>((_, _, _, _) => Interlocked.Increment(ref measurements));
+        meterListener.Start();
+
+        var behavior = new DiagnosticsBehavior<PingQuery, Result<string>>();
+        var context = new RequestContext<PingQuery, Result<string>>(new PingQuery(), "user");
+
+        await behavior.Handle(context, () => Task.FromResult(Result.Success("ok")));
+
+        measurements.Should().Be(1);
+    }
+
+    [Fact]
     public void AddMediarqDiagnostics_Registers_Behaviors()
     {
         var services = new ServiceCollection();
@@ -93,7 +162,11 @@ public class DiagnosticsBehaviorTests
         }
 
         items.Should().Equal(0, 1, 2);
-        stopped.Should().ContainSingle(a => a.OperationName == "Mediarq:Stream TickStream");
+        var activity = stopped.Should().ContainSingle(a => a.OperationName == "Mediarq:Stream TickStream").Subject;
+        activity.GetTagItem("messaging.system").Should().Be(MediarqDiagnostics.MessagingSystem);
+        activity.GetTagItem("messaging.operation.type").Should().Be("process");
+        activity.GetTagItem("messaging.destination.name").Should().Be(nameof(TickStream));
+        activity.GetTagItem("messaging.batch.message_count").Should().Be(3L);
     }
 
     [Fact]
@@ -115,7 +188,10 @@ public class DiagnosticsBehaviorTests
         await publisher.Publish(handlers, CancellationToken.None);
 
         invoked.Should().BeTrue();
-        stopped.Should().ContainSingle(a => a.OperationName == "Mediarq:Publish");
+        var activity = stopped.Should().ContainSingle(a => a.OperationName == "Mediarq:Publish").Subject;
+        activity.GetTagItem("messaging.system").Should().Be(MediarqDiagnostics.MessagingSystem);
+        activity.GetTagItem("messaging.operation.type").Should().Be("publish");
+        activity.GetTagItem("messaging.batch.message_count").Should().Be(1L);
     }
 
     [Fact]

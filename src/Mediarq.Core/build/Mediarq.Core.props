@@ -3,9 +3,14 @@
        - MediarqGeneratedAccessibility: set to "public" to make the generated AddMediarqHandlers()
          public instead of internal (so it can be called from another assembly).
        - MediarqGeneratedNamespace: the namespace of the generated registration class
-         (default: Mediarq.Extensions). -->
+         (default: Mediarq.Extensions).
+       - PublishAot / IsAotCompatible: standard MSBuild properties, exposed here (not visible to
+         generators by default) so the generator can report MQ004 when the reflection-based
+         AddMediarq(...) is called in a project that opts into Native AOT. -->
   <ItemGroup>
     <CompilerVisibleProperty Include="MediarqGeneratedAccessibility" />
     <CompilerVisibleProperty Include="MediarqGeneratedNamespace" />
+    <CompilerVisibleProperty Include="PublishAot" />
+    <CompilerVisibleProperty Include="IsAotCompatible" />
   </ItemGroup>
 </Project>

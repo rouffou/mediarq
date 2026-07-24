@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Mediarq.SourceGenerators;
@@ -47,6 +48,14 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor ReflectionBasedRegistrationInAotProject = new(
+        id: "MQ004",
+        title: "Reflection-based AddMediarq used in an AOT-published project",
+        messageFormat: "This project publishes with Native AOT (PublishAot/IsAotCompatible), but calls the reflection-based AddMediarq(...), which is annotated [RequiresUnreferencedCode]/[RequiresDynamicCode] and not trim/AOT safe. Prefer AddMediarqCore() + the generated AddMediarqHandlers().",
+        category: "Mediarq",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -77,6 +86,61 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(registrations.Combine(options),
             static (spc, pair) => Emit(spc, pair.Left, pair.Right.Left, pair.Right.Right));
+
+        // MQ004: this project publishes with Native AOT (PublishAot or IsAotCompatible), but calls the
+        // reflection-based AddMediarq(...) instead of AddMediarqCore() + this generator's own
+        // AddMediarqHandlers(). Both are ordinary MSBuild properties, not visible to generators unless
+        // explicitly exposed -- see src/Mediarq.Core/build/Mediarq.Core.props.
+        var isAotProject = context.AnalyzerConfigOptionsProvider.Select(static (provider, _) =>
+            IsTrue(provider, "build_property.PublishAot") || IsTrue(provider, "build_property.IsAotCompatible"));
+
+        var reflectionRegistrationCalls = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (node, _) => node is InvocationExpressionSyntax
+                {
+                    Expression: MemberAccessExpressionSyntax { Name.Identifier.ValueText: "AddMediarq" },
+                },
+                transform: static (ctx, ct) => TransformAddMediarqCall(ctx, ct))
+            .Where(static location => location is not null)
+            .Collect();
+
+        context.RegisterSourceOutput(reflectionRegistrationCalls.Combine(isAotProject), static (spc, pair) =>
+        {
+            if (!pair.Right)
+            {
+                return;
+            }
+
+            foreach (var location in pair.Left)
+            {
+                spc.ReportDiagnostic(Diagnostic.Create(ReflectionBasedRegistrationInAotProject, location));
+            }
+        });
+    }
+
+    private static bool IsTrue(AnalyzerConfigOptionsProvider provider, string key) =>
+        provider.GlobalOptions.TryGetValue(key, out var value) && string.Equals(value, "true", System.StringComparison.OrdinalIgnoreCase);
+
+    // Resolves the invoked method's symbol to make sure this is really Mediarq.Extensions'
+    // ServiceCollectionExtensions.AddMediarq(...) (the reflection-based, [RequiresUnreferencedCode]
+    // scan) and not some unrelated method that merely happens to share the name.
+    private static Location? TransformAddMediarqCall(GeneratorSyntaxContext ctx, CancellationToken cancellationToken)
+    {
+        var invocation = (InvocationExpressionSyntax)ctx.Node;
+        if (ctx.SemanticModel.GetSymbolInfo(invocation, cancellationToken).Symbol is not IMethodSymbol method)
+        {
+            return null;
+        }
+
+        var containingType = method.ContainingType;
+        if (method.Name != "AddMediarq" ||
+            containingType?.Name != "ServiceCollectionExtensions" ||
+            containingType.ContainingNamespace?.ToDisplayString() != "Mediarq.Extensions")
+        {
+            return null;
+        }
+
+        return invocation.GetLocation();
     }
 
     private static EquatableArray<HandlerRegistration> Transform(GeneratorSyntaxContext ctx, CancellationToken cancellationToken)
