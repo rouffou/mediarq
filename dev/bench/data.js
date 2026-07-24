@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784903698815,
+  "lastUpdate": 1784909858911,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -108,6 +108,42 @@ window.BENCHMARK_DATA = {
             "value": 177.98551321029663,
             "unit": "ns",
             "range": "± 0.4399326228439369"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa2beda4f5efbd1c69f082e9a485e72ba534e6a2",
+          "message": "Merge pull request #162 from rouffou/feat/benchmarks-expanded\n\nfeat(benchmarks): expand Mediarq.Benchmarks coverage",
+          "timestamp": "2026-07-24T18:16:27+02:00",
+          "tree_id": "ede252887953b3eb5d6712752c392c0598d3c757",
+          "url": "https://github.com/rouffou/mediarq/commit/aa2beda4f5efbd1c69f082e9a485e72ba534e6a2"
+        },
+        "date": 1784909858620,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 156.08181969324747,
+            "unit": "ns",
+            "range": "± 0.5773170290605447"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 191.23713819185892,
+            "unit": "ns",
+            "range": "± 1.111217584943043"
           }
         ]
       }
