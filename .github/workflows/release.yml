@@ -53,6 +53,7 @@ jobs:
           dotnet pack src/Mediarq.Analyzers/Mediarq.Analyzers.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Saga/Mediarq.Saga.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Hangfire/Mediarq.Hangfire.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Quartz/Mediarq.Quartz.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
 
       - name: NuGet login (trusted publishing)
         id: login
