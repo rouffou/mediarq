@@ -45,6 +45,30 @@ This analyzer only compares **explicit** lifetimes (`[RegisterHandler(...)]` on 
 `services.AddScoped<T>()` calls outside the Mediarq registration model, so it stays silent rather than
 guess and risk a false positive.
 
+## Pipeline
+
+### Build warning `MQ201` — pipeline behavior never calls its `handle` delegate
+An `IPipelineBehavior<TRequest, TResponse>.Handle` implementation never references its `handle`
+parameter anywhere in its body. Every behavior after this one in the pipeline — and the actual request
+handler — will never run; the behavior always short-circuits with whatever it returns directly.
+
+```csharp
+public Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
+{
+    // Missing `return await handle();` — the request never reaches its handler.
+    return Task.FromResult(default(TResponse)!);
+}
+```
+
+Fix by calling `handle()` (typically `return await handle();`, or storing its result to act on
+afterwards). If the short-circuit is genuinely intentional (e.g. a behavior that always returns a
+canned response and never delegates further), the analyzer has no way to tell that apart from a bug —
+suppress the specific instance rather than the rule.
+
+This analyzer only requires `handle` to appear **somewhere** in the body, on any code path — a behavior
+that conditionally short-circuits (e.g. return a cached value on a hit, otherwise `await handle()`) is
+not flagged, since the identifier is still referenced on the miss path.
+
 ## Validation
 
 ### My validation never runs (no error, the handler just runs)

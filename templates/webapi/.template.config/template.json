@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Nicolas Rouffart",
+  "classifications": [ "Mediarq", "CQRS", "Web", "WebAPI" ],
+  "identity": "Mediarq.WebApi.CSharp",
+  "name": "Mediarq CQRS Web API",
+  "shortName": "mediarq-webapi",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "Mediarq.WebApiTemplate1",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "datatype": "choice",
+      "choices": [
+        { "choice": "net8.0", "description": "Target net8.0" },
+        { "choice": "net9.0", "description": "Target net9.0" },
+        { "choice": "net10.0", "description": "Target net10.0" }
+      ],
+      "replaces": "net10.0",
+      "defaultValue": "net10.0",
+      "description": "The target framework."
+    }
+  }
+}

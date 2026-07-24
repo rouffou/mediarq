@@ -73,9 +73,20 @@ public interface IRequestHandler<in TRequest> : IRequestHandler<TRequest, Unit>
     /// <param name="request">The request message containing all data required for processing.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
     /// <returns>A task that completes with <see cref="Unit.Value"/>.</returns>
-    async Task<Unit> IRequestHandler<TRequest, Unit>.Handle(TRequest request, CancellationToken cancellationToken)
+    /// <remarks>
+    /// Written without <c>async</c>/<c>await</c> so a handler that completes synchronously (the common
+    /// case for a trivial no-op or a handler returning <see cref="Task.CompletedTask"/>) does not pay for
+    /// an async state machine on every dispatch — only a genuinely asynchronous handler falls back to it.
+    /// </remarks>
+    Task<Unit> IRequestHandler<TRequest, Unit>.Handle(TRequest request, CancellationToken cancellationToken)
     {
-        await ((IRequestHandler<TRequest>)this).Handle(request, cancellationToken);
-        return Unit.Value;
+        var task = ((IRequestHandler<TRequest>)this).Handle(request, cancellationToken);
+        return task.IsCompletedSuccessfully ? Task.FromResult(Unit.Value) : Awaited(task);
+
+        static async Task<Unit> Awaited(Task task)
+        {
+            await task.ConfigureAwait(false);
+            return Unit.Value;
+        }
     }
 }

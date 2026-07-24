@@ -54,11 +54,18 @@ need to keep dependencies minimal.
 
 ### Scaffolding (`dotnet new`)
 
-Install the templates and scaffold a feature (a command, its handler and a validator) in one command:
+Install the templates once, then scaffold either a feature or a full solution:
 
 ```bash
 dotnet new install Mediarq.Templates
+
+# a command, its handler and a validator
 dotnet new mediarq-feature -n CreateUser --namespace MyApp.Users
+
+# a runnable ASP.NET Core Web API wired with Mediarq: commands, queries, a FluentValidation
+# validator, minimal-API endpoints mapping Result to HTTP, and request logging — all working
+# out of the box against an in-memory store
+dotnet new mediarq-webapi -n MyApi -o MyApi
 ```
 
 ## Getting started
@@ -313,6 +320,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Idempotency` | Run `IIdempotentRequest` at most once per key, replaying the stored result (`AddMediarqIdempotency`) |
 | `Mediarq.Idempotency.EntityFrameworkCore` | EF Core-backed `IDistributedCache` for `Mediarq.Idempotency`, no Redis required (`AddMediarqIdempotencyEntityFrameworkCore`) |
 | `Mediarq.Outbox` | Transactional outbox over EF Core: enqueue notifications and publish them reliably (`AddMediarqOutbox`) |
+| `Mediarq.Saga` | Saga / process-manager primitives: persisted, correlated state across a sequence of notifications (`AddMediarqSaga<TState>`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
 | `Mediarq.OpenTelemetry` | One-line `AddMediarqInstrumentation()` on the tracer/meter provider builders |
 | `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |

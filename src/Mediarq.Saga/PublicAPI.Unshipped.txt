@@ -1,0 +1,22 @@
+#nullable enable
+abstract Mediarq.Saga.SagaNotificationHandler<TNotification, TState>.CreateState(System.Guid correlationId) -> TState!
+abstract Mediarq.Saga.SagaNotificationHandler<TNotification, TState>.GetCorrelationId(TNotification notification) -> System.Guid
+abstract Mediarq.Saga.SagaNotificationHandler<TNotification, TState>.HandleAsync(TNotification notification, TState! state, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Mediarq.Saga.InMemorySagaStore<TState>
+Mediarq.Saga.InMemorySagaStore<TState>.DeleteAsync(System.Guid correlationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Saga.InMemorySagaStore<TState>.FindAsync(System.Guid correlationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TState?>!
+Mediarq.Saga.InMemorySagaStore<TState>.InMemorySagaStore() -> void
+Mediarq.Saga.InMemorySagaStore<TState>.SaveAsync(TState state, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Saga.ISagaState
+Mediarq.Saga.ISagaState.CorrelationId.get -> System.Guid
+Mediarq.Saga.ISagaState.IsComplete.get -> bool
+Mediarq.Saga.ISagaState.IsComplete.set -> void
+Mediarq.Saga.ISagaStore<TState>
+Mediarq.Saga.ISagaStore<TState>.DeleteAsync(System.Guid correlationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Saga.ISagaStore<TState>.FindAsync(System.Guid correlationId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TState?>!
+Mediarq.Saga.ISagaStore<TState>.SaveAsync(TState state, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Saga.SagaNotificationHandler<TNotification, TState>
+Mediarq.Saga.SagaNotificationHandler<TNotification, TState>.Handle(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Saga.SagaNotificationHandler<TNotification, TState>.SagaNotificationHandler(Mediarq.Saga.ISagaStore<TState!>! store) -> void
+Mediarq.Saga.SagaServiceCollectionExtensions
+static Mediarq.Saga.SagaServiceCollectionExtensions.AddMediarqSaga<TState>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
