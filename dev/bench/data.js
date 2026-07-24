@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784903671831,
+  "lastUpdate": 1784903698815,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -206,6 +206,54 @@ window.BENCHMARK_DATA = {
             "value": 64.85146844387054,
             "unit": "ns",
             "range": "± 1.9623274278180864"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "55b597cd274fed9e7940b9a07f19766078a7237f",
+          "message": "Merge pull request #159 from rouffou/dev\n\nRelease v1.3 — Performance & observability",
+          "timestamp": "2026-07-24T16:33:32+02:00",
+          "tree_id": "9fd243f8b003ba9c0933758a203b2effe0402a96",
+          "url": "https://github.com/rouffou/mediarq/commit/55b597cd274fed9e7940b9a07f19766078a7237f"
+        },
+        "date": 1784903698257,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send",
+            "value": 53.61632605393728,
+            "unit": "ns",
+            "range": "± 0.6744379107061989"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send",
+            "value": 82.32407522201538,
+            "unit": "ns",
+            "range": "± 0.9655977972157925"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean",
+            "value": 85.05955805381139,
+            "unit": "ns",
+            "range": "± 2.35077963375893"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain",
+            "value": 63.4753404657046,
+            "unit": "ns",
+            "range": "± 0.6680490242802314"
           }
         ]
       }
