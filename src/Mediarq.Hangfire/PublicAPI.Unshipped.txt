@@ -1,0 +1,9 @@
+#nullable enable
+Mediarq.Hangfire.HangfireSchedulingExtensions
+Mediarq.Hangfire.HangfireServiceCollectionExtensions
+Mediarq.Hangfire.IMediarqJobDispatcher
+Mediarq.Hangfire.IMediarqJobDispatcher.DispatchAsync<TCommand>(TCommand command) -> System.Threading.Tasks.Task!
+static Mediarq.Hangfire.HangfireSchedulingExtensions.Enqueue<TCommand>(this Hangfire.IBackgroundJobClient! client, TCommand command) -> string!
+static Mediarq.Hangfire.HangfireSchedulingExtensions.Schedule<TCommand>(this Hangfire.IBackgroundJobClient! client, TCommand command, System.DateTimeOffset enqueueAt) -> string!
+static Mediarq.Hangfire.HangfireSchedulingExtensions.Schedule<TCommand>(this Hangfire.IBackgroundJobClient! client, TCommand command, System.TimeSpan delay) -> string!
+static Mediarq.Hangfire.HangfireServiceCollectionExtensions.AddMediarqHangfire(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
