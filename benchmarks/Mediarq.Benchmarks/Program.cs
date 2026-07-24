@@ -26,7 +26,14 @@ config = config.WithOptions(ConfigOptions.DisableOptimizationsValidator);
 // BenchmarkSwitcher (not BenchmarkRunner.Run) so `args` (--job short, --exporters json, --filter, ...)
 // from `dotnet run --project ... -- <args>` are actually parsed — the CI workflow depends on this to
 // keep runs short and to produce the JSON report github-action-benchmark reads.
-BenchmarkSwitcher.FromTypes([typeof(SendBenchmarks), typeof(PublishBenchmarks)]).Run(args, config);
+BenchmarkSwitcher.FromTypes([
+    typeof(SendBenchmarks),
+    typeof(PublishBenchmarks),
+    typeof(DeepPipelineBenchmarks),
+    typeof(LifetimeBenchmarks),
+    typeof(ManyHandlersBenchmarks),
+    typeof(CrossLibraryBenchmarks),
+]).Run(args, config);
 
 /// <summary>
 /// Compares dispatching a request through Mediarq vs MediatR. Run in Release:
