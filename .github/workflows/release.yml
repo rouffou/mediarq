@@ -51,6 +51,7 @@ jobs:
           dotnet pack src/Mediarq.MediatRCompat/Mediarq.MediatRCompat.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Idempotency.EntityFrameworkCore/Mediarq.Idempotency.EntityFrameworkCore.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Analyzers/Mediarq.Analyzers.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Saga/Mediarq.Saga.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
 
       - name: NuGet login (trusted publishing)
         id: login

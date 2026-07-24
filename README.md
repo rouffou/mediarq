@@ -320,6 +320,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Idempotency` | Run `IIdempotentRequest` at most once per key, replaying the stored result (`AddMediarqIdempotency`) |
 | `Mediarq.Idempotency.EntityFrameworkCore` | EF Core-backed `IDistributedCache` for `Mediarq.Idempotency`, no Redis required (`AddMediarqIdempotencyEntityFrameworkCore`) |
 | `Mediarq.Outbox` | Transactional outbox over EF Core: enqueue notifications and publish them reliably (`AddMediarqOutbox`) |
+| `Mediarq.Saga` | Saga / process-manager primitives: persisted, correlated state across a sequence of notifications (`AddMediarqSaga<TState>`) |
 | `Mediarq.Diagnostics` | `Activity` tracing + metrics (OpenTelemetry-compatible) (`AddMediarqDiagnostics`) |
 | `Mediarq.OpenTelemetry` | One-line `AddMediarqInstrumentation()` on the tracer/meter provider builders |
 | `Mediarq.UnitOfWork` | Commit a unit of work around `ITransactionalRequest` commands (`AddMediarqUnitOfWork`) |
