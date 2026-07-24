@@ -132,9 +132,17 @@ public class LifetimeBenchmarks
     [GlobalSetup]
     public void Setup()
     {
+        // AddMediarqCore() (not the scanning AddMediarq): the scanning path would auto-discover
+        // MediarqPassthroughBehavior (declared for DeepPipelineBenchmarks, above, in this same assembly)
+        // as a global open-generic behavior, so every dispatch below would pay for a 1-behavior pipeline
+        // instead of the bare handler call this benchmark means to measure. [RegisterHandler] on
+        // SingletonPingHandler is only honored by the scan/source-gen paths, so its lifetime is
+        // reproduced manually below via AddSingleton.
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMediarq(isHttp: false, typeof(LifetimeBenchmarks).Assembly);
+        services.AddMediarqCore(isHttp: false);
+        services.AddScoped<IRequestHandler<ScopedPing, Result<string>>, ScopedPingHandler>();
+        services.AddSingleton<IRequestHandler<SingletonPing, Result<string>>, SingletonPingHandler>();
         _scope = services.BuildServiceProvider().CreateScope();
         _mediarq = _scope.ServiceProvider.GetRequiredService<MediarqMediator>();
     }
@@ -190,9 +198,43 @@ public class ManyHandlersBenchmarks
     [GlobalSetup]
     public void Setup()
     {
+        // AddMediarqCore() (not the scanning AddMediarq): the scanning path would auto-discover
+        // MediarqPassthroughBehavior (declared for DeepPipelineBenchmarks, above, in this same assembly)
+        // as a global open-generic behavior, so every dispatch below would pay for a 1-behavior pipeline
+        // that MediatR's own registration (no auto-discovered IPipelineBehavior) never pays for.
         var mediarqServices = new ServiceCollection();
         mediarqServices.AddLogging();
-        mediarqServices.AddMediarq(isHttp: false, typeof(ManyHandlersBenchmarks).Assembly);
+        mediarqServices.AddMediarqCore(isHttp: false);
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing1, Result<string>>, MediarqManyHandlersPing1Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing2, Result<string>>, MediarqManyHandlersPing2Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing3, Result<string>>, MediarqManyHandlersPing3Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing4, Result<string>>, MediarqManyHandlersPing4Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing5, Result<string>>, MediarqManyHandlersPing5Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing6, Result<string>>, MediarqManyHandlersPing6Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing7, Result<string>>, MediarqManyHandlersPing7Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing8, Result<string>>, MediarqManyHandlersPing8Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing9, Result<string>>, MediarqManyHandlersPing9Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing10, Result<string>>, MediarqManyHandlersPing10Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing11, Result<string>>, MediarqManyHandlersPing11Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing12, Result<string>>, MediarqManyHandlersPing12Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing13, Result<string>>, MediarqManyHandlersPing13Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing14, Result<string>>, MediarqManyHandlersPing14Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing15, Result<string>>, MediarqManyHandlersPing15Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing16, Result<string>>, MediarqManyHandlersPing16Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing17, Result<string>>, MediarqManyHandlersPing17Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing18, Result<string>>, MediarqManyHandlersPing18Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing19, Result<string>>, MediarqManyHandlersPing19Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing20, Result<string>>, MediarqManyHandlersPing20Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing21, Result<string>>, MediarqManyHandlersPing21Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing22, Result<string>>, MediarqManyHandlersPing22Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing23, Result<string>>, MediarqManyHandlersPing23Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing24, Result<string>>, MediarqManyHandlersPing24Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing25, Result<string>>, MediarqManyHandlersPing25Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing26, Result<string>>, MediarqManyHandlersPing26Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing27, Result<string>>, MediarqManyHandlersPing27Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing28, Result<string>>, MediarqManyHandlersPing28Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing29, Result<string>>, MediarqManyHandlersPing29Handler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqManyHandlersPing30, Result<string>>, MediarqManyHandlersPing30Handler>();
         _mediarqScope = mediarqServices.BuildServiceProvider().CreateScope();
         _mediarq = _mediarqScope.ServiceProvider.GetRequiredService<MediarqMediator>();
 
@@ -602,9 +644,17 @@ public class CrossLibraryBenchmarks
     [GlobalSetup]
     public async Task Setup()
     {
+        // AddMediarqCore() (not the scanning AddMediarq): the scanning path would auto-discover
+        // MediarqPassthroughBehavior (declared for DeepPipelineBenchmarks, above, in this same assembly)
+        // as a global open-generic behavior, so Mediarq_Send_Void would pay for a 1-behavior pipeline
+        // the other three libraries below never pay for. Both interface forms are registered because the
+        // dispatch pipeline resolves the 2-arg IRequestHandler<,Unit> for a void command, matching what
+        // Scrutor's AsImplementedInterfaces (used by AddMediarq) would have registered.
         var mediarqServices = new ServiceCollection();
         mediarqServices.AddLogging();
-        mediarqServices.AddMediarq(isHttp: false, typeof(CrossLibraryBenchmarks).Assembly);
+        mediarqServices.AddMediarqCore(isHttp: false);
+        mediarqServices.AddScoped<IRequestHandler<MediarqVoidPing>, MediarqVoidPingHandler>();
+        mediarqServices.AddScoped<IRequestHandler<MediarqVoidPing, Unit>, MediarqVoidPingHandler>();
         _mediarqScope = mediarqServices.BuildServiceProvider().CreateScope();
         _mediarq = _mediarqScope.ServiceProvider.GetRequiredService<MediarqMediator>();
 
