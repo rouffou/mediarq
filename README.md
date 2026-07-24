@@ -114,8 +114,9 @@ default. Override either via MSBuild:
 ```
 
 The generator also emits compile-time diagnostics: `MQ001` (multiple handlers for one request), `MQ002`
-(a command/query with no handler in the assembly), and `MQ003` (a validator whose target is neither a
-request nor a notification, so it can never run).
+(a command/query with no handler in the assembly), `MQ003` (a validator whose target is neither a
+request nor a notification, so it can never run), and `MQ004` (the reflection-based `AddMediarq(...)`
+called in a project that publishes with Native AOT).
 
 ## Commands & queries (with a result)
 

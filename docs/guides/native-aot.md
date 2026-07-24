@@ -20,6 +20,10 @@ handler, behavior and validator it finds at compile time, and pre-populates a `M
 with strongly-typed dispatch wrappers — so `Send`, `Publish` and `CreateStream` never need
 `Activator.CreateInstance` or `MakeGenericType` at runtime.
 
+If your project sets `PublishAot`/`IsAotCompatible` but still calls the reflection-based `AddMediarq(...)`
+anywhere, the generator reports **`MQ004`** (warning) at that call site as a nudge to switch to
+`AddMediarqCore()` + `AddMediarqHandlers()`.
+
 ## Publishing for Native AOT
 
 ```bash
