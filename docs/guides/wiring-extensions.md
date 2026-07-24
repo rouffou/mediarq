@@ -130,6 +130,22 @@ dispatches. The default store is process-lifetime only; register your own `ISaga
 Core-backed) **before** `AddMediarqSaga<TState>()` for production. Pair with `Mediarq.Outbox`'s
 `IOutbox.Enqueue` inside `HandleAsync` so a step's follow-up event is delivered reliably.
 
+## Mediarq.Hangfire — delayed & scheduled dispatch
+
+```csharp
+builder.Services.AddMediarqHangfire();
+builder.Services.AddHangfire(cfg => cfg.UseSqlServerStorage(connectionString));
+builder.Services.AddHangfireServer();
+```
+```csharp
+backgroundJobClient.Enqueue(new SendWelcomeEmail(userId));                                    // ASAP
+backgroundJobClient.Schedule(new SendWelcomeEmail(userId), TimeSpan.FromMinutes(10));          // after a delay
+backgroundJobClient.Schedule(new SendWelcomeEmail(userId), DateTimeOffset.UtcNow.AddDays(1));  // at a point in time
+```
+Only `ICommand` (no result) is supported — call `Enqueue`/`Schedule` directly on the command instance,
+not through a variable statically typed as `ICommand`, so Hangfire's serializer captures the concrete
+type.
+
 ## Mediarq.Polly — resilience
 
 ```csharp

@@ -328,6 +328,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Polly` | Retry / timeout / circuit breaker for `IResilientRequest` via Polly (`AddMediarqResilience`) |
 | `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
 | `Mediarq.MediatRCompat` | Optional MediatR compatibility shim for incremental migration (`AddMediarqMediatRCompat`) |
+| `Mediarq.Hangfire` | Enqueue/schedule a command as a Hangfire background job, dispatched through the real pipeline (`AddMediarqHangfire`) |
 
 Built into `Mediarq.Core`:
 
