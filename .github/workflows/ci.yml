@@ -46,8 +46,18 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   aot:
-    name: Native AOT publish (reflection-free path)
-    runs-on: ubuntu-latest
+    name: Native AOT (${{ matrix.rid }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            executable: ./aot-publish/Mediarq.AotSample
+          - os: windows-latest
+            rid: win-x64
+            executable: ./aot-publish/Mediarq.AotSample.exe
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -56,10 +66,30 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Install Native AOT prerequisites
+      - name: Install Native AOT prerequisites (Linux)
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
 
       # The sample uses AddMediarqCore() + the generated AddMediarqHandlers() and is built with
       # TreatWarningsAsErrors, so any trimming/AOT (IL****) warning fails the job.
       - name: Publish AOT sample
-        run: dotnet publish Samples/Mediarq.AotSample/Mediarq.AotSample.csproj -r linux-x64 -c Release
+        run: dotnet publish Samples/Mediarq.AotSample/Mediarq.AotSample.csproj -r ${{ matrix.rid }} -c Release -o ./aot-publish
+
+      # Publishing cleanly isn't proof the binary actually works: trimming can silently remove a member
+      # only reached at runtime (e.g. through an interface implemented via reflection-invisible paths).
+      # Run the real native executable and compare its output byte-for-byte against what the same
+      # source produces normally, so a trimming regression that publish-time analysis misses still fails CI.
+      - name: Run the published binary and verify its output
+        shell: bash
+        run: |
+          # tr -d '\r': on Windows, Console.WriteLine emits CRLF, and command substitution only
+          # strips trailing newlines, not embedded \r -- without this every line compares unequal
+          # even though it looks identical once printed.
+          actual="$(${{ matrix.executable }} | tr -d '\r')"
+          echo "$actual"
+          expected=$'command    : success=True, value=aot\nquery      : Hello, Ada!\nvalidation : failure=True (Validation.General)\nstream     : 3 2 1 \nnotified   : 42\ndone'
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::Native AOT binary output does not match the expected output"
+            diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual")
+            exit 1
+          fi
