@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784903102779,
+  "lastUpdate": 1784903104549,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -36,6 +36,42 @@ window.BENCHMARK_DATA = {
             "value": 141.64338278770447,
             "unit": "ns",
             "range": "± 5.690859065173967"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43e502d49bb4249e73be22bc14d847e2e1705ffe",
+          "message": "Merge pull request #158 from rouffou/feat/sourcegen-aot-diagnostic\n\nfeat(sourcegen): add MQ004, review incremental-caching correctness",
+          "timestamp": "2026-07-24T16:23:54+02:00",
+          "tree_id": "9fd243f8b003ba9c0933758a203b2effe0402a96",
+          "url": "https://github.com/rouffou/mediarq/commit/43e502d49bb4249e73be22bc14d847e2e1705ffe"
+        },
+        "date": 1784903102073,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 174.16137798627219,
+            "unit": "ns",
+            "range": "± 0.3018406194548515"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 202.570982058843,
+            "unit": "ns",
+            "range": "± 2.9114815583696063"
           }
         ]
       }
