@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784900465269,
+  "lastUpdate": 1784903102779,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -86,6 +86,54 @@ window.BENCHMARK_DATA = {
             "value": 102.90802721182506,
             "unit": "ns",
             "range": "± 0.7217607139294068"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43e502d49bb4249e73be22bc14d847e2e1705ffe",
+          "message": "Merge pull request #158 from rouffou/feat/sourcegen-aot-diagnostic\n\nfeat(sourcegen): add MQ004, review incremental-caching correctness",
+          "timestamp": "2026-07-24T16:23:54+02:00",
+          "tree_id": "9fd243f8b003ba9c0933758a203b2effe0402a96",
+          "url": "https://github.com/rouffou/mediarq/commit/43e502d49bb4249e73be22bc14d847e2e1705ffe"
+        },
+        "date": 1784903102271,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send",
+            "value": 59.89226202170054,
+            "unit": "ns",
+            "range": "± 1.6570350245656469"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send",
+            "value": 91.80849619706471,
+            "unit": "ns",
+            "range": "± 2.910939412772628"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean",
+            "value": 87.32832113901775,
+            "unit": "ns",
+            "range": "± 0.5550478733468004"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain",
+            "value": 64.85146844387054,
+            "unit": "ns",
+            "range": "± 1.9623274278180864"
           }
         ]
       }
