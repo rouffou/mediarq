@@ -59,8 +59,11 @@ default. Override either:
 
 ## Verifying
 
-The repository ships an AOT smoke sample under `Samples/Mediarq.AotSample`, and a CI job publishes it
-with `PublishAot=true` to catch regressions. Run a trim/AOT analysis on your app with:
+The repository ships an AOT smoke sample under `Samples/Mediarq.AotSample`. The `aot` CI job publishes
+it with `PublishAot=true` on both `linux-x64` and `win-x64`, **and runs the resulting native binary**,
+comparing its output byte-for-byte against what the same source produces normally — publishing cleanly
+isn't proof the binary actually works, since trimming can silently remove a member only reached at
+runtime. Run a trim/AOT analysis on your own app with:
 
 ```bash
 dotnet publish -c Release -r <rid> /p:PublishAot=true
