@@ -133,3 +133,21 @@ An in-memory EF Core provider (as in the WebApi sample) keeps these tests fast a
 | Integration (WebApplicationFactory) | routing, `Result` → HTTP, idempotency, the real wiring | slower |
 
 The library's own test suite (`Tests/`) is a worked reference for all three.
+
+## Mutation testing (Mediarq.Core)
+
+[Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) mutates `Mediarq.Core`'s code
+(flips a `>` to `>=`, removes a condition, ...) and re-runs `Tests/Mediarq.Tests` against each mutant: a
+"survived" mutant is a change the suite didn't notice — a test gap. Config lives at
+`Tests/Mediarq.Tests/stryker-config.json`; run it locally with:
+
+```bash
+dotnet tool restore
+cd Tests/Mediarq.Tests
+dotnet stryker
+```
+
+A full run mutates the whole library and re-runs the suite per surviving candidate, so it's not part of
+the per-PR `ci.yml` — it runs weekly and on demand via `.github/workflows/mutation-testing.yml`, which
+uploads the HTML/JSON report as a build artifact. `thresholds.break` is `0` in the config, so a low score
+never fails the job: treat the report as a prompt to add tests where mutants survive, not a merge gate.
