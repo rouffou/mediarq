@@ -28,6 +28,9 @@
       { "files": [ "api/**.yml", "api/index.md" ] },
       { "files": [ "*.md", "guides/**.md", "toc.yml" ] }
     ],
+    "resource": [
+      { "files": [ "assets/**" ] }
+    ],
     "dest": "_site",
     "globalMetadata": {
       "_appName": "Mediarq",

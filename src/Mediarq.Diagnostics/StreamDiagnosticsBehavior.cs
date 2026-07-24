@@ -40,11 +40,16 @@ public sealed class StreamDiagnosticsBehavior<TRequest, TResponse> : IStreamPipe
 
             succeeded = true;
         }
+        // No catch here: C# disallows `yield return` inside a try block that also has a catch clause, so
+        // (like the original code) failure is only observable via `succeeded` staying false, not the
+        // exception itself -- `error.type` is therefore never set for a stream, unlike Send/Publish.
         finally
         {
+            var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
             activity?.SetTag("mediarq.stream.item_count", itemCount);
             activity?.SetStatus(succeeded ? ActivityStatusCode.Ok : ActivityStatusCode.Error);
-            MediarqDiagnostics.Record(RequestName, Stopwatch.GetElapsedTime(startTimestamp), succeeded);
+            MediarqDiagnostics.Record(RequestName, elapsed, succeeded);
+            MediarqDiagnostics.RecordMessagingOperation(activity, "process", RequestName, elapsed, batchMessageCount: itemCount);
         }
     }
 }
