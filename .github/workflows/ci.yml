@@ -82,7 +82,10 @@ jobs:
       - name: Run the published binary and verify its output
         shell: bash
         run: |
-          actual="$(${{ matrix.executable }})"
+          # tr -d '\r': on Windows, Console.WriteLine emits CRLF, and command substitution only
+          # strips trailing newlines, not embedded \r -- without this every line compares unequal
+          # even though it looks identical once printed.
+          actual="$(${{ matrix.executable }} | tr -d '\r')"
           echo "$actual"
           expected=$'command    : success=True, value=aot\nquery      : Hello, Ada!\nvalidation : failure=True (Validation.General)\nstream     : 3 2 1 \nnotified   : 42\ndone'
           if [ "$actual" != "$expected" ]; then
