@@ -6,7 +6,7 @@
     <Version>1.0.0</Version>
     <Title>Mediarq templates</Title>
     <Authors>Nicolas Rouffart</Authors>
-    <Description>dotnet new templates for Mediarq. Includes 'mediarq-feature' which scaffolds a command, its handler and a validator.</Description>
+    <Description>dotnet new templates for Mediarq. Includes 'mediarq-feature' (scaffolds a command, its handler and a validator) and 'mediarq-webapi' (a full CQRS ASP.NET Core Web API solution wired with Mediarq).</Description>
     <PackageTags>dotnet-new;templates;mediarq;cqrs;mediator</PackageTags>
     <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
@@ -27,6 +27,7 @@
   <ItemGroup>
     <!-- Ship the template content; never compile it as part of this project. -->
     <Content Include="feature\**\*" Exclude="feature\**\bin\**;feature\**\obj\**" />
+    <Content Include="webapi\**\*" Exclude="webapi\**\bin\**;webapi\**\obj\**" />
     <Compile Remove="**\*" />
   </ItemGroup>
 

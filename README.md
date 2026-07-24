@@ -54,11 +54,18 @@ need to keep dependencies minimal.
 
 ### Scaffolding (`dotnet new`)
 
-Install the templates and scaffold a feature (a command, its handler and a validator) in one command:
+Install the templates once, then scaffold either a feature or a full solution:
 
 ```bash
 dotnet new install Mediarq.Templates
+
+# a command, its handler and a validator
 dotnet new mediarq-feature -n CreateUser --namespace MyApp.Users
+
+# a runnable ASP.NET Core Web API wired with Mediarq: commands, queries, a FluentValidation
+# validator, minimal-API endpoints mapping Result to HTTP, and request logging — all working
+# out of the box against an in-memory store
+dotnet new mediarq-webapi -n MyApi -o MyApi
 ```
 
 ## Getting started
