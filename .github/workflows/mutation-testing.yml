@@ -1,0 +1,41 @@
+name: Mutation testing
+
+# Stryker.NET mutation testing on Mediarq.Core (the "core lib"), scored against Tests/Mediarq.Tests.
+# A full run mutates every branch/expression in the core library and re-runs the whole suite per
+# surviving mutant candidate — far too slow to run on every push/PR, so this is scheduled weekly plus
+# an on-demand workflow_dispatch. Report-only: thresholds.break is 0 in stryker-config.json, so a low
+# score never fails the job — this is a signal to look for test gaps, not a merge gate.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly, Mondays 04:17 UTC (offset from CodeQL's Monday 03:27 scan to avoid runner contention).
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  stryker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore .NET tools
+        run: dotnet tool restore
+
+      - name: Run Stryker mutation testing on Mediarq.Core
+        working-directory: Tests/Mediarq.Tests
+        run: dotnet stryker
+
+      - name: Upload mutation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: Tests/Mediarq.Tests/StrykerOutput/**/reports/*
+          if-no-files-found: warn
