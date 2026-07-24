@@ -1,1 +1,11 @@
 #nullable enable
+const Mediarq.Analyzers.CaptiveDependencyAnalyzer.DiagnosticId = "MQ200" -> string!
+const Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.DiagnosticId = "MQ201" -> string!
+Mediarq.Analyzers.CaptiveDependencyAnalyzer
+Mediarq.Analyzers.CaptiveDependencyAnalyzer.CaptiveDependencyAnalyzer() -> void
+Mediarq.Analyzers.PipelineBehaviorNextAnalyzer
+Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.PipelineBehaviorNextAnalyzer() -> void
+override Mediarq.Analyzers.CaptiveDependencyAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Mediarq.Analyzers.CaptiveDependencyAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
