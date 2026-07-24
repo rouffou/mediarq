@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784909858911,
+  "lastUpdate": 1784909900888,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -290,6 +290,54 @@ window.BENCHMARK_DATA = {
             "value": 63.4753404657046,
             "unit": "ns",
             "range": "± 0.6680490242802314"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa2beda4f5efbd1c69f082e9a485e72ba534e6a2",
+          "message": "Merge pull request #162 from rouffou/feat/benchmarks-expanded\n\nfeat(benchmarks): expand Mediarq.Benchmarks coverage",
+          "timestamp": "2026-07-24T18:16:27+02:00",
+          "tree_id": "ede252887953b3eb5d6712752c392c0598d3c757",
+          "url": "https://github.com/rouffou/mediarq/commit/aa2beda4f5efbd1c69f082e9a485e72ba534e6a2"
+        },
+        "date": 1784909900562,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send",
+            "value": 98.03321500619252,
+            "unit": "ns",
+            "range": "± 0.5955003062322197"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send",
+            "value": 255.38702726364136,
+            "unit": "ns",
+            "range": "± 2.7405509812574294"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean",
+            "value": 131.62813003857931,
+            "unit": "ns",
+            "range": "± 1.3975273306054439"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain",
+            "value": 234.7066961924235,
+            "unit": "ns",
+            "range": "± 2.3898864643079567"
           }
         ]
       }
