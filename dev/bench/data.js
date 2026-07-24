@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784917978308,
+  "lastUpdate": 1784918165163,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -216,6 +216,42 @@ window.BENCHMARK_DATA = {
             "value": 141.86847694714865,
             "unit": "ns",
             "range": "± 1.3746215924837597"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "df4a7a81164290a413d4eff0ecb77524a36e8db2",
+          "message": "Merge pull request #170 from rouffou/dev\n\nRelease v1.4.0",
+          "timestamp": "2026-07-24T20:34:58+02:00",
+          "tree_id": "0c63b7aff0653d28cc86f30f47176e29c6866ad5",
+          "url": "https://github.com/rouffou/mediarq/commit/df4a7a81164290a413d4eff0ecb77524a36e8db2"
+        },
+        "date": 1784918164170,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 149.78647621472678,
+            "unit": "ns",
+            "range": "± 0.6079467554058966"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 180.66736102104187,
+            "unit": "ns",
+            "range": "± 0.23978845303173374"
           }
         ]
       }
