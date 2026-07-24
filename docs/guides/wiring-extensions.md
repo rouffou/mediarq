@@ -117,6 +117,19 @@ stage an event with `IOutbox.Enqueue(...)`; it is committed in the same transact
 published afterwards by the background `OutboxProcessor`. Combine with the unit of work above so the
 event and the data commit atomically.
 
+## Mediarq.Saga — process managers
+
+```csharp
+builder.Services.AddMediarqSaga<OrderFulfillmentState>();
+```
+State: `ISagaState` (`CorrelationId`, `IsComplete`). Each step is a normal `INotificationHandler`
+implemented by deriving from `SagaNotificationHandler<TNotification, TState>` — it loads (or creates) the
+`TState` correlated to the notification via an `ISagaStore<TState>`, calls your `HandleAsync`, then saves
+it back. Steps that share the same `CorrelationId` read and write the same instance across separate
+dispatches. The default store is process-lifetime only; register your own `ISagaStore<TState>` (e.g. EF
+Core-backed) **before** `AddMediarqSaga<TState>()` for production. Pair with `Mediarq.Outbox`'s
+`IOutbox.Enqueue` inside `HandleAsync` so a step's follow-up event is delivered reliably.
+
 ## Mediarq.Polly — resilience
 
 ```csharp
@@ -169,6 +182,7 @@ builder.Services.AddMediarq(isHttp: true, typeof(Program).Assembly)
 // 4. everything else AFTER the core
 builder.Services.AddMediarqEntityFrameworkCore<AppDbContext>();
 builder.Services.AddMediarqOutbox<AppDbContext>();
+builder.Services.AddMediarqSaga<OrderFulfillmentState>();
 builder.Services.AddMediarqCaching();
 builder.Services.AddMediarqIdempotency();
 builder.Services.AddMediarqResilience();
