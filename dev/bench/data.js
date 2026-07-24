@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784910866603,
+  "lastUpdate": 1784917958612,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -180,6 +180,42 @@ window.BENCHMARK_DATA = {
             "value": 175.59515698750815,
             "unit": "ns",
             "range": "± 1.5656858488679817"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d98beb1d7ecc79f4ec03fa6dcd44a63be7945f6d",
+          "message": "fix(benchmarks,core): remove benchmark contamination + avoid async state machine on void dispatch (#169)\n\nManyHandlersBenchmarks, CrossLibraryBenchmarks and LifetimeBenchmarks set up\nMediarq via the scanning AddMediarq(...), which auto-discovered\nMediarqPassthroughBehavior (declared for DeepPipelineBenchmarks, in the same\nassembly) as a global open-generic pipeline behavior. Every dispatch in\nthose three benchmarks silently ran through a 1-behavior pipeline while\nMediatR's own registration never auto-discovers IPipelineBehaviors, making\nthe \"base dispatch\" comparison apples-to-oranges. Switched to\nAddMediarqCore() + explicit handler registrations, the same fix\nDeepPipelineBenchmarks already used.\n\nAlso: IRequestHandler<TRequest>'s default-interface adaptation to\nIRequestHandler<TRequest, Unit> no longer uses async/await, so a handler\nthat completes synchronously (the common case) skips the async state\nmachine entirely. No public API change.\n\nTogether these resolve most of #163: the apparent overhead was not a real\nper-handler cost that grows with registered handler count, it was constant\nbenchmark contamination plus one avoidable allocation on the hot path.\n\n  ManyHandlersBenchmarks:  616 B -> 240 B alloc (3.20x -> 2.23x)\n  CrossLibraryBenchmarks:  432 B ->  56 B alloc (2.89x -> 1.58x)\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-24T20:31:36+02:00",
+          "tree_id": "0c63b7aff0653d28cc86f30f47176e29c6866ad5",
+          "url": "https://github.com/rouffou/mediarq/commit/d98beb1d7ecc79f4ec03fa6dcd44a63be7945f6d"
+        },
+        "date": 1784917958126,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 105.66403259833653,
+            "unit": "ns",
+            "range": "± 1.7144109479728276"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 141.86847694714865,
+            "unit": "ns",
+            "range": "± 1.3746215924837597"
           }
         ]
       }
