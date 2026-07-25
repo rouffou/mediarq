@@ -26,6 +26,7 @@ Legend: ✅ supported · ⚠️ supported with a deliberate difference · ❌ no
 | `IPublisher.Publish(object notification)` | — | ❌ omitted (reflection); use the generic overload |
 | `INotificationPublisher` (`ForeachAwait`, `TaskWhenAll`) | `INotificationPublisher` (`Sequential`, `Parallel` default, `AggregateException`) | ✅ richer set |
 | Ordered handler execution | `IOrderedNotificationHandler` (ascending `Order`) | ✅ Mediarq addition |
+| Base-type handler receives derived notifications | `IPolymorphicNotification` opt-in marker | ✅ opt-in, unlike MediatR's always-on behavior |
 
 ## Pipeline
 
