@@ -18,6 +18,11 @@ public class PolymorphicNotificationTests
 
     public sealed record NonPolymorphicLeafEvent(string Message) : ParentEvent;
 
+    // Implements IPolymorphicNotification directly with no intermediate notification base type
+    // (its only base is object), so the hierarchy walk in BuildPolymorphicHandlerServiceTypes finds
+    // nothing to resolve.
+    public sealed record TopLevelPolymorphicEvent(string Message) : INotification, IPolymorphicNotification;
+
     private readonly Mock<IHandlerResolver> _resolver = new();
     private readonly Mediator _mediator;
 
@@ -113,6 +118,36 @@ public class PolymorphicNotificationTests
     }
 
     [Fact]
+    public async Task Publish_Honors_Explicit_Order_When_Only_The_Base_Type_Handler_Is_Ordered()
+    {
+        var log = new List<string>();
+        var concreteHandler = new LoggingHandler<LeafEvent>("concrete", log);
+        var baseHandler = new OrderedLoggingBaseHandler(1, "base", log);
+
+        SetupConcrete<LeafEvent>(concreteHandler);
+        SetupBaseType(typeof(ParentEvent), baseHandler);
+        SetupBaseType(typeof(GrandparentEvent));
+
+        await _mediator.Publish(new LeafEvent("x"));
+
+        // The concrete handler isn't ordered, so hasOrdered is only discovered while scanning the
+        // base-type (polymorphic) handlers — exercising that scan in isolation. Once found, the
+        // explicitly-ordered base handler (Order 1) still runs before the unordered concrete one.
+        log.Should().Equal("base", "concrete");
+    }
+
+    [Fact]
+    public async Task Publish_Does_Not_Resolve_Any_Base_Type_When_The_Notification_Has_No_Notification_Base_Type()
+    {
+        SetupConcrete<TopLevelPolymorphicEvent>();
+
+        var act = async () => await _mediator.Publish(new TopLevelPolymorphicEvent("x"));
+
+        await act.Should().NotThrowAsync();
+        _resolver.Verify(r => r.ResolveAll(It.IsAny<Type>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Publish_Is_Noop_When_No_Handler_Is_Registered_At_Any_Tier()
     {
         SetupConcrete<LeafEvent>();
@@ -170,6 +205,17 @@ public class PolymorphicNotificationTests
         public Task Handle(LeafEvent notification, CancellationToken cancellationToken = default)
         {
             log.Add(order);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class OrderedLoggingBaseHandler(int order, string tag, List<string> log) : INotificationHandler<ParentEvent>, IOrderedNotificationHandler
+    {
+        public int Order => order;
+
+        public Task Handle(ParentEvent notification, CancellationToken cancellationToken = default)
+        {
+            log.Add(tag);
             return Task.CompletedTask;
         }
     }
