@@ -25,6 +25,19 @@ generator doesn't see). Add the handler, or ignore if intentional.
 Your `IValidator<T>` is for a `T` that is never dispatched, so it can never run. Point it at a request
 or notification type.
 
+### Build warning `MQ005` — multiple stream handlers for the same stream request
+A stream request must have exactly one `IStreamRequestHandler<,>`. You have two classes implementing
+the handler interface for the same stream request. Delete or merge one.
+
+### Build info `MQ006` — a stream request has no handler in the assembly
+You declared an `IStreamRequest<T>` but never wrote its `IStreamRequestHandler<,>` (or it's in another
+assembly the generator doesn't see). Add the handler, or ignore if intentional.
+
+### Build info `MQ007` — a notification has no handler in the assembly
+You declared an `INotification` but never wrote an `INotificationHandler<>` for it (or it's in another
+assembly, or the notification intentionally has no subscribers yet). Add a handler, or ignore if
+intentional.
+
 ## Lifetime
 
 ### Build warning `MQ200` — Singleton depends on a shorter-lived type
@@ -83,6 +96,20 @@ genuinely dead code.
 This is a syntactic check, not a proof over every possible request type: it only fires when the getter
 is literally the `false` literal (an expression-bodied property, an expression-bodied getter, or a single
 `return false;`) — real conditional logic, however it evaluates at runtime, is never flagged.
+
+## Routing
+
+### Build warning `MQ202` — duplicate Mediarq route
+Two request types carry a Mediarq route attribute (`[MediarqGet]`/`[MediarqPost]`/`[MediarqPut]`/
+`[MediarqPatch]`/`[MediarqDelete]`) with the same HTTP method and route pattern. `MapMediarq()` maps
+both with no uniqueness check, so without this analyzer the collision would only surface as ASP.NET
+Core's ambiguous-match error, at the first request that matches the pattern.
+
+Fix by giving one of the two a distinct pattern, or removing the redundant type.
+
+This is an exact, literal match of the method and the pattern text — it does not parse route pattern
+syntax, so two patterns that are equivalent but written differently (e.g. differing only by a route
+constraint) are not detected.
 
 ## Validation
 
