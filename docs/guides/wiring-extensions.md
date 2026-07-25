@@ -107,6 +107,19 @@ public record CreateOrder(string Customer) : ICommand<Result<Guid>>, ITransactio
 ```
 (For a non-EF store, implement `IUnitOfWork` yourself and call `AddMediarqUnitOfWork()`.)
 
+Domain events — publish events raised by aggregates after a successful commit:
+```csharp
+builder.Services.AddMediarqDomainEvents(); // picked up automatically by AddDbContext<AppDbContext>
+```
+```csharp
+public class Order : AggregateRoot // or implement IHasDomainEvents directly
+{
+    public void Place() => AddDomainEvent(new OrderPlaced(Id));
+}
+```
+Collected (and cleared) right before `SaveChangesAsync`, published only after it succeeds. Async-only —
+no synchronous `SaveChanges` support.
+
 ## Mediarq.Outbox — reliable events
 
 ```csharp

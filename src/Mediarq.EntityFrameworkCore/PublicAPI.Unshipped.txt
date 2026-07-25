@@ -1,1 +1,15 @@
 #nullable enable
+Mediarq.EntityFrameworkCore.AggregateRoot
+Mediarq.EntityFrameworkCore.AggregateRoot.AddDomainEvent(Mediarq.Core.Common.Requests.Notifications.INotification! domainEvent) -> void
+Mediarq.EntityFrameworkCore.AggregateRoot.AggregateRoot() -> void
+Mediarq.EntityFrameworkCore.AggregateRoot.ClearDomainEvents() -> void
+Mediarq.EntityFrameworkCore.AggregateRoot.DomainEvents.get -> System.Collections.Generic.IReadOnlyCollection<Mediarq.Core.Common.Requests.Notifications.INotification!>!
+Mediarq.EntityFrameworkCore.DomainEventsInterceptor
+Mediarq.EntityFrameworkCore.DomainEventsInterceptor.DomainEventsInterceptor(Mediarq.Core.Mediators.IPublisher! publisher) -> void
+Mediarq.EntityFrameworkCore.IHasDomainEvents
+Mediarq.EntityFrameworkCore.IHasDomainEvents.ClearDomainEvents() -> void
+Mediarq.EntityFrameworkCore.IHasDomainEvents.DomainEvents.get -> System.Collections.Generic.IReadOnlyCollection<Mediarq.Core.Common.Requests.Notifications.INotification!>!
+override Mediarq.EntityFrameworkCore.DomainEventsInterceptor.SaveChangesFailedAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextErrorEventData! eventData, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+override Mediarq.EntityFrameworkCore.DomainEventsInterceptor.SavedChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.SaveChangesCompletedEventData! eventData, int result, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<int>
+override Mediarq.EntityFrameworkCore.DomainEventsInterceptor.SavingChangesAsync(Microsoft.EntityFrameworkCore.Diagnostics.DbContextEventData! eventData, Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int> result, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Microsoft.EntityFrameworkCore.Diagnostics.InterceptionResult<int>>
+static Mediarq.EntityFrameworkCore.EntityFrameworkCoreServiceCollectionExtensions.AddMediarqDomainEvents(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
