@@ -239,6 +239,55 @@ public class MediatorTests
     }
 
     [Fact]
+    public async Task Send_Should_Publish_CascadedNotifications_When_The_Handler_Completes_Asynchronously()
+    {
+        // Task.Yield() forces the handler's task to be genuinely incomplete when Handle(...) returns
+        // synchronously — exercising the await-path (as opposed to the IsCompletedSuccessfully fast path
+        // the other tests hit, since Moq's ReturnsAsync/.Returns(Result) always yields an already-completed task).
+        var request = new TestCommand("Hello");
+        var notification = new TestNotification("async-cascade");
+
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                await Task.Yield();
+                return Result.Success("OK").WithNotifications(notification);
+            });
+
+        var mockPublisher = new Mock<IPublisher>();
+        mockPublisher.Setup(p => p.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _mockHandlerResolver.Setup(r => r.Resolve<IPublisher>()).Returns(mockPublisher.Object);
+
+        var result = await _testClass.Send(request, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        mockPublisher.Verify(p => p.Publish((INotification)notification, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Send_Should_Not_Publish_When_The_Handler_Completes_Asynchronously_With_No_CascadedNotifications()
+    {
+        var request = new TestCommand("Hello");
+
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                await Task.Yield();
+                return Result.Success("OK");
+            });
+
+        var mockPublisher = new Mock<IPublisher>();
+        _mockHandlerResolver.Setup(r => r.Resolve<IPublisher>()).Returns(mockPublisher.Object);
+
+        var result = await _testClass.Send(request, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        mockPublisher.Verify(p => p.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Send_Should_Not_Publish_CascadedNotifications_When_The_Result_Is_A_Failure()
     {
         var request = new TestCommand("Hello");
