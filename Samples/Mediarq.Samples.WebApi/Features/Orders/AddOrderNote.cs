@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Results;
 using Mediarq.Samples.WebApi.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,25 @@ public sealed class AddOrderNoteHandler(AppDbContext db)
 
         order.Note = request.Note;
         await db.SaveChangesAsync(cancellationToken);
-        return Result.Success();
+
+        // Cascaded notification: attached to the successful Result instead of injecting IPublisher and
+        // calling Publish(...) explicitly. Published automatically after dispatch, and only on success —
+        // a lightweight, in-process alternative to the transactional outbox (CreateOrder) and domain
+        // events (ConfirmOrder) used elsewhere in this sample.
+        return Result.Success().WithNotifications(new OrderNoteAddedEvent(order.Id, request.Note));
+    }
+}
+
+/// <summary>Cascaded via <see cref="Result.WithNotifications"/> — no explicit <c>IPublisher</c> injection needed.</summary>
+public sealed record OrderNoteAddedEvent(Guid OrderId, string Note) : INotification;
+
+public sealed class LogOrderNoteAddedHandler(ILogger<LogOrderNoteAddedHandler> logger)
+    : INotificationHandler<OrderNoteAddedEvent>
+{
+    public Task Handle(OrderNoteAddedEvent notification, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("[cascaded notification] note added to order {OrderId}: {Note}",
+            notification.OrderId, notification.Note);
+        return Task.CompletedTask;
     }
 }
