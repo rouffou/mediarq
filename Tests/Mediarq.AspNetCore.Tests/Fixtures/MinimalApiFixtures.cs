@@ -30,6 +30,23 @@ public sealed class CreateOrderHandler : ICommandHandler<CreateOrder, Result<Gui
     }
 }
 
+[MediarqPut("/orders/{id}/customer")]
+public sealed record RenameOrder(Guid Id, string Customer) : ICommand<Result>;
+
+public sealed class RenameOrderHandler : ICommandHandler<RenameOrder, Result>
+{
+    public Task<Result> Handle(RenameOrder request, CancellationToken cancellationToken = default)
+    {
+        if (!Store.Orders.TryGetValue(request.Id, out var existing))
+        {
+            return Task.FromResult(Result.Failure(ResultError.NotFound("Order.NotFound", "Order not found.")));
+        }
+
+        Store.Orders[request.Id] = existing with { Customer = request.Customer };
+        return Task.FromResult(Result.Success());
+    }
+}
+
 [MediarqDelete("/orders/{id}")]
 public sealed record DeleteOrder(Guid Id) : ICommand;
 
