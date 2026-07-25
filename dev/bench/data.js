@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785002070341,
+  "lastUpdate": 1785002084806,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -1310,6 +1310,50 @@ window.BENCHMARK_DATA = {
           {
             "name": "SendBenchmarks.Mediarq_Send_Lean - Allocated",
             "value": 248,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain - Allocated",
+            "value": 440,
+            "unit": "B"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6082554feb0d9e4fa4a124df658c8caf903e491d",
+          "message": "feat(core): let a handler cascade follow-up notifications via Result.WithNotifications(...) (#220)\n\n* feat(core): let a handler cascade follow-up notifications via Result.WithNotifications(...)\n\nA handler that needs to raise a notification after completing its own work\npreviously had to inject IPublisher and call Publish(...) itself, burying\n\"what does this handler cause to happen next\" in its body instead of its\nreturn type.\n\n- Result.WithNotifications(...) (virtual, covariant override on Result<T>)\n  attaches notifications to a result, fluent and mutation-based -- has no\n  effect on serialization (ResultJsonConverter never touches it).\n- PipelineDispatch publishes them via the resolved IPublisher (so the same\n  registered INotificationPublisher -- Parallel/Sequential/AggregateException\n  -- as an explicit Publish(...) call) once the request has finished\n  dispatching, after every behavior/exception handler/post-processor --\n  and only when the final response is a *successful* Result/Result<T>.\n- Not wired to Mediarq.Outbox: a cascaded notification goes through the same\n  IPublisher.Publish(...) as a manual call, not IOutbox.Enqueue(...). Combine\n  the two explicitly if a cascaded event needs the outbox's guarantee.\n- Zero overhead for any response type unrelated to Result (checked once per\n  closed TResponse type); a Result/Result<T> response that completes\n  synchronously with no attached notifications also pays nothing extra --\n  the async continuation is only used when there is something to await or\n  publish.\n\nCloses #216.\n\n* test(core): cover the async completion path of cascaded-notification publishing\n\ncodecov flagged PR #220's patch at 84% -- 6 missing lines and 1 partial\nbranch, all in PipelineDispatch.AwaitThenPublishAsync. Every existing test\ncompletes its handler's task synchronously (Moq's ReturnsAsync/.Returns(Result)\nalways yields an already-completed Task), so the async-await path\n(responseTask.IsCompletedSuccessfully == false) was never exercised.\n\nAdd two tests using a handler that awaits Task.Yield() before returning,\nforcing a genuinely incomplete task at the point WithCascadedNotifications\nchecks it -- confirmed locally via coverlet: PipelineDispatch.cs and all its\nasync state machines are now at 100% line/branch coverage.\n\n* docs: restore missing blank line before Routing section (merge artifact)\n\n---------\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T19:53:13+02:00",
+          "tree_id": "2181188561efe23fe0a666f586c0e3b8425c5220",
+          "url": "https://github.com/rouffou/mediarq/commit/6082554feb0d9e4fa4a124df658c8caf903e491d"
+        },
+        "date": 1785002084042,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send - Allocated",
+            "value": 224,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send - Allocated",
+            "value": 560,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean - Allocated",
+            "value": 256,
             "unit": "B"
           },
           {
