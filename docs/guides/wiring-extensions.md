@@ -161,6 +161,24 @@ await scheduler.ScheduleAsync(new SendWelcomeEmail(userId), DateTimeOffset.UtcNo
 Same `ICommand`-only constraint as `Mediarq.Hangfire`. The command is JSON-serialized into the job's
 `JobDataMap`; configure a persistent Quartz job store for jobs to survive a restart.
 
+## Mediarq.HealthChecks — fail fast on a missing/ambiguous handler
+
+```csharp
+builder.Services.AddHealthChecks()
+    .AddMediarqHandlerRegistrationCheck(assemblies: typeof(Program).Assembly);
+```
+```csharp
+app.MapHealthChecks("/health");
+```
+Reports `Unhealthy` when a discovered `ICommand`/`IQuery` closed type does not resolve to exactly one
+`IRequestHandler<TRequest, TResponse>`. To fail the app at startup instead of waiting for a health probe:
+
+```csharp
+builder.Services.AddMediarqHandlerValidationOnStartup(typeof(Program).Assembly);
+```
+Throws `InvalidOperationException` once, during host startup, if any command/query has zero or more than
+one registered handler.
+
 ## Mediarq.Polly — resilience
 
 ```csharp
@@ -218,6 +236,7 @@ builder.Services.AddMediarqCaching();
 builder.Services.AddMediarqIdempotency();
 builder.Services.AddMediarqResilience();
 builder.Services.AddMediarqDiagnostics();
+builder.Services.AddMediarqHandlerValidationOnStartup(typeof(Program).Assembly);
 ```
 
 See [Samples/Mediarq.Samples.WebApi](https://github.com/rouffou/mediarq/tree/main/Samples/Mediarq.Samples.WebApi)

@@ -1,0 +1,16 @@
+#nullable enable
+Mediarq.HealthChecks.HandlerRegistrationIssue
+Mediarq.HealthChecks.HandlerRegistrationIssue.HandlerCount.get -> int
+Mediarq.HealthChecks.HandlerRegistrationIssue.HandlerCount.init -> void
+Mediarq.HealthChecks.HandlerRegistrationIssue.HandlerRegistrationIssue(System.Type! RequestType, int HandlerCount) -> void
+Mediarq.HealthChecks.HandlerRegistrationIssue.RequestType.get -> System.Type!
+Mediarq.HealthChecks.HandlerRegistrationIssue.RequestType.init -> void
+Mediarq.HealthChecks.HealthChecksServiceCollectionExtensions
+Mediarq.HealthChecks.MediarqHandlerRegistrationHealthCheck
+Mediarq.HealthChecks.MediarqHandlerRegistrationHealthCheck.CheckHealthAsync(Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext! context, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult>!
+Mediarq.HealthChecks.MediarqHandlerRegistrationHealthCheck.MediarqHandlerRegistrationHealthCheck(System.IServiceProvider! serviceProvider, System.Reflection.Assembly![]! assemblies) -> void
+Mediarq.HealthChecks.MediarqHandlerRegistrationValidator
+override Mediarq.HealthChecks.HandlerRegistrationIssue.ToString() -> string!
+static Mediarq.HealthChecks.HealthChecksServiceCollectionExtensions.AddMediarqHandlerRegistrationCheck(this Microsoft.Extensions.DependencyInjection.IHealthChecksBuilder! builder, string! name = "mediarq_handlers", Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus? failureStatus = null, System.Collections.Generic.IEnumerable<string!>? tags = null, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.DependencyInjection.IHealthChecksBuilder!
+static Mediarq.HealthChecks.HealthChecksServiceCollectionExtensions.AddMediarqHandlerValidationOnStartup(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.HealthChecks.MediarqHandlerRegistrationValidator.Validate(System.IServiceProvider! serviceProvider, params System.Reflection.Assembly![]! assemblies) -> System.Collections.Generic.IReadOnlyList<Mediarq.HealthChecks.HandlerRegistrationIssue!>!
