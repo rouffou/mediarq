@@ -1,0 +1,10 @@
+#nullable enable
+Mediarq.AzureServiceBus.AzureServiceBusNotificationForwarder<TNotification>
+Mediarq.AzureServiceBus.AzureServiceBusNotificationForwarder<TNotification>.AzureServiceBusNotificationForwarder(Azure.Messaging.ServiceBus.ServiceBusClient! client) -> void
+Mediarq.AzureServiceBus.AzureServiceBusNotificationForwarder<TNotification>.Handle(TNotification! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.AzureServiceBus.AzureServiceBusServiceCollectionExtensions
+Mediarq.AzureServiceBus.IAzureServiceBusEvent
+Mediarq.AzureServiceBus.IAzureServiceBusEvent.SubscriptionName.get -> string!
+Mediarq.AzureServiceBus.IAzureServiceBusEvent.TopicName.get -> string!
+static Mediarq.AzureServiceBus.AzureServiceBusServiceCollectionExtensions.AddMediarqAzureServiceBusPublisher<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.AzureServiceBus.AzureServiceBusServiceCollectionExtensions.AddMediarqAzureServiceBusSubscriber<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

@@ -53,6 +53,17 @@ jobs:
           dotnet pack src/Mediarq.Analyzers/Mediarq.Analyzers.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Saga/Mediarq.Saga.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Hangfire/Mediarq.Hangfire.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Quartz/Mediarq.Quartz.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.HealthChecks/Mediarq.HealthChecks.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Authorization/Mediarq.Authorization.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Testing/Mediarq.Testing.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.RateLimiting/Mediarq.RateLimiting.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Deferred/Mediarq.Deferred.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Dapr/Mediarq.Dapr.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.AzureServiceBus/Mediarq.AzureServiceBus.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.RabbitMQ/Mediarq.RabbitMQ.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Aspire/Mediarq.Aspire.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Grpc/Mediarq.Grpc.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
 
       - name: NuGet login (trusted publishing)
         id: login

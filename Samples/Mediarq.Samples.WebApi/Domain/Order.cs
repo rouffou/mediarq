@@ -1,3 +1,6 @@
+using Mediarq.EntityFrameworkCore;
+using Mediarq.Samples.WebApi.Features.Orders;
+
 namespace Mediarq.Samples.WebApi.Domain;
 
 public enum OrderStatus
@@ -7,8 +10,13 @@ public enum OrderStatus
     Cancelled,
 }
 
-/// <summary>The order aggregate persisted through EF Core (the unit of work).</summary>
-public sealed class Order
+/// <summary>
+/// The order aggregate persisted through EF Core (the unit of work). Derives from
+/// <see cref="AggregateRoot"/> so <see cref="Confirm"/> can raise an in-process
+/// <see cref="OrderConfirmedDomainEvent"/> — published by <c>DomainEventsInterceptor</c> right after
+/// <c>SaveChanges</c> commits, distinct from <c>OrderPlacedEvent</c>'s cross-process outbox delivery.
+/// </summary>
+public sealed class Order : AggregateRoot
 {
     public Guid Id { get; set; }
     public string Customer { get; set; } = string.Empty;
@@ -16,6 +24,13 @@ public sealed class Order
     public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public List<OrderItem> Items { get; set; } = [];
     public string? Note { get; set; }
+
+    /// <summary>Marks the order confirmed and raises <see cref="OrderConfirmedDomainEvent"/>.</summary>
+    public void Confirm()
+    {
+        Status = OrderStatus.Confirmed;
+        AddDomainEvent(new OrderConfirmedDomainEvent(Id, Customer));
+    }
 }
 
 public sealed class OrderItem

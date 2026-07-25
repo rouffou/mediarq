@@ -81,4 +81,22 @@ public class ServiceCollectionExtensionsTests
         ((Action)(() => services.AddMediarqTimeout())).Should().Throw<ArgumentNullException>();
         ((Action)(() => services.AddMediarq())).Should().Throw<ArgumentNullException>();
     }
+
+    [Fact]
+    public void AddMediarqCore_Registers_PipelineBehaviorRegistrationCache_As_A_Singleton_Shared_Across_Scopes()
+    {
+        var services = new ServiceCollection();
+
+        services.AddMediarqCore();
+        var provider = services.BuildServiceProvider();
+
+        using var scope1 = provider.CreateScope();
+        using var scope2 = provider.CreateScope();
+        var cache1 = scope1.ServiceProvider.GetRequiredService<PipelineBehaviorRegistrationCache>();
+        var cache2 = scope2.ServiceProvider.GetRequiredService<PipelineBehaviorRegistrationCache>();
+
+        // Same instance across independent scopes: the "empty pipeline" memo must outlive a single
+        // request scope, or repeat dispatches across scopes would never benefit from it.
+        cache1.Should().BeSameAs(cache2);
+    }
 }

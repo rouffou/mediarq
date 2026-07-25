@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Mediarq logo" width="128" height="128">
+</p>
+
 # Mediarq
 
 [![CI](https://github.com/rouffou/mediarq/actions/workflows/ci.yml/badge.svg)](https://github.com/rouffou/mediarq/actions/workflows/ci.yml)
@@ -122,8 +126,10 @@ default. Override either via MSBuild:
 
 The generator also emits compile-time diagnostics: `MQ001` (multiple handlers for one request), `MQ002`
 (a command/query with no handler in the assembly), `MQ003` (a validator whose target is neither a
-request nor a notification, so it can never run), and `MQ004` (the reflection-based `AddMediarq(...)`
-called in a project that publishes with Native AOT).
+request nor a notification, so it can never run), `MQ004` (the reflection-based `AddMediarq(...)`
+called in a project that publishes with Native AOT), `MQ005` (multiple `IStreamRequestHandler`s for the
+same stream request), `MQ006` (a stream request with no handler in the assembly), and `MQ007` (a
+notification with no handler in the assembly).
 
 ## Commands & queries (with a result)
 
@@ -186,6 +192,44 @@ await mediator.Publish(new UserCreated(id));
 By default handlers run concurrently (`ParallelNotificationPublisher`) and the first failure is surfaced;
 publishing with no registered handler is a no-op. Register a different `INotificationPublisher`
 (e.g. `SequentialNotificationPublisher`, or your own) before `AddMediarq`/`AddMediarqCore` to change this.
+
+### Polymorphic notifications (opt-in)
+
+By default, publishing resolves handlers for the notification's exact concrete type only — the
+reflection-free fast path. Implement `IPolymorphicNotification` to also dispatch to
+`INotificationHandler<TBase>` for every base type in the notification's class hierarchy:
+
+```csharp
+public abstract record DomainEvent : INotification;
+public sealed record OrderPlaced(Guid OrderId) : DomainEvent, IPolymorphicNotification;
+
+// Receives OrderPlaced (and any other DomainEvent-derived type), not just its own concrete type:
+public class AuditLogHandler : INotificationHandler<DomainEvent> { /* ... */ }
+```
+Concrete-type handlers run first, then base-type handlers from most to least specific — unless a handler
+implements `IOrderedNotificationHandler`, in which case its explicit `Order` takes precedence across the
+whole batch. This is opt-in and per-notification-type: publishing a type that doesn't implement
+`IPolymorphicNotification` is unaffected — and, unlike the default path, it does resolve handlers via
+reflection (walking the base-type hierarchy with `MakeGenericType`), so it's not part of the trimming/AOT
+fast path.
+
+### Cascaded notifications — `Result.WithNotifications(...)` (opt-in)
+
+A handler can attach follow-up notifications to its own result instead of injecting `IPublisher` and
+calling `Publish(...)` itself — what the handler causes to happen next shows up in its return value:
+
+```csharp
+public Task<Result<Guid>> Handle(CreateOrder request, CancellationToken cancellationToken = default)
+{
+    var id = Guid.NewGuid();
+    // ... persist the order ...
+    return Task.FromResult(Result.Success(id).WithNotifications(new OrderPlaced(id)));
+}
+```
+The mediator publishes attached notifications automatically once the request finishes dispatching —
+after every behavior/exception handler/post-processor has run, and **only when the result is a
+success** — through the same `IPublisher`/`INotificationPublisher` as an explicit `Publish(...)` call.
+See [Wiring extensions](docs/guides/wiring-extensions.md#cascaded-notifications--resultwithnotifications).
 
 ### Out-of-process notifications (MassTransit)
 
@@ -329,6 +373,17 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.MassTransit` | Forward notifications to a MassTransit bus, out-of-process (`AddMediarqMassTransitForwarding`) |
 | `Mediarq.MediatRCompat` | Optional MediatR compatibility shim for incremental migration (`AddMediarqMediatRCompat`) |
 | `Mediarq.Hangfire` | Enqueue/schedule a command as a Hangfire background job, dispatched through the real pipeline (`AddMediarqHangfire`) |
+| `Mediarq.Quartz` | Enqueue/schedule a command as a Quartz.NET job, dispatched through the real pipeline (`AddMediarqQuartz`) |
+| `Mediarq.HealthChecks` | `IHealthCheck` + startup validation that every command/query resolves to exactly one handler (`AddMediarqHandlerRegistrationCheck`, `AddMediarqHandlerValidationOnStartup`) |
+| `Mediarq.Authorization` | ASP.NET Core policy-based authorization as a pipeline behavior for `IAuthorizedRequest` (`AddMediarqAuthorization`) |
+| `Mediarq.Testing` | `SpyMediator` decorator recording dispatched requests/notifications through the real pipeline, plus `FakeClock`/`FakeUserContext` (`AddMediarqSpy`) |
+| `Mediarq.RateLimiting` | Throttle `IRateLimitedRequest` requests via `System.Threading.RateLimiting`, partitionable per user/key (`AddMediarqRateLimiting`) |
+| `Mediarq.Deferred` | In-process deferred dispatch on a `System.Threading.Channels` background worker, no external dependency (`AddMediarqDeferredDispatch`) |
+| `Mediarq.Dapr` | Dapr pub/sub: publish `IDaprPubSubEvent` notifications (`AddMediarqDaprPubSub`) and receive them back into the pipeline via a minimal-API webhook + `/dapr/subscribe` (`MapDaprPubSubSubscription`) |
+| `Mediarq.AzureServiceBus` | A lightweight, direct Azure Service Bus bridge: publish `IAzureServiceBusEvent` notifications (`AddMediarqAzureServiceBusPublisher`) and consume them back into the pipeline via a background service (`AddMediarqAzureServiceBusSubscriber`) |
+| `Mediarq.RabbitMQ` | A lightweight, direct RabbitMQ bridge: publish `IRabbitMqEvent` notifications (`AddMediarqRabbitMqPublisher`) and consume them back into the pipeline via a background service (`AddMediarqRabbitMqSubscriber`) |
+| `Mediarq.Aspire` | .NET Aspire `ServiceDefaults` integration: wires Mediarq's OpenTelemetry instrumentation and handler-registration health check into your own `ServiceDefaults` project (`AddMediarqServiceDefaults`) |
+| `Mediarq.Grpc` | Direct point-to-point gRPC transport: publish `IGrpcNotificationEvent` notifications to another service's endpoint (`AddMediarqGrpcPublisher`) and receive them back into the pipeline via a shared gRPC service (`AddMediarqGrpcSubscriptions` + `MapMediarqGrpcSubscription`) — ships its own compiled Protobuf contract, no `protoc` needed downstream |
 
 Built into `Mediarq.Core`:
 
@@ -350,7 +405,8 @@ Three runnable samples under [Samples/](Samples) (see [Samples/README.md](Sample
   pre/post processors, exception handling, timeout, `Result` combinators).
 - **[Mediarq.Samples.WebApi](Samples/Mediarq.Samples.WebApi)** — an ASP.NET Core "Orders" API wiring the
   extensions end-to-end (`Result` → HTTP, FluentValidation/DataAnnotations, caching, idempotency,
-  EF Core unit of work + transactional outbox, Polly, diagnostics/OpenTelemetry, MassTransit).
+  EF Core unit of work + transactional outbox + domain events + cascaded notifications, policy-based
+  authorization, rate limiting, health checks, Polly, diagnostics/OpenTelemetry, MassTransit).
 - **[Mediarq.AotSample](Samples/Mediarq.AotSample)** — the reflection-free path, published with Native AOT.
 
 ```bash

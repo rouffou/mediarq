@@ -1,0 +1,15 @@
+#nullable enable
+Mediarq.Grpc.GrpcChannelCache
+Mediarq.Grpc.GrpcChannelCache.Dispose() -> void
+Mediarq.Grpc.GrpcChannelCache.GrpcChannelCache() -> void
+Mediarq.Grpc.GrpcEndpointRouteBuilderExtensions
+Mediarq.Grpc.GrpcNotificationForwarder<TNotification>
+Mediarq.Grpc.GrpcNotificationForwarder<TNotification>.GrpcNotificationForwarder(Mediarq.Grpc.GrpcChannelCache! channelCache) -> void
+Mediarq.Grpc.GrpcNotificationForwarder<TNotification>.Handle(TNotification! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Grpc.GrpcServiceCollectionExtensions
+Mediarq.Grpc.IGrpcNotificationEvent
+Mediarq.Grpc.IGrpcNotificationEvent.ServiceAddress.get -> string!
+static Mediarq.Grpc.GrpcEndpointRouteBuilderExtensions.MapMediarqGrpcNotificationService(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! app) -> Microsoft.AspNetCore.Routing.IEndpointRouteBuilder!
+static Mediarq.Grpc.GrpcEndpointRouteBuilderExtensions.MapMediarqGrpcSubscription<TNotification>(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! app) -> Microsoft.AspNetCore.Routing.IEndpointRouteBuilder!
+static Mediarq.Grpc.GrpcServiceCollectionExtensions.AddMediarqGrpcPublisher<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Grpc.GrpcServiceCollectionExtensions.AddMediarqGrpcSubscriptions(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

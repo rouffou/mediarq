@@ -21,6 +21,12 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
 {
     private readonly IHandlerResolver _handlerResolver = handlerResolver;
 
+    // Resolved once per PipelineExecutor instance (i.e. once per scope) through the existing resolver
+    // rather than added as a constructor parameter, so this stays a non-breaking change to an
+    // already-shipped constructor signature. Null when the container has no such registration (e.g. a
+    // hand-built PipelineExecutor in a test) — every use below is null-conditional.
+    private readonly PipelineBehaviorRegistrationCache? _behaviorRegistrationCache = handlerResolver.Resolve<PipelineBehaviorRegistrationCache>();
+
     /// <summary>
     /// Executes the request pipeline for a given request and response type.
     /// </summary>
@@ -79,7 +85,22 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(handlerDelegate);
 
+        // Memoized fast path: this closed request/response type is known, from a prior dispatch, to have
+        // zero registered behaviors — skip the IEnumerable<> resolution entirely. See
+        // PipelineBehaviorRegistrationCache for why only "zero registered" is ever cached here.
+        if (_behaviorRegistrationCache?.IsKnownEmpty<TRequest, TResponse>() == true)
+        {
+            return handlerDelegate(cancellationToken);
+        }
+
         var behaviors = _handlerResolver.ResolveAll<IPipelineBehavior<TRequest, TResponse>>();
+
+        if (behaviors.Count == 0)
+        {
+            _behaviorRegistrationCache?.MarkKnownEmpty<TRequest, TResponse>();
+            return handlerDelegate(cancellationToken);
+        }
+
         var active = PipelineDispatch.SelectActive<TRequest, TResponse>(behaviors, out var activeCount);
 
         // No active behavior: invoke the handler directly, with none of the chain/closure overhead.
@@ -88,7 +109,7 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
             return handlerDelegate(cancellationToken);
         }
 
-        return PipelineDispatch.Run(active, activeCount, context, handlerDelegate, cancellationToken);
+        return PipelineDispatch.Run(active, activeCount, context, () => handlerDelegate(cancellationToken), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -103,18 +124,9 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
         ArgumentNullException.ThrowIfNull(handler);
         ArgumentNullException.ThrowIfNull(contextFactory);
 
-        var behaviors = _handlerResolver.ResolveAll<IPipelineBehavior<TRequest, TResponse>>();
-        var active = PipelineDispatch.SelectActive<TRequest, TResponse>(behaviors, out var activeCount);
-
-        // No active behavior: skip the request context allocation and the delegate entirely, invoking
-        // the handler directly — the hot path costs no more than a bare handler call.
-        if (active is null)
-        {
-            return handler.Handle(request, cancellationToken);
-        }
-
-        // A behavior will observe the context, so create it now (lazily, only when actually needed).
-        RequestContext<TRequest, TResponse> context = contextFactory.Create<TRequest, TResponse>(request, cancellationToken);
-        return PipelineDispatch.Run(active, activeCount, context, ct => handler.Handle(request, ct), cancellationToken);
+        // AsTask() is allocation-free here: the shared helper always wraps a real Task<TResponse>
+        // (the handler's own, or PipelineDispatch.Run's), never a synchronous ValueTask value.
+        return PipelineDispatch.ExecuteWithBehaviorCache(
+            _handlerResolver, _behaviorRegistrationCache, request, handler, contextFactory, cancellationToken).AsTask();
     }
 }

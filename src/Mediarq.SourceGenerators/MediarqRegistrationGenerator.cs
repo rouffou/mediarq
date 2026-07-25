@@ -56,6 +56,30 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor MultipleStreamHandlers = new(
+        id: "MQ005",
+        title: "Multiple stream handlers for the same stream request",
+        messageFormat: "Multiple handlers are registered for '{0}'. Mediarq dispatches each stream request to a single handler.",
+        category: "Mediarq",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor MissingStreamHandler = new(
+        id: "MQ006",
+        title: "No stream handler found for a stream request",
+        messageFormat: "No IStreamRequestHandler was found in this assembly for '{0}'. Define a handler, or ignore this if the handler lives in another assembly.",
+        category: "Mediarq",
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor MissingNotificationHandler = new(
+        id: "MQ007",
+        title: "No notification handler found for a notification",
+        messageFormat: "No INotificationHandler was found in this assembly for '{0}'. Define a handler, or ignore this if the handler lives in another assembly or this notification intentionally has no subscribers.",
+        category: "Mediarq",
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
     /// <inheritdoc />
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -464,6 +488,40 @@ public sealed class MediarqRegistrationGenerator : IIncrementalGenerator
         foreach (var orphan in registrations.Where(r => r.Kind == HandlerKind.Validator && r.IsOrphanValidator && r.RequestType != null))
         {
             context.ReportDiagnostic(Diagnostic.Create(OrphanValidator, Location.None, orphan.RequestType));
+        }
+
+        // Diagnose multiple stream handlers registered for the same stream request (a stream request
+        // must be handled by exactly one IStreamRequestHandler, same rule as MQ001).
+        foreach (var group in registrations.Where(r => r.Kind == HandlerKind.StreamHandler).GroupBy(r => r.ServiceType))
+        {
+            if (group.Select(r => r.ImplType).Distinct().Count() > 1)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(MultipleStreamHandlers, Location.None, group.Key));
+            }
+        }
+
+        // Diagnose a declared stream request that has no handler in this assembly (MQ006, informational).
+        var handledStreamRequestTypes = new HashSet<string>(
+            registrations.Where(r => r.Kind == HandlerKind.StreamHandler && r.RequestType != null).Select(r => r.RequestType!));
+
+        foreach (var stream in registrations.Where(r => r.Kind == HandlerKind.StreamDeclaration && r.RequestType != null))
+        {
+            if (!handledStreamRequestTypes.Contains(stream.RequestType!))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(MissingStreamHandler, Location.None, stream.RequestType));
+            }
+        }
+
+        // Diagnose a declared notification that has no handler in this assembly (MQ007, informational).
+        var handledNotificationTypes = new HashSet<string>(
+            registrations.Where(r => r.Kind == HandlerKind.NotificationHandler && r.NotificationType != null).Select(r => r.NotificationType!));
+
+        foreach (var notification in registrations.Where(r => r.Kind == HandlerKind.NotificationDeclaration && r.NotificationType != null))
+        {
+            if (!handledNotificationTypes.Contains(notification.NotificationType!))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(MissingNotificationHandler, Location.None, notification.NotificationType));
+            }
         }
 
         var sb = new StringBuilder();

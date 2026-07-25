@@ -285,6 +285,104 @@ public class PipelineExecutorTests
         factory.Verify(f => f.Create<TestCommandWithValue, Result<string>>(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_Should_ResolveAll_Only_Once_When_No_Behaviors_Are_Registered()
+    {
+        // Arrange — a real cache so the executor can memoize "zero behaviors registered".
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.Resolve<PipelineBehaviorRegistrationCache>())
+            .Returns(new PipelineBehaviorRegistrationCache());
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+
+        var executor = new PipelineExecutor(resolver.Object);
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), "user");
+
+        // Act — dispatch twice.
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+
+        // Assert — the second dispatch skipped ResolveAll entirely, using the memoized "empty" fact.
+        resolver.Verify(
+            r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>(),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LazyContext_Should_ResolveAll_Only_Once_When_No_Behaviors_Are_Registered()
+    {
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.Resolve<PipelineBehaviorRegistrationCache>())
+            .Returns(new PipelineBehaviorRegistrationCache());
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+
+        var handler = new Mock<Mediarq.Core.Common.Requests.Abstraction.IRequestHandler<TestCommandWithValue, Result<string>>>();
+        handler.Setup(h => h.Handle(It.IsAny<TestCommandWithValue>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync(Result.Success("OK"));
+        var factory = new Mock<IRequestContextFactory>();
+
+        var executor = new PipelineExecutor(resolver.Object);
+
+        await executor.ExecuteAsync(new TestCommandWithValue("x"), handler.Object, factory.Object, CancellationToken.None);
+        await executor.ExecuteAsync(new TestCommandWithValue("x"), handler.Object, factory.Object, CancellationToken.None);
+
+        resolver.Verify(
+            r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>(),
+            Times.Once);
+        handler.Verify(h => h.Handle(It.IsAny<TestCommandWithValue>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Should_Never_Cache_When_Behaviors_Are_Registered_Even_If_All_Inactive()
+    {
+        // Arrange — structurally non-empty (one registered behavior), but inactive every time: this must
+        // be re-evaluated on every dispatch, never memoized as "empty".
+        var log = new List<string>();
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.Resolve<PipelineBehaviorRegistrationCache>())
+            .Returns(new PipelineBehaviorRegistrationCache());
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(new IPipelineBehavior<TestCommandWithValue, Result<string>>[] { new ConditionalBehavior(isActive: false, "Inactive", log) });
+
+        var executor = new PipelineExecutor(resolver.Object);
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), "user");
+
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+
+        resolver.Verify(
+            r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>(),
+            Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Should_ResolveAll_Every_Time_When_No_Cache_Is_Registered()
+    {
+        // Arrange — no PipelineBehaviorRegistrationCache registered in the container (e.g. a hand-built
+        // resolver in a test): falls back to resolving on every dispatch, exactly like before this change.
+        var resolver = new Mock<IHandlerResolver>();
+        resolver
+            .Setup(r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>())
+            .Returns(Array.Empty<IPipelineBehavior<TestCommandWithValue, Result<string>>>());
+
+        var executor = new PipelineExecutor(resolver.Object);
+        var context = new RequestContext<TestCommandWithValue, Result<string>>(new TestCommandWithValue(""), "user");
+
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+        await executor.ExecuteAsync(context, _ => Task.FromResult(Result.Success("OK")));
+
+        resolver.Verify(
+            r => r.ResolveAll<IPipelineBehavior<TestCommandWithValue, Result<string>>>(),
+            Times.Exactly(2));
+    }
+
     private sealed class OrderedBehavior(int order, string name, List<string> log)
         : IPipelineBehavior<TestCommandWithValue, Result<string>>, IOrderBehavior
     {

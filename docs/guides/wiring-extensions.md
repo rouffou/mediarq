@@ -31,6 +31,33 @@ Opt-in core behaviors (any order, after the call above):
 .AddMediarqTimeout()             // enforces ITimeoutRequest.Timeout -> RequestTimeoutException
 ```
 
+## Cascaded notifications — `Result.WithNotifications(...)`
+
+No registration needed. A handler can attach follow-up notifications to its own successful result
+instead of injecting `IPublisher` and calling `Publish(...)` itself:
+
+```csharp
+public sealed class CreateOrderHandler : ICommandHandler<CreateOrder, Result<Guid>>
+{
+    public Task<Result<Guid>> Handle(CreateOrder request, CancellationToken cancellationToken = default)
+    {
+        var id = Guid.NewGuid();
+        // ... persist the order ...
+        return Task.FromResult(Result.Success(id).WithNotifications(new OrderPlaced(id)));
+    }
+}
+```
+The mediator publishes `OrderPlaced` automatically once the request has finished dispatching — after
+every behavior, exception handler and post-processor has run — through the same `IPublisher` (and
+therefore the same registered `INotificationPublisher`: Parallel/Sequential/AggregateException) as an
+explicit `Publish(...)` call. **Only on a successful result**: a failed `Result`/`Result<T>` never
+publishes its attached notifications, even if `WithNotifications(...)` was called before the failure was
+known. Works with both `Result` and `Result<T>`; has no effect on other response shapes (e.g. `Unit`).
+
+Not automatically enqueued to `Mediarq.Outbox` — combine with an explicit `IOutbox.Enqueue(...)` call
+inside the handler if a cascaded notification needs the outbox's transactional/reliable delivery
+guarantee instead of an in-process publish.
+
 ## Validation
 
 ### Mediarq.FluentValidation
@@ -61,6 +88,21 @@ group.MapPost("/", (CreateOrder cmd, ISender s) => s.Send(cmd).ToHttpResultAsync
 ```
 Success → `200`/`Ok(value)`; failure → RFC 7807 `ProblemDetails` with a status derived from
 `ResultError.Type` (`NotFound` → 404, `Validation` → 400, `Conflict` → 409, …).
+
+Skip the pass-through endpoint entirely — annotate the command/query and map every attributed type at once:
+```csharp
+[MediarqGet("/orders/{id}")]
+public record GetOrder(Guid Id) : IQuery<Result<OrderDto>>;
+
+app.MapMediarq(typeof(GetOrder).Assembly);
+```
+`[MediarqGet]`/`[MediarqDelete]` bind members individually from the route/query string (`[AsParameters]`,
+no body); `[MediarqPost]`/`[MediarqPut]`/`[MediarqPatch]` bind the whole request from the JSON body.
+
+Every mapped endpoint also declares its response shapes for ASP.NET Core's OpenAPI generator
+(`Microsoft.AspNetCore.OpenApi`/Swagger): `200`/`204` with the success type (or no body), plus
+`400`/`401`/`403`/`404`/`409`/`500` — the full set `ResultError.Type` can map to — so generated
+Swagger/OpenAPI documents show a typed response instead of a bare, untyped `IResult`.
 
 ## Mediarq.Caching — memoize a query
 
@@ -107,6 +149,19 @@ public record CreateOrder(string Customer) : ICommand<Result<Guid>>, ITransactio
 ```
 (For a non-EF store, implement `IUnitOfWork` yourself and call `AddMediarqUnitOfWork()`.)
 
+Domain events — publish events raised by aggregates after a successful commit:
+```csharp
+builder.Services.AddMediarqDomainEvents(); // picked up automatically by AddDbContext<AppDbContext>
+```
+```csharp
+public class Order : AggregateRoot // or implement IHasDomainEvents directly
+{
+    public void Place() => AddDomainEvent(new OrderPlaced(Id));
+}
+```
+Collected (and cleared) right before `SaveChangesAsync`, published only after it succeeds. Async-only —
+no synchronous `SaveChanges` support.
+
 ## Mediarq.Outbox — reliable events
 
 ```csharp
@@ -146,6 +201,109 @@ Only `ICommand` (no result) is supported — call `Enqueue`/`Schedule` directly 
 not through a variable statically typed as `ICommand`, so Hangfire's serializer captures the concrete
 type.
 
+## Mediarq.Quartz — delayed & scheduled dispatch (Quartz.NET)
+
+```csharp
+builder.Services.AddMediarqQuartz();
+builder.Services.AddQuartz();
+builder.Services.AddQuartzHostedService();
+```
+```csharp
+await scheduler.EnqueueAsync(new SendWelcomeEmail(userId));                                    // ASAP
+await scheduler.ScheduleAsync(new SendWelcomeEmail(userId), TimeSpan.FromMinutes(10));          // after a delay
+await scheduler.ScheduleAsync(new SendWelcomeEmail(userId), DateTimeOffset.UtcNow.AddDays(1));  // at a point in time
+```
+Same `ICommand`-only constraint as `Mediarq.Hangfire`. The command is JSON-serialized into the job's
+`JobDataMap`; configure a persistent Quartz job store for jobs to survive a restart.
+
+## Mediarq.Deferred — in-process deferred dispatch, no external dependency
+
+```csharp
+builder.Services.AddMediarqDeferredDispatch();
+```
+```csharp
+await deferredDispatcher.SendLaterAsync(new SendWelcomeEmail(userId));   // returns immediately
+await deferredDispatcher.PublishLaterAsync(new UserRegistered(userId));
+```
+`IDeferredDispatcher` queues the request on a `System.Threading.Channels`-backed background worker
+(`DeferredDispatchHostedService`) instead of running its handler(s) inline. Unlike `Mediarq.Hangfire`/
+`Mediarq.Quartz`, the queue is **in-memory only** — no delay/cron scheduling, nothing survives a crash —
+but a graceful shutdown drains everything already queued before the host stops. Use it for "reliable
+in-process fire-and-forget" (e.g. decoupling an HTTP request from a side effect); use Hangfire/Quartz when
+you need delayed/cron scheduling or durability across a restart.
+
+## Mediarq.HealthChecks — fail fast on a missing/ambiguous handler
+
+```csharp
+builder.Services.AddHealthChecks()
+    .AddMediarqHandlerRegistrationCheck(assemblies: typeof(Program).Assembly);
+```
+```csharp
+app.MapHealthChecks("/health");
+```
+Reports `Unhealthy` when a discovered `ICommand`/`IQuery` closed type does not resolve to exactly one
+`IRequestHandler<TRequest, TResponse>`. To fail the app at startup instead of waiting for a health probe:
+
+```csharp
+builder.Services.AddMediarqHandlerValidationOnStartup(typeof(Program).Assembly);
+```
+Throws `InvalidOperationException` once, during host startup, if any command/query has zero or more than
+one registered handler.
+
+## Mediarq.Authorization — policy-based authorization
+
+```csharp
+builder.Services.AddAuthorization();          // ASP.NET Core's own registration
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMediarqAuthorization();
+```
+Marker: `IAuthorizedRequest` (`PolicyName`). No authenticated user → `Result.Failure(ResultError.Unauthorized(...))`
+(HTTP 401 via `Mediarq.AspNetCore`); authenticated but the policy fails → `ResultError.Forbidden(...)`
+(HTTP 403). `PolicyName` can be `null` to only require authentication.
+
+```csharp
+public record DeleteOrder(Guid OrderId) : ICommand, IAuthorizedRequest
+{
+    public string? PolicyName => "OrdersAdmin";
+}
+```
+⚠️ The handler's response type must be `Result` or `Result<T>` — same constraint, same reflection-fallback
+trade-off, as the core `ValidationBehavior`'s `Result<T>` support.
+
+## Mediarq.Testing — spy mediator, fakes
+
+```csharp
+services.AddMediarq(isHttp: false, typeof(Program).Assembly); // your normal registration
+services.AddMediarqSpy();                                     // decorates IMediator, after AddMediarq(...)
+```
+```csharp
+var spy = (SpyMediator)provider.GetRequiredService<IMediator>();
+await provider.GetRequiredService<ISender>().Send(new CreateOrder(customerId));
+
+spy.HasSent<CreateOrder>();          // true — recorded, and the real handler ran
+spy.Published<OrderCreated>();       // notifications published during that Send
+```
+Handlers, validators and behaviors all run for real — nothing is faked, only recorded. Also ships
+`FakeClock`/`FakeUserContext`, plain settable implementations of `IClock`/`IUserContext` to register in a
+test's `IServiceCollection`.
+
+## Mediarq.RateLimiting — throttle a request type or a user
+
+```csharp
+builder.Services.AddMediarqRateLimiting(registry =>
+{
+    registry.AddPolicy("orders-per-user", key => RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+    {
+        Window = TimeSpan.FromMinutes(1),
+        PermitLimit = 10,
+    }));
+});
+```
+Marker: `IRateLimitedRequest` (`PolicyName`, optional `PartitionKey` — e.g. the current user id, for an
+independent limit per caller; `null` shares a single bucket). No permit available →
+`RateLimitExceededException`; catch it with an `IRequestExceptionHandler<,>` or an ASP.NET Core exception
+handler to map it to `429 Too Many Requests`.
+
 ## Mediarq.Polly — resilience
 
 ```csharp
@@ -165,6 +323,25 @@ builder.Services.AddOpenTelemetry()
 ```
 `AddMediarqInstrumentation()` subscribes to the `"Mediarq"` source/meter.
 
+## Mediarq.Aspire — .NET Aspire ServiceDefaults integration
+
+```csharp
+// MyApp.ServiceDefaults/Extensions.cs — additive, alongside the template's own setup
+public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
+{
+    builder.ConfigureOpenTelemetry();   // generated by dotnet new aspire-servicedefaults
+    builder.AddDefaultHealthChecks();   // generated by dotnet new aspire-servicedefaults
+
+    builder.AddMediarqServiceDefaults(typeof(Program).Assembly); // wires Mediarq's tracing/metrics + handler-registration health check
+
+    return builder;
+}
+```
+Not a replacement for the Aspire template's own `ServiceDefaults` project — call it from inside yours.
+Adds `Mediarq.OpenTelemetry`'s tracing/metrics and `Mediarq.HealthChecks`' handler-registration check on
+top of whatever OpenTelemetry/service-discovery/resilience setup the template already generated; it
+doesn't reimplement any of that, nor map `/health`/`/alive` endpoints itself.
+
 ## Mediarq.MassTransit — out-of-process notifications
 
 ```csharp
@@ -177,6 +354,74 @@ builder.Services.AddMediarqMassTransitForwarding<OrderPlacedEvent>(); // forward
 ```
 Marker: `IIntegrationEvent` (an `INotification` meant to leave the process). The forwarder is a normal
 notification handler, so it runs **alongside** your in-process handlers.
+
+## Mediarq.Dapr — pub/sub for containers/Kubernetes
+
+```csharp
+builder.Services.AddDaprClient();                          // from Dapr.AspNetCore/Dapr.Client
+builder.Services.AddMediarqDaprPubSub<OrderPlaced>();       // publish (outbound)
+builder.Services.AddMediarqDaprPubSubSubscriptions();       // subscribe (inbound) registry
+// ...
+app.MapDaprPubSubSubscription<OrderPlaced>();               // POST /dapr/pubsub/OrderPlaced
+app.MapDaprPubSubSubscribeEndpoint();                       // GET  /dapr/subscribe (map last)
+```
+Marker: `IDaprPubSubEvent` (`static abstract string PubsubName`/`Topic` — static, not instance members,
+so the subscribe side has routing info before any instance exists, and both directions can never drift
+apart). Publishing forwards through `DaprClient.PublishEventAsync`, same "runs alongside your in-process
+handlers" shape as `Mediarq.MassTransit`. Subscribing extracts the `data` field from the CloudEvents 1.0
+envelope Dapr delivers and republishes it via `IPublisher` — the same pipeline as any in-process `Publish`.
+
+## Mediarq.AzureServiceBus — a lightweight, direct broker bridge
+
+```csharp
+builder.Services.AddSingleton(_ => new ServiceBusClient(connectionString));
+builder.Services.AddMediarqAzureServiceBusPublisher<OrderPlaced>();   // publish (outbound)
+builder.Services.AddMediarqAzureServiceBusSubscriber<OrderPlaced>();  // subscribe (inbound background processor)
+```
+Marker: `IAzureServiceBusEvent` (`static abstract string TopicName`/`SubscriptionName` — same static-member
+rationale as `Mediarq.Dapr`'s `IDaprPubSubEvent`). This package never owns the `ServiceBusClient`'s lifecycle,
+and does **not** provision the topic/subscription — create them ahead of time (portal, ARM/Bicep, or
+`ServiceBusAdministrationClient`). The subscriber completes a message only after a successful
+`IPublisher.Publish`; a failure dead-letters it (Service Bus's analogue of "nack without requeue") and does
+**not** dedupe redeliveries — enable the entity's built-in duplicate-detection window if you need broker-side
+dedup. A lightweight alternative to `Mediarq.MassTransit` for the simple pub/sub case, same as `Mediarq.RabbitMQ`.
+## Mediarq.RabbitMQ — a lightweight, direct broker bridge
+
+```csharp
+builder.Services.AddSingleton<IConnection>(_ =>
+{
+    var factory = new ConnectionFactory { Uri = new Uri("amqp://guest:guest@localhost:5672") };
+    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+});
+builder.Services.AddMediarqRabbitMqPublisher<OrderPlaced>();   // publish (outbound)
+builder.Services.AddMediarqRabbitMqSubscriber<OrderPlaced>();  // subscribe (inbound background consumer)
+```
+Marker: `IRabbitMqEvent` (`static abstract string Exchange`/`Queue`/`RoutingKey` — static for the same
+reason as `Mediarq.Dapr`'s `IDaprPubSubEvent`: the subscriber declares its queue/binding at startup,
+before any instance exists). This package never owns the connection's lifecycle — register an
+`IConnection` yourself. The subscriber acks only after a successful `IPublisher.Publish`; a failure nacks
+without requeue (route to a dead-letter exchange at the broker if you need one) and does **not** dedupe
+redeliveries — for `Mediarq.MassTransit`'s heavier, batteries-included alternative (retry, outbox,
+saga integration, many transports), see above.
+
+## Mediarq.Grpc — direct point-to-point RPC to another service
+
+```csharp
+// publish (outbound)
+builder.Services.AddMediarqGrpcPublisher<OrderPlaced>();
+
+// subscribe (inbound)
+builder.Services.AddMediarqGrpcSubscriptions();
+// ...
+app.MapMediarqGrpcNotificationService();     // map exactly once
+app.MapMediarqGrpcSubscription<OrderPlaced>();
+```
+Marker: `IGrpcNotificationEvent` (`static abstract string ServiceAddress`). Unlike the broker packages
+above, gRPC is direct point-to-point RPC — the publisher must know the target service's address, there
+is no fan-out or persistence, and a failed `Publish` RPC throws `Grpc.Core.RpcException` like any other
+handler exception. Ships its own compiled Protobuf/gRPC contract, so no `protoc`/`Grpc.Tools` is needed
+downstream. Every subscribed notification type is multiplexed over one shared RPC method; an
+unrecognized `type_name` fails with `StatusCode.NotFound`.
 
 ## Recommended order (a safe template)
 
@@ -203,6 +448,8 @@ builder.Services.AddMediarqCaching();
 builder.Services.AddMediarqIdempotency();
 builder.Services.AddMediarqResilience();
 builder.Services.AddMediarqDiagnostics();
+builder.Services.AddMediarqAuthorization();
+builder.Services.AddMediarqHandlerValidationOnStartup(typeof(Program).Assembly);
 ```
 
 See [Samples/Mediarq.Samples.WebApi](https://github.com/rouffou/mediarq/tree/main/Samples/Mediarq.Samples.WebApi)
