@@ -24,8 +24,8 @@ public Task<IActionResult> Create(CreateOrder cmd) => mediator.Send(cmd).ToActio
 ```
 
 Status mapping: `NotFound` → 404, `Validation` → 400, `Conflict` → 409, `Unauthorized` → 401,
-otherwise 400/500 as appropriate. A validation failure renders the property errors as a ProblemDetails
-`errors` dictionary.
+`Forbidden` → 403, otherwise 400/500 as appropriate. A validation failure renders the property errors as
+a ProblemDetails `errors` dictionary.
 
 ## Learn more
 

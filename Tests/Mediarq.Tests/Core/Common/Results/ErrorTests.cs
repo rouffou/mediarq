@@ -70,4 +70,26 @@ public class ErrorTests
         problemError.Code.Should().Be("ProblemCode");
         problemError.Message.Should().Be("Problem occurred");
     }
+
+    [Fact]
+    public void Error_FactoryMethods_ShouldCreateErrorsUnauthorizedTypes()
+    {
+        // Arrange & Act
+        var unauthorizedError = ResultError.Unauthorized("UnauthorizedCode", "Authentication required");
+        // Assert
+        unauthorizedError.Type.Should().Be(ErrorType.Unauthorized);
+        unauthorizedError.Code.Should().Be("UnauthorizedCode");
+        unauthorizedError.Message.Should().Be("Authentication required");
+    }
+
+    [Fact]
+    public void Error_FactoryMethods_ShouldCreateErrorsForbiddenTypes()
+    {
+        // Arrange & Act
+        var forbiddenError = ResultError.Forbidden("ForbiddenCode", "Permission denied");
+        // Assert
+        forbiddenError.Type.Should().Be(ErrorType.Forbidden);
+        forbiddenError.Code.Should().Be("ForbiddenCode");
+        forbiddenError.Message.Should().Be("Permission denied");
+    }
 }

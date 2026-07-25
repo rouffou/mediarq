@@ -46,4 +46,11 @@ public enum ErrorType
     /// to perform the requested operation.
     /// </summary>
     Unauthorized = 5,
+
+    /// <summary>
+    /// Indicates that the current user or system actor is authenticated, but does not have permission
+    /// to perform the requested operation. Distinct from <see cref="Unauthorized"/>: this is "authenticated
+    /// but not permitted" (HTTP 403), whereas <see cref="Unauthorized"/> is "not authenticated" (HTTP 401).
+    /// </summary>
+    Forbidden = 6,
 }
