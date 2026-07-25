@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784988029835,
+  "lastUpdate": 1784988043737,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -1163,6 +1163,40 @@ window.BENCHMARK_DATA = {
           {
             "name": "PublishBenchmarks.Mediarq_Publish - Allocated",
             "value": 392,
+            "unit": "B"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "17ba263cfc9b51ff98fd77971c33243c7b81a615",
+          "message": "feat(core): add opt-in polymorphic notification publishing (#209)\n\n* feat(core): add opt-in polymorphic notification publishing\n\nIPolymorphicNotification marks a notification whose publish also dispatches to\nINotificationHandler<TBase> for every base type in its class hierarchy, not just its own\nconcrete type -- closing the MediatR-migration friction point called out in #183 (MediatR does\nthis unconditionally; Mediarq keeps it opt-in).\n\nNotificationHandlerWrapperImpl<TNotification> resolves base-type handlers via\nIHandlerResolver's existing non-generic ResolveAll(Type), walking TNotification's BaseType chain\n(lazy, cached per closed type, [RequiresDynamicCode]/[RequiresUnreferencedCode] with a suppressed\ncall site, exactly mirroring AuthorizationBehavior's established reflection-fallback pattern).\nResolved instances are cast straight to INotificationHandler<TNotification> -- no expression-tree\ncompilation needed, since INotificationHandler<in TNotification> is already contravariant.\n\nOrdering: concrete-type handlers run first, then base-type handlers from most to least specific,\nunless a handler implements IOrderedNotificationHandler, whose explicit Order then takes\nprecedence across the whole combined batch -- same OrderBy logic already used for concrete-type\nhandlers, unchanged.\n\nZero behavior/perf change for notification types that don't opt in: IsPolymorphic is a single\ncheap IsAssignableFrom check computed once per closed TNotification type, and the reflection path\nis never reached unless a type actually implements IPolymorphicNotification. Verified against the\nfull existing Mediarq.Tests notification suite (zero regression) plus 7 new tests covering base-\ntype dispatch, non-opted-in isolation, default and explicit ordering across tiers, multi-level\nhierarchies, the no-handler no-op, and the single-handler fast path.\n\nCloses #183.\n\n* test(core): close patch-coverage gaps in polymorphic notification dispatch\n\ncodecov/patch was failing at 86% on PR #209: the ordered-handler scan\nover base-type handlers (reached only when no concrete handler is\nordered) and the empty-hierarchy short-circuit in\nBuildPolymorphicHandlerServiceTypes/ResolvePolymorphicHandlers had no\ndedicated test.\n\n---------\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T15:59:05+02:00",
+          "tree_id": "8c4bf6c6437104ba0865ea7203c702b15a12c351",
+          "url": "https://github.com/rouffou/mediarq/commit/17ba263cfc9b51ff98fd77971c33243c7b81a615"
+        },
+        "date": 1784988042968,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish - Allocated",
+            "value": 464,
+            "unit": "B"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish - Allocated",
+            "value": 424,
             "unit": "B"
           }
         ]
