@@ -1,0 +1,12 @@
+#nullable enable
+Mediarq.Deferred.DeferredDispatchOptions
+Mediarq.Deferred.DeferredDispatchOptions.Capacity.get -> int?
+Mediarq.Deferred.DeferredDispatchOptions.Capacity.set -> void
+Mediarq.Deferred.DeferredDispatchOptions.DeferredDispatchOptions() -> void
+Mediarq.Deferred.DeferredDispatchOptions.FullMode.get -> System.Threading.Channels.BoundedChannelFullMode
+Mediarq.Deferred.DeferredDispatchOptions.FullMode.set -> void
+Mediarq.Deferred.DeferredServiceCollectionExtensions
+Mediarq.Deferred.IDeferredDispatcher
+Mediarq.Deferred.IDeferredDispatcher.PublishLaterAsync<TNotification>(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Mediarq.Deferred.IDeferredDispatcher.SendLaterAsync<TCommand>(TCommand command, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+static Mediarq.Deferred.DeferredServiceCollectionExtensions.AddMediarqDeferredDispatch(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Mediarq.Deferred.DeferredDispatchOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
