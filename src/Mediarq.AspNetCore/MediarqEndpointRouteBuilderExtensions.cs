@@ -140,7 +140,7 @@ public static class MediarqEndpointRouteBuilderExtensions
                 $"'{requestType}' has a Mediarq route attribute but its response type '{responseType}' is not Result, Result<T> or Unit (a no-result ICommand).");
         }
 
-        _ = method switch
+        var routeBuilder = method switch
         {
             "GET" => group.MapGet(pattern, handler),
             "POST" => group.MapPost(pattern, handler),
@@ -149,6 +149,38 @@ public static class MediarqEndpointRouteBuilderExtensions
             "DELETE" => group.MapDelete(pattern, handler),
             _ => throw new InvalidOperationException($"Unsupported HTTP method '{method}'."),
         };
+
+        WithOpenApiMetadata(routeBuilder, responseType);
+    }
+
+    // Declares the response shapes ASP.NET Core's OpenAPI generator can't infer on its own from the
+    // handler delegate's bare IResult return type: a success shape driven by the response type, plus
+    // every failure shape ToHttpResult()/ToProblem() can actually produce (see ResultHttpExtensions.ToStatusCode).
+    private static void WithOpenApiMetadata(RouteHandlerBuilder builder, Type responseType)
+    {
+        if (responseType == typeof(Unit))
+        {
+            builder.Produces(StatusCodes.Status204NoContent);
+            return;
+        }
+
+        if (responseType == typeof(Result))
+        {
+            builder.Produces(StatusCodes.Status204NoContent);
+        }
+        else
+        {
+            var valueType = responseType.GetGenericArguments()[0];
+            builder.Produces(StatusCodes.Status200OK, valueType);
+        }
+
+        builder
+            .ProducesValidationProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status500InternalServerError);
     }
 
     private static Type HandlerDelegateType(Type requestType) =>
