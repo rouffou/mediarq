@@ -1,15 +1,20 @@
 #nullable enable
 const Mediarq.Analyzers.CaptiveDependencyAnalyzer.DiagnosticId = "MQ200" -> string!
+const Mediarq.Analyzers.DuplicateRouteAnalyzer.DiagnosticId = "MQ202" -> string!
 const Mediarq.Analyzers.InertConditionalBehaviorAnalyzer.DiagnosticId = "MQ204" -> string!
 const Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.DiagnosticId = "MQ201" -> string!
 Mediarq.Analyzers.CaptiveDependencyAnalyzer
 Mediarq.Analyzers.CaptiveDependencyAnalyzer.CaptiveDependencyAnalyzer() -> void
+Mediarq.Analyzers.DuplicateRouteAnalyzer
+Mediarq.Analyzers.DuplicateRouteAnalyzer.DuplicateRouteAnalyzer() -> void
 Mediarq.Analyzers.InertConditionalBehaviorAnalyzer
 Mediarq.Analyzers.InertConditionalBehaviorAnalyzer.InertConditionalBehaviorAnalyzer() -> void
 Mediarq.Analyzers.PipelineBehaviorNextAnalyzer
 Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.PipelineBehaviorNextAnalyzer() -> void
 override Mediarq.Analyzers.CaptiveDependencyAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override Mediarq.Analyzers.CaptiveDependencyAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override Mediarq.Analyzers.DuplicateRouteAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override Mediarq.Analyzers.DuplicateRouteAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override Mediarq.Analyzers.InertConditionalBehaviorAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override Mediarq.Analyzers.InertConditionalBehaviorAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override Mediarq.Analyzers.PipelineBehaviorNextAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
