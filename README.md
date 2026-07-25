@@ -363,6 +363,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.AzureServiceBus` | A lightweight, direct Azure Service Bus bridge: publish `IAzureServiceBusEvent` notifications (`AddMediarqAzureServiceBusPublisher`) and consume them back into the pipeline via a background service (`AddMediarqAzureServiceBusSubscriber`) |
 | `Mediarq.RabbitMQ` | A lightweight, direct RabbitMQ bridge: publish `IRabbitMqEvent` notifications (`AddMediarqRabbitMqPublisher`) and consume them back into the pipeline via a background service (`AddMediarqRabbitMqSubscriber`) |
 | `Mediarq.Aspire` | .NET Aspire `ServiceDefaults` integration: wires Mediarq's OpenTelemetry instrumentation and handler-registration health check into your own `ServiceDefaults` project (`AddMediarqServiceDefaults`) |
+| `Mediarq.Grpc` | Direct point-to-point gRPC transport: publish `IGrpcNotificationEvent` notifications to another service's endpoint (`AddMediarqGrpcPublisher`) and receive them back into the pipeline via a shared gRPC service (`AddMediarqGrpcSubscriptions` + `MapMediarqGrpcSubscription`) — ships its own compiled Protobuf contract, no `protoc` needed downstream |
 
 Built into `Mediarq.Core`:
 
