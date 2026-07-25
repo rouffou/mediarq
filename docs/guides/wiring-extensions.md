@@ -184,6 +184,22 @@ await scheduler.ScheduleAsync(new SendWelcomeEmail(userId), DateTimeOffset.UtcNo
 Same `ICommand`-only constraint as `Mediarq.Hangfire`. The command is JSON-serialized into the job's
 `JobDataMap`; configure a persistent Quartz job store for jobs to survive a restart.
 
+## Mediarq.Deferred — in-process deferred dispatch, no external dependency
+
+```csharp
+builder.Services.AddMediarqDeferredDispatch();
+```
+```csharp
+await deferredDispatcher.SendLaterAsync(new SendWelcomeEmail(userId));   // returns immediately
+await deferredDispatcher.PublishLaterAsync(new UserRegistered(userId));
+```
+`IDeferredDispatcher` queues the request on a `System.Threading.Channels`-backed background worker
+(`DeferredDispatchHostedService`) instead of running its handler(s) inline. Unlike `Mediarq.Hangfire`/
+`Mediarq.Quartz`, the queue is **in-memory only** — no delay/cron scheduling, nothing survives a crash —
+but a graceful shutdown drains everything already queued before the host stops. Use it for "reliable
+in-process fire-and-forget" (e.g. decoupling an HTTP request from a side effect); use Hangfire/Quartz when
+you need delayed/cron scheduling or durability across a restart.
+
 ## Mediarq.HealthChecks — fail fast on a missing/ambiguous handler
 
 ```csharp

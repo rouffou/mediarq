@@ -334,6 +334,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Authorization` | ASP.NET Core policy-based authorization as a pipeline behavior for `IAuthorizedRequest` (`AddMediarqAuthorization`) |
 | `Mediarq.Testing` | `SpyMediator` decorator recording dispatched requests/notifications through the real pipeline, plus `FakeClock`/`FakeUserContext` (`AddMediarqSpy`) |
 | `Mediarq.RateLimiting` | Throttle `IRateLimitedRequest` requests via `System.Threading.RateLimiting`, partitionable per user/key (`AddMediarqRateLimiting`) |
+| `Mediarq.Deferred` | In-process deferred dispatch on a `System.Threading.Channels` background worker, no external dependency (`AddMediarqDeferredDispatch`) |
 
 Built into `Mediarq.Core`:
 
