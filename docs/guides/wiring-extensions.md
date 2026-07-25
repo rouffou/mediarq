@@ -62,6 +62,16 @@ group.MapPost("/", (CreateOrder cmd, ISender s) => s.Send(cmd).ToHttpResultAsync
 Success → `200`/`Ok(value)`; failure → RFC 7807 `ProblemDetails` with a status derived from
 `ResultError.Type` (`NotFound` → 404, `Validation` → 400, `Conflict` → 409, …).
 
+Skip the pass-through endpoint entirely — annotate the command/query and map every attributed type at once:
+```csharp
+[MediarqGet("/orders/{id}")]
+public record GetOrder(Guid Id) : IQuery<Result<OrderDto>>;
+
+app.MapMediarq(typeof(GetOrder).Assembly);
+```
+`[MediarqGet]`/`[MediarqDelete]` bind members individually from the route/query string (`[AsParameters]`,
+no body); `[MediarqPost]`/`[MediarqPut]`/`[MediarqPatch]` bind the whole request from the JSON body.
+
 ## Mediarq.Caching — memoize a query
 
 ```csharp
