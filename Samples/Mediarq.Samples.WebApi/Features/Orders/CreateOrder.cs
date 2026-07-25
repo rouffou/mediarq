@@ -2,6 +2,7 @@ using FluentValidation;
 using Mediarq.Core.Common.Requests.Command;
 using Mediarq.Core.Common.Results;
 using Mediarq.Outbox;
+using Mediarq.RateLimiting;
 using Mediarq.Samples.WebApi.Domain;
 using Mediarq.UnitOfWork;
 
@@ -12,9 +13,14 @@ public sealed record OrderLineInput(string Product, int Quantity, decimal UnitPr
 /// <summary>
 /// Creates an order. Implements <see cref="ITransactionalRequest"/> so the UnitOfWorkBehavior commits
 /// the EF Core change tracker after the handler — atomically persisting the order AND the outbox event.
+/// Also implements <see cref="IRateLimitedRequest"/>: throttled by the "create-order" policy (see
+/// <c>Program.cs</c>), shared across all callers since <see cref="PartitionKey"/> is left <see langword="null"/>.
 /// </summary>
 public sealed record CreateOrderCommand(string Customer, List<OrderLineInput> Items)
-    : ICommand<Result<Guid>>, ITransactionalRequest;
+    : ICommand<Result<Guid>>, ITransactionalRequest, IRateLimitedRequest
+{
+    public string PolicyName => "create-order";
+}
 
 public sealed class CreateOrderHandler(AppDbContext db, IOutbox outbox)
     : ICommandHandler<CreateOrderCommand, Result<Guid>>
