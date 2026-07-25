@@ -1,0 +1,18 @@
+#nullable enable
+Mediarq.RateLimiting.IRateLimitedRequest
+Mediarq.RateLimiting.IRateLimitedRequest.PartitionKey.get -> string?
+Mediarq.RateLimiting.IRateLimitedRequest.PolicyName.get -> string!
+Mediarq.RateLimiting.RateLimiterRegistry
+Mediarq.RateLimiting.RateLimiterRegistry.AddPolicy(string! name, System.Func<string!, System.Threading.RateLimiting.RateLimitPartition<string!>>! partitioner) -> void
+Mediarq.RateLimiting.RateLimiterRegistry.RateLimiterRegistry() -> void
+Mediarq.RateLimiting.RateLimitExceededException
+Mediarq.RateLimiting.RateLimitExceededException.PartitionKey.get -> string!
+Mediarq.RateLimiting.RateLimitExceededException.PolicyName.get -> string!
+Mediarq.RateLimiting.RateLimitExceededException.RateLimitExceededException(string! policyName, string! partitionKey, System.TimeSpan? retryAfter = null) -> void
+Mediarq.RateLimiting.RateLimitExceededException.RetryAfter.get -> System.TimeSpan?
+Mediarq.RateLimiting.RateLimitingBehavior<TRequest, TResponse>
+Mediarq.RateLimiting.RateLimitingBehavior<TRequest, TResponse>.Handle(Mediarq.Core.Common.Contexts.IMutableRequestContext<TRequest, TResponse>! context, System.Func<System.Threading.Tasks.Task<TResponse>!>! handle, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.RateLimiting.RateLimitingBehavior<TRequest, TResponse>.IsActive.get -> bool
+Mediarq.RateLimiting.RateLimitingBehavior<TRequest, TResponse>.RateLimitingBehavior(Mediarq.RateLimiting.RateLimiterRegistry! registry) -> void
+Mediarq.RateLimiting.RateLimitingServiceCollectionExtensions
+static Mediarq.RateLimiting.RateLimitingServiceCollectionExtensions.AddMediarqRateLimiting(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Mediarq.RateLimiting.RateLimiterRegistry!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

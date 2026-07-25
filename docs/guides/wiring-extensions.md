@@ -239,6 +239,23 @@ Handlers, validators and behaviors all run for real — nothing is faked, only r
 `FakeClock`/`FakeUserContext`, plain settable implementations of `IClock`/`IUserContext` to register in a
 test's `IServiceCollection`.
 
+## Mediarq.RateLimiting — throttle a request type or a user
+
+```csharp
+builder.Services.AddMediarqRateLimiting(registry =>
+{
+    registry.AddPolicy("orders-per-user", key => RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+    {
+        Window = TimeSpan.FromMinutes(1),
+        PermitLimit = 10,
+    }));
+});
+```
+Marker: `IRateLimitedRequest` (`PolicyName`, optional `PartitionKey` — e.g. the current user id, for an
+independent limit per caller; `null` shares a single bucket). No permit available →
+`RateLimitExceededException`; catch it with an `IRequestExceptionHandler<,>` or an ASP.NET Core exception
+handler to map it to `429 Too Many Requests`.
+
 ## Mediarq.Polly — resilience
 
 ```csharp

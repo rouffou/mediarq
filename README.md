@@ -333,6 +333,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.HealthChecks` | `IHealthCheck` + startup validation that every command/query resolves to exactly one handler (`AddMediarqHandlerRegistrationCheck`, `AddMediarqHandlerValidationOnStartup`) |
 | `Mediarq.Authorization` | ASP.NET Core policy-based authorization as a pipeline behavior for `IAuthorizedRequest` (`AddMediarqAuthorization`) |
 | `Mediarq.Testing` | `SpyMediator` decorator recording dispatched requests/notifications through the real pipeline, plus `FakeClock`/`FakeUserContext` (`AddMediarqSpy`) |
+| `Mediarq.RateLimiting` | Throttle `IRateLimitedRequest` requests via `System.Threading.RateLimiting`, partitionable per user/key (`AddMediarqRateLimiting`) |
 
 Built into `Mediarq.Core`:
 
