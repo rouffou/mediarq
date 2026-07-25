@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784964518332,
+  "lastUpdate": 1784964681790,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -288,6 +288,42 @@ window.BENCHMARK_DATA = {
             "value": 189.18264770507812,
             "unit": "ns",
             "range": "± 2.8125153411626713"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ae94ba91d259df52306a954ea33ec54cfed5099",
+          "message": "fix(ci): never let a missing/unreachable gh-pages branch fail the benchmark jobs (#195)\n\nThe gh-pages branch backing github-action-benchmark's history was found deleted from\norigin between two consecutive CI runs (its cause is unclear -- restored from a local\nremote-tracking ref that still had the full commit history). When gh-pages is missing,\ngithub-action-benchmark's git fetch hard-fails the step, turning this workflow's own\ndocumented \"report-only, never fails the build\" design into an actual build-blocking\nfailure. Add continue-on-error to both tracking steps so a missing/unreachable data\nbranch degrades to a stopped trend instead of a red check.\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T09:30:18+02:00",
+          "tree_id": "5551d064959f9f22845320d5bec409e1be11132b",
+          "url": "https://github.com/rouffou/mediarq/commit/3ae94ba91d259df52306a954ea33ec54cfed5099"
+        },
+        "date": 1784964681325,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 157.8676663239797,
+            "unit": "ns",
+            "range": "± 0.22684896070335228"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 183.3965171178182,
+            "unit": "ns",
+            "range": "± 1.1178326958417881"
           }
         ]
       }
