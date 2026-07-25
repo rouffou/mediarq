@@ -1,0 +1,29 @@
+#nullable enable
+Mediarq.Testing.FakeClock
+Mediarq.Testing.FakeClock.FakeClock() -> void
+Mediarq.Testing.FakeClock.UtcNow.get -> System.DateTime
+Mediarq.Testing.FakeClock.UtcNow.set -> void
+Mediarq.Testing.FakeUserContext
+Mediarq.Testing.FakeUserContext.FakeUserContext() -> void
+Mediarq.Testing.FakeUserContext.Roles.get -> System.Collections.Generic.IEnumerable<string!>!
+Mediarq.Testing.FakeUserContext.Roles.set -> void
+Mediarq.Testing.FakeUserContext.UserId.get -> string?
+Mediarq.Testing.FakeUserContext.UserId.set -> void
+Mediarq.Testing.FakeUserContext.UserName.get -> string?
+Mediarq.Testing.FakeUserContext.UserName.set -> void
+Mediarq.Testing.SpyMediator
+Mediarq.Testing.SpyMediator.Clear() -> void
+Mediarq.Testing.SpyMediator.CreateStream<TResponse>(Mediarq.Core.Common.Requests.Streaming.IStreamRequest<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<TResponse>!
+Mediarq.Testing.SpyMediator.Publish<TNotification>(TNotification notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Testing.SpyMediator.PublishedNotifications.get -> System.Collections.Generic.IReadOnlyList<object!>!
+Mediarq.Testing.SpyMediator.Send(Mediarq.Core.Common.Requests.Command.ICommand! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Testing.SpyMediator.Send<TResponse>(Mediarq.Core.Common.Requests.Abstraction.ICommandOrQuery<TResponse>! request, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<TResponse>!
+Mediarq.Testing.SpyMediator.SentRequests.get -> System.Collections.Generic.IReadOnlyList<object!>!
+Mediarq.Testing.SpyMediator.SpyMediator(Mediarq.Core.Mediators.IMediator! inner) -> void
+Mediarq.Testing.SpyMediatorAssertions
+Mediarq.Testing.SpyMediatorServiceCollectionExtensions
+static Mediarq.Testing.SpyMediatorAssertions.HasPublished<TNotification>(this Mediarq.Testing.SpyMediator! spy) -> bool
+static Mediarq.Testing.SpyMediatorAssertions.HasSent<TRequest>(this Mediarq.Testing.SpyMediator! spy) -> bool
+static Mediarq.Testing.SpyMediatorAssertions.Published<TNotification>(this Mediarq.Testing.SpyMediator! spy) -> System.Collections.Generic.IEnumerable<TNotification>!
+static Mediarq.Testing.SpyMediatorAssertions.Sent<TRequest>(this Mediarq.Testing.SpyMediator! spy) -> System.Collections.Generic.IEnumerable<TRequest>!
+static Mediarq.Testing.SpyMediatorServiceCollectionExtensions.AddMediarqSpy(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
