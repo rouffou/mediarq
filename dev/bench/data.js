@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784991353735,
+  "lastUpdate": 1784991362275,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -962,6 +962,54 @@ window.BENCHMARK_DATA = {
             "value": 225.8471965789795,
             "unit": "ns",
             "range": "± 1.514869030141163"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f5eb5b01c198672aaff100bea8fb663aa3fd5d01",
+          "message": "perf(core): share behavior-registration cache with Send's dispatch path, investigate ValueTask boundary (#210)\n\nCloses #175, closes #176.\n\n#175: Mediator.Send's hot path (RequestHandlerWrapperImpl) resolved\nIPipelineBehavior<,> via ResolveAll on every single dispatch, unlike\nPipelineExecutor which already skips that call once a request type is\nknown (via PipelineBehaviorRegistrationCache, #177) to have zero\nregistered behaviors. Extracted the shared cache-check + dispatch logic\ninto PipelineDispatch.ExecuteWithBehaviorCache, used by both\nPipelineExecutor and the wrapper, removing the duplicated inline copy\nthat previously existed only in PipelineExecutor. PipelineDispatch.Run's\nhandler-tail parameter was also simplified (Func<Task<TResponse>>\ninstead of Func<CancellationToken, Task<TResponse>>), removing one\nredundant closure per dispatch when at least one behavior is active —\nmeasured on DeepPipelineBenchmarks (10 chained behaviors): 1.52 KB ->\n1.45 KB allocated per Send.\n\nTrue compile-time behavior-chain composition (the literal ask of #175)\nwas considered and rejected after a design pass: the source generator\nonly sees types declared in the current compilation's syntax trees, so\nit cannot soundly know about IPipelineBehavior<,> implementations\nregistered from a referenced assembly — baking a \"no behaviors\" decision\ninto generated code would silently produce wrong results for that case.\nThe runtime cache is the sound alternative and delivers the same\npractical win for the common (no cross-assembly behaviors) case.\n\n#176: the internal (non-public) wrapper types RequestHandlerWrapper and\nRequestHandlerWrapperImpl now return ValueTask<TResponse> instead of\nTask<TResponse>; Mediator.Send (the public Task<TResponse>-returning\nboundary) converts once via ValueTask<TResponse>.AsTask(), which is\nallocation-free when backed by a real Task<TResponse> (always true on\nthis path). For a void command dispatch, the one remaining allocation\nis the handler's own Task<Unit> (Task.FromResult inside the\nIRequestHandler<TRequest> void-to-Unit adapter fixed by #169) -\nunavoidable without a breaking change to the Task-based\nIRequestHandler/IPipelineBehavior public contracts. Verified via\nextensive isolated benchmarking (including runs with dynamic PGO\ndisabled, and control tests where the changed code path was never\nexecuted) that the ValueTask conversion itself does not add measurable\nallocation; #176 is closed as investigated rather than yielding an\nadditional measurable win beyond the #175 cache fix.\n\nNo public API changes: ISender.Send, IPipelineExecutor.ExecuteAsync, and\nevery IRequestHandler/IPipelineBehavior signature are untouched. The\ntouched wrapper types are internal.\n\nVerified: full solution build (0 warnings/errors), full test suite\n(all assemblies green), DeepPipelineBenchmarks and CrossLibraryBenchmarks\nrun locally to confirm no regression.\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T16:54:44+02:00",
+          "tree_id": "baccd9fe7316e21da4755f3b2be14f4c0bfad995",
+          "url": "https://github.com/rouffou/mediarq/commit/f5eb5b01c198672aaff100bea8fb663aa3fd5d01"
+        },
+        "date": 1784991361926,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send",
+            "value": 77.10729749997456,
+            "unit": "ns",
+            "range": "± 0.4387465724119741"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send",
+            "value": 262.9922612508138,
+            "unit": "ns",
+            "range": "± 1.4249610719055843"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean",
+            "value": 153.69901180267334,
+            "unit": "ns",
+            "range": "± 0.5174837053243482"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain",
+            "value": 230.64847342173258,
+            "unit": "ns",
+            "range": "± 0.20888879672907212"
           }
         ]
       }
