@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784964711248,
+  "lastUpdate": 1784965599249,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -324,6 +324,42 @@ window.BENCHMARK_DATA = {
             "value": 183.3965171178182,
             "unit": "ns",
             "range": "± 1.1178326958417881"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a111c4afe4117c95e5a3982474668e3c47738b46",
+          "message": "feat(authorization): add Mediarq.Authorization package for policy-based authorization (#196)\n\nNew IAuthorizedRequest marker + AuthorizationBehavior pipeline behavior that runs\nASP.NET Core policy-based authorization (IAuthorizationService) before the handler:\nno authenticated user short-circuits with ResultError.Unauthorized (401), an\nauthenticated user failing the named policy short-circuits with the new\nResultError.Forbidden (403). ErrorType gains a Forbidden member and ResultError gains\nUnauthorized/Forbidden factories (both purely additive, non-breaking).\n\nCloses #181\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T09:45:35+02:00",
+          "tree_id": "983df667b5ac253203fb7f1e2bec6d286490b06c",
+          "url": "https://github.com/rouffou/mediarq/commit/a111c4afe4117c95e5a3982474668e3c47738b46"
+        },
+        "date": 1784965598979,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 153.4168292681376,
+            "unit": "ns",
+            "range": "± 0.7176755285343415"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 197.75907802581787,
+            "unit": "ns",
+            "range": "± 2.2575759014416397"
           }
         ]
       }
