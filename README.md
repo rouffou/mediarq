@@ -337,6 +337,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Deferred` | In-process deferred dispatch on a `System.Threading.Channels` background worker, no external dependency (`AddMediarqDeferredDispatch`) |
 | `Mediarq.Dapr` | Dapr pub/sub: publish `IDaprPubSubEvent` notifications (`AddMediarqDaprPubSub`) and receive them back into the pipeline via a minimal-API webhook + `/dapr/subscribe` (`MapDaprPubSubSubscription`) |
 | `Mediarq.RabbitMQ` | A lightweight, direct RabbitMQ bridge: publish `IRabbitMqEvent` notifications (`AddMediarqRabbitMqPublisher`) and consume them back into the pipeline via a background service (`AddMediarqRabbitMqSubscriber`) |
+| `Mediarq.Aspire` | .NET Aspire `ServiceDefaults` integration: wires Mediarq's OpenTelemetry instrumentation and handler-registration health check into your own `ServiceDefaults` project (`AddMediarqServiceDefaults`) |
 
 Built into `Mediarq.Core`:
 
