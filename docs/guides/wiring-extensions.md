@@ -304,6 +304,22 @@ builder.Services.AddMediarqMassTransitForwarding<OrderPlacedEvent>(); // forward
 Marker: `IIntegrationEvent` (an `INotification` meant to leave the process). The forwarder is a normal
 notification handler, so it runs **alongside** your in-process handlers.
 
+## Mediarq.Dapr — pub/sub for containers/Kubernetes
+
+```csharp
+builder.Services.AddDaprClient();                          // from Dapr.AspNetCore/Dapr.Client
+builder.Services.AddMediarqDaprPubSub<OrderPlaced>();       // publish (outbound)
+builder.Services.AddMediarqDaprPubSubSubscriptions();       // subscribe (inbound) registry
+// ...
+app.MapDaprPubSubSubscription<OrderPlaced>();               // POST /dapr/pubsub/OrderPlaced
+app.MapDaprPubSubSubscribeEndpoint();                       // GET  /dapr/subscribe (map last)
+```
+Marker: `IDaprPubSubEvent` (`static abstract string PubsubName`/`Topic` — static, not instance members,
+so the subscribe side has routing info before any instance exists, and both directions can never drift
+apart). Publishing forwards through `DaprClient.PublishEventAsync`, same "runs alongside your in-process
+handlers" shape as `Mediarq.MassTransit`. Subscribing extracts the `data` field from the CloudEvents 1.0
+envelope Dapr delivers and republishes it via `IPublisher` — the same pipeline as any in-process `Publish`.
+
 ## Recommended order (a safe template)
 
 ```csharp

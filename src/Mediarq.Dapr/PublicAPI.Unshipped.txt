@@ -1,0 +1,30 @@
+#nullable enable
+Mediarq.Dapr.CloudEventEnvelope<TData>
+Mediarq.Dapr.CloudEventEnvelope<TData>.CloudEventEnvelope() -> void
+Mediarq.Dapr.CloudEventEnvelope<TData>.Data.get -> TData?
+Mediarq.Dapr.CloudEventEnvelope<TData>.Data.set -> void
+Mediarq.Dapr.DaprPubSubEndpointRouteBuilderExtensions
+Mediarq.Dapr.DaprPubSubNotificationForwarder<TNotification>
+Mediarq.Dapr.DaprPubSubNotificationForwarder<TNotification>.DaprPubSubNotificationForwarder(Dapr.Client.DaprClient! daprClient) -> void
+Mediarq.Dapr.DaprPubSubNotificationForwarder<TNotification>.Handle(TNotification! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.Dapr.DaprPubSubSubscriptionRegistry
+Mediarq.Dapr.DaprPubSubSubscriptionRegistry.Add(Mediarq.Dapr.DaprSubscription! subscription) -> void
+Mediarq.Dapr.DaprPubSubSubscriptionRegistry.DaprPubSubSubscriptionRegistry() -> void
+Mediarq.Dapr.DaprPubSubSubscriptionRegistry.Subscriptions.get -> System.Collections.Generic.IReadOnlyList<Mediarq.Dapr.DaprSubscription!>!
+Mediarq.Dapr.DaprServiceCollectionExtensions
+Mediarq.Dapr.DaprSubscription
+Mediarq.Dapr.DaprSubscription.DaprSubscription(string! PubsubName, string! Topic, string! Route) -> void
+Mediarq.Dapr.DaprSubscription.PubsubName.get -> string!
+Mediarq.Dapr.DaprSubscription.PubsubName.init -> void
+Mediarq.Dapr.DaprSubscription.Route.get -> string!
+Mediarq.Dapr.DaprSubscription.Route.init -> void
+Mediarq.Dapr.DaprSubscription.Topic.get -> string!
+Mediarq.Dapr.DaprSubscription.Topic.init -> void
+Mediarq.Dapr.IDaprPubSubEvent
+Mediarq.Dapr.IDaprPubSubEvent.PubsubName.get -> string!
+Mediarq.Dapr.IDaprPubSubEvent.Topic.get -> string!
+static Mediarq.Dapr.DaprPubSubEndpointRouteBuilderExtensions.MapDaprPubSubSubscribeEndpoint(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! app) -> Microsoft.AspNetCore.Routing.IEndpointRouteBuilder!
+static Mediarq.Dapr.DaprPubSubEndpointRouteBuilderExtensions.MapDaprPubSubSubscription<TNotification>(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! app, string? route = null) -> Microsoft.AspNetCore.Routing.IEndpointRouteBuilder!
+static Mediarq.Dapr.DaprServiceCollectionExtensions.AddMediarqDaprPubSub(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Dapr.DaprServiceCollectionExtensions.AddMediarqDaprPubSub<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.Dapr.DaprServiceCollectionExtensions.AddMediarqDaprPubSubSubscriptions(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

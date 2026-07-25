@@ -335,6 +335,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Testing` | `SpyMediator` decorator recording dispatched requests/notifications through the real pipeline, plus `FakeClock`/`FakeUserContext` (`AddMediarqSpy`) |
 | `Mediarq.RateLimiting` | Throttle `IRateLimitedRequest` requests via `System.Threading.RateLimiting`, partitionable per user/key (`AddMediarqRateLimiting`) |
 | `Mediarq.Deferred` | In-process deferred dispatch on a `System.Threading.Channels` background worker, no external dependency (`AddMediarqDeferredDispatch`) |
+| `Mediarq.Dapr` | Dapr pub/sub: publish `IDaprPubSubEvent` notifications (`AddMediarqDaprPubSub`) and receive them back into the pipeline via a minimal-API webhook + `/dapr/subscribe` (`MapDaprPubSubSubscription`) |
 
 Built into `Mediarq.Core`:
 
