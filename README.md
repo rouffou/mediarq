@@ -355,7 +355,8 @@ Three runnable samples under [Samples/](Samples) (see [Samples/README.md](Sample
   pre/post processors, exception handling, timeout, `Result` combinators).
 - **[Mediarq.Samples.WebApi](Samples/Mediarq.Samples.WebApi)** — an ASP.NET Core "Orders" API wiring the
   extensions end-to-end (`Result` → HTTP, FluentValidation/DataAnnotations, caching, idempotency,
-  EF Core unit of work + transactional outbox, Polly, diagnostics/OpenTelemetry, MassTransit).
+  EF Core unit of work + transactional outbox + domain events, policy-based authorization, rate limiting,
+  health checks, Polly, diagnostics/OpenTelemetry, MassTransit).
 - **[Mediarq.AotSample](Samples/Mediarq.AotSample)** — the reflection-free path, published with Native AOT.
 
 ```bash

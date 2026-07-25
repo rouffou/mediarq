@@ -1,5 +1,6 @@
 using Mediarq.AspNetCore;
 using Mediarq.Core.Mediators;
+using Mediarq.RateLimiting;
 using Mediarq.Samples.WebApi.Domain;
 using Mediarq.Samples.WebApi.Features.Orders;
 
@@ -20,8 +21,26 @@ public static class OrderEndpoints
         var group = app.MapGroup("/orders").WithTags("Orders");
 
         // Create — runs FluentValidation, persists via the unit of work, enqueues an outbox event.
-        group.MapPost("/", (CreateOrderCommand command, ISender sender)
-            => sender.Send(command).ToHttpResultAsync());
+        // Throttled by the "create-order" rate limit policy; a rejected permit throws
+        // RateLimitExceededException, mapped here to 429 with a Retry-After header when the limiter
+        // reports one (see Mediarq.RateLimiting's own suggested ASP.NET Core exception-handler pattern).
+        group.MapPost("/", async (CreateOrderCommand command, ISender sender, HttpResponse http) =>
+        {
+            try
+            {
+                return await sender.Send(command).ToHttpResultAsync();
+            }
+            catch (RateLimitExceededException ex)
+            {
+                if (ex.RetryAfter is { } retryAfter)
+                    http.Headers["Retry-After"] = ((int)retryAfter.TotalSeconds).ToString();
+
+                return Results.Problem(
+                    statusCode: StatusCodes.Status429TooManyRequests,
+                    title: "Too many requests",
+                    detail: ex.Message);
+            }
+        });
 
         // Get — memoized by the caching behavior (second identical call skips the DB read).
         group.MapGet("/{id:guid}", (Guid id, ISender sender)

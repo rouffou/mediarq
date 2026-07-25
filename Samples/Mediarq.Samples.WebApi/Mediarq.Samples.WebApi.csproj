@@ -33,6 +33,9 @@
     <ProjectReference Include="..\..\src\Mediarq.OpenTelemetry\Mediarq.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\src\Mediarq.Polly\Mediarq.Polly.csproj" />
     <ProjectReference Include="..\..\src\Mediarq.MassTransit\Mediarq.MassTransit.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.Authorization\Mediarq.Authorization.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.RateLimiting\Mediarq.RateLimiting.csproj" />
+    <ProjectReference Include="..\..\src\Mediarq.HealthChecks\Mediarq.HealthChecks.csproj" />
   </ItemGroup>
 
 </Project>

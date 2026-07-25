@@ -1,4 +1,6 @@
+using Mediarq.Authorization;
 using Mediarq.Core.Common.Requests.Command;
+using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Results;
 using Mediarq.Idempotency;
 using Mediarq.Samples.WebApi.Domain;
@@ -9,12 +11,15 @@ namespace Mediarq.Samples.WebApi.Features.Orders;
 /// <summary>
 /// Confirms an order. Implements <see cref="IIdempotentRequest"/>: the IdempotencyBehavior runs it at
 /// most once per <see cref="IdempotencyKey"/> (taken from the <c>Idempotency-Key</c> header) and replays
-/// the stored result for repeated calls — safe to retry a POST without double-confirming.
+/// the stored result for repeated calls — safe to retry a POST without double-confirming. Also implements
+/// <see cref="IAuthorizedRequest"/>: only a caller satisfying the "orders:confirm" policy (see
+/// <c>Program.cs</c>'s demo header-based auth scheme) may confirm an order.
 /// </summary>
 public sealed record ConfirmOrderCommand(Guid OrderId, string IdempotencyKey)
-    : ICommand<Result>, IIdempotentRequest
+    : ICommand<Result>, IIdempotentRequest, IAuthorizedRequest
 {
     public TimeSpan? IdempotencyDuration => TimeSpan.FromMinutes(10);
+    public string? PolicyName => "orders:confirm";
 }
 
 public sealed class ConfirmOrderHandler(AppDbContext db, ILogger<ConfirmOrderHandler> logger)
@@ -33,8 +38,26 @@ public sealed class ConfirmOrderHandler(AppDbContext db, ILogger<ConfirmOrderHan
             .Replace("\n", string.Empty);
         logger.LogInformation("Confirming order {OrderId} (key {Key})", request.OrderId, sanitizedKey);
 
-        order.Status = OrderStatus.Confirmed;
+        order.Confirm();
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success();
+    }
+}
+
+/// <summary>
+/// Raised by <see cref="Order.Confirm"/> and published by <c>DomainEventsInterceptor</c> right after
+/// <c>SaveChanges</c> commits — an in-process side effect, unlike <see cref="OrderPlacedEvent"/> which
+/// also crosses the bus via the transactional outbox.
+/// </summary>
+public sealed record OrderConfirmedDomainEvent(Guid OrderId, string Customer) : INotification;
+
+public sealed class LogOrderConfirmedHandler(ILogger<LogOrderConfirmedHandler> logger)
+    : INotificationHandler<OrderConfirmedDomainEvent>
+{
+    public Task Handle(OrderConfirmedDomainEvent notification, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("[domain event] order {OrderId} confirmed for {Customer}",
+            notification.OrderId, notification.Customer);
+        return Task.CompletedTask;
     }
 }
