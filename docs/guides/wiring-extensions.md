@@ -320,6 +320,20 @@ apart). Publishing forwards through `DaprClient.PublishEventAsync`, same "runs a
 handlers" shape as `Mediarq.MassTransit`. Subscribing extracts the `data` field from the CloudEvents 1.0
 envelope Dapr delivers and republishes it via `IPublisher` — the same pipeline as any in-process `Publish`.
 
+## Mediarq.AzureServiceBus — a lightweight, direct broker bridge
+
+```csharp
+builder.Services.AddSingleton(_ => new ServiceBusClient(connectionString));
+builder.Services.AddMediarqAzureServiceBusPublisher<OrderPlaced>();   // publish (outbound)
+builder.Services.AddMediarqAzureServiceBusSubscriber<OrderPlaced>();  // subscribe (inbound background processor)
+```
+Marker: `IAzureServiceBusEvent` (`static abstract string TopicName`/`SubscriptionName` — same static-member
+rationale as `Mediarq.Dapr`'s `IDaprPubSubEvent`). This package never owns the `ServiceBusClient`'s lifecycle,
+and does **not** provision the topic/subscription — create them ahead of time (portal, ARM/Bicep, or
+`ServiceBusAdministrationClient`). The subscriber completes a message only after a successful
+`IPublisher.Publish`; a failure dead-letters it (Service Bus's analogue of "nack without requeue") and does
+**not** dedupe redeliveries — enable the entity's built-in duplicate-detection window if you need broker-side
+dedup. A lightweight alternative to `Mediarq.MassTransit` for the simple pub/sub case, same as `Mediarq.RabbitMQ`.
 ## Mediarq.RabbitMQ — a lightweight, direct broker bridge
 
 ```csharp
