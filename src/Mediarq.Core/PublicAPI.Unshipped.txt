@@ -1,1 +1,3 @@
 #nullable enable
+Mediarq.Core.Common.Pipeline.PipelineBehaviorRegistrationCache
+Mediarq.Core.Common.Pipeline.PipelineBehaviorRegistrationCache.PipelineBehaviorRegistrationCache() -> void

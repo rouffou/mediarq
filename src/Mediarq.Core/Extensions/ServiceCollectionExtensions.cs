@@ -244,6 +244,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPublisher>(sp => sp.GetRequiredService<IMediator>());
 
         services.TryAddSingleton<IClock, SystemClock>();
+        services.TryAddSingleton<PipelineBehaviorRegistrationCache>();
         services.TryAddScoped<IRequestContextFactory, RequestContextFactory>();
         services.TryAddScoped<IPipelineExecutor, PipelineExecutor>();
         services.TryAddScoped<IStreamPipelineExecutor, StreamPipelineExecutor>();
