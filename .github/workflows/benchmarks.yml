@@ -15,7 +15,11 @@ name: Benchmarks
 # Send and Publish are tracked in separate jobs (not two steps in one job): the action commits to a
 # local gh-pages checkout as part of every run regardless of save-data-file/auto-push, so a second
 # invocation in the same checkout always fails to re-fetch gh-pages against its own already-diverged
-# local ref. Separate jobs get separate, independent checkouts.
+# local ref. Separate jobs get separate, independent checkouts. The same constraint is why allocation
+# tracking (`benchmark-alloc` below) is its own job per matrix entry rather than a second
+# github-action-benchmark step tacked onto `benchmark`: it downloads the JSON artifact `benchmark`
+# already produced instead of re-running BenchmarkDotNet, so the extra job costs a converter script and
+# an upload/download round-trip, not a second benchmark run.
 
 on:
   push:
@@ -24,6 +28,7 @@ on:
       - 'src/Mediarq.Core/**'
       - 'src/Mediarq/**'
       - 'benchmarks/**'
+      - 'scripts/benchmarkdotnet-alloc-report.mjs'
       - '.github/workflows/benchmarks.yml'
   pull_request:
     branches: [ dev, main ]
@@ -31,6 +36,7 @@ on:
       - 'src/Mediarq.Core/**'
       - 'src/Mediarq/**'
       - 'benchmarks/**'
+      - 'scripts/benchmarkdotnet-alloc-report.mjs'
       - '.github/workflows/benchmarks.yml'
   workflow_dispatch:
 
@@ -79,6 +85,46 @@ jobs:
           name: 'Mediarq.Benchmarks - ${{ matrix.display-name }}'
           tool: 'benchmarkdotnet'
           output-file-path: BenchmarkDotNet.Artifacts/results/${{ matrix.report-file }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: ${{ github.event_name == 'push' }}
+          fail-on-alert: false
+          comment-on-alert: true
+          alert-threshold: '150%'
+
+  # github-action-benchmark's built-in `benchmarkdotnet` tool (above) only tracks the Mean time
+  # statistic; it does not read BenchmarkDotNet's MemoryDiagnoser output. This job converts the same
+  # JSON report into github-action-benchmark's generic `customSmallerIsBetter` format (see
+  # scripts/benchmarkdotnet-alloc-report.mjs) to track allocated bytes per operation as its own,
+  # independently-alerted metric — closing the "alloc" half of the guardrail alongside "mean" above.
+  benchmark-alloc:
+    needs: benchmark
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - display-name: Send
+            report-file: SendBenchmarks-report-full-compressed.json
+          - display-name: Publish
+            report-file: PublishBenchmarks-report-full-compressed.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download ${{ matrix.display-name }} benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.display-name }}
+          path: BenchmarkDotNet.Artifacts/results
+
+      - name: Convert to an allocation report
+        run: node scripts/benchmarkdotnet-alloc-report.mjs BenchmarkDotNet.Artifacts/results/${{ matrix.report-file }} alloc-report.json
+
+      - name: Track ${{ matrix.display-name }} allocation history
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: 'Mediarq.Benchmarks - ${{ matrix.display-name }} (Allocated)'
+          tool: 'customSmallerIsBetter'
+          output-file-path: alloc-report.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name == 'push' }}
           fail-on-alert: false
