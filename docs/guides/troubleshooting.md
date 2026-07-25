@@ -69,6 +69,21 @@ This analyzer only requires `handle` to appear **somewhere** in the body, on any
 that conditionally short-circuits (e.g. return a cached value on a hit, otherwise `await handle()`) is
 not flagged, since the identifier is still referenced on the miss path.
 
+### Build warning `MQ204` — pipeline behavior is registered but never active
+An `IConditionalPipelineBehavior.IsActive` implementation is literally `false` — the behavior is
+registered but can never participate in the pipeline for any request:
+
+```csharp
+public bool IsActive => false; // leftover placeholder, or a mistake -- this behavior never runs
+```
+
+Fix by implementing the real activation condition, or remove the behavior/its registration if it's
+genuinely dead code.
+
+This is a syntactic check, not a proof over every possible request type: it only fires when the getter
+is literally the `false` literal (an expression-bodied property, an expression-bodied getter, or a single
+`return false;`) — real conditional logic, however it evaluates at runtime, is never flagged.
+
 ## Validation
 
 ### My validation never runs (no error, the handler just runs)
