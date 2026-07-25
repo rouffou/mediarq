@@ -1,0 +1,11 @@
+#nullable enable
+Mediarq.RabbitMQ.IRabbitMqEvent
+Mediarq.RabbitMQ.IRabbitMqEvent.Exchange.get -> string!
+Mediarq.RabbitMQ.IRabbitMqEvent.Queue.get -> string!
+Mediarq.RabbitMQ.IRabbitMqEvent.RoutingKey.get -> string!
+Mediarq.RabbitMQ.RabbitMqNotificationForwarder<TNotification>
+Mediarq.RabbitMQ.RabbitMqNotificationForwarder<TNotification>.Handle(TNotification! notification, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Mediarq.RabbitMQ.RabbitMqNotificationForwarder<TNotification>.RabbitMqNotificationForwarder(RabbitMQ.Client.IConnection! connection) -> void
+Mediarq.RabbitMQ.RabbitMqServiceCollectionExtensions
+static Mediarq.RabbitMQ.RabbitMqServiceCollectionExtensions.AddMediarqRabbitMqPublisher<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static Mediarq.RabbitMQ.RabbitMqServiceCollectionExtensions.AddMediarqRabbitMqSubscriber<TNotification>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

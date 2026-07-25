@@ -334,6 +334,24 @@ and does **not** provision the topic/subscription — create them ahead of time 
 `IPublisher.Publish`; a failure dead-letters it (Service Bus's analogue of "nack without requeue") and does
 **not** dedupe redeliveries — enable the entity's built-in duplicate-detection window if you need broker-side
 dedup. A lightweight alternative to `Mediarq.MassTransit` for the simple pub/sub case, same as `Mediarq.RabbitMQ`.
+## Mediarq.RabbitMQ — a lightweight, direct broker bridge
+
+```csharp
+builder.Services.AddSingleton<IConnection>(_ =>
+{
+    var factory = new ConnectionFactory { Uri = new Uri("amqp://guest:guest@localhost:5672") };
+    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+});
+builder.Services.AddMediarqRabbitMqPublisher<OrderPlaced>();   // publish (outbound)
+builder.Services.AddMediarqRabbitMqSubscriber<OrderPlaced>();  // subscribe (inbound background consumer)
+```
+Marker: `IRabbitMqEvent` (`static abstract string Exchange`/`Queue`/`RoutingKey` — static for the same
+reason as `Mediarq.Dapr`'s `IDaprPubSubEvent`: the subscriber declares its queue/binding at startup,
+before any instance exists). This package never owns the connection's lifecycle — register an
+`IConnection` yourself. The subscriber acks only after a successful `IPublisher.Publish`; a failure nacks
+without requeue (route to a dead-letter exchange at the broker if you need one) and does **not** dedupe
+redeliveries — for `Mediarq.MassTransit`'s heavier, batteries-included alternative (retry, outbox,
+saga integration, many transports), see above.
 
 ## Recommended order (a safe template)
 
