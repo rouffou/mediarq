@@ -3,5 +3,8 @@ Mediarq.Core.Common.Pipeline.PipelineBehaviorRegistrationCache
 Mediarq.Core.Common.Pipeline.PipelineBehaviorRegistrationCache.PipelineBehaviorRegistrationCache() -> void
 Mediarq.Core.Common.Requests.Notifications.IPolymorphicNotification
 Mediarq.Core.Common.Results.ErrorType.Forbidden = 6 -> Mediarq.Core.Common.Results.ErrorType
+Mediarq.Core.Common.Results.Result.CascadedNotifications.get -> System.Collections.Generic.IReadOnlyList<Mediarq.Core.Common.Requests.Notifications.INotification!>!
+override Mediarq.Core.Common.Results.Result<TValue>.WithNotifications(params Mediarq.Core.Common.Requests.Notifications.INotification![]! notifications) -> Mediarq.Core.Common.Results.Result<TValue>!
 static Mediarq.Core.Common.Results.ResultError.Forbidden(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
 static Mediarq.Core.Common.Results.ResultError.Unauthorized(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
+virtual Mediarq.Core.Common.Results.Result.WithNotifications(params Mediarq.Core.Common.Requests.Notifications.INotification![]! notifications) -> Mediarq.Core.Common.Results.Result!

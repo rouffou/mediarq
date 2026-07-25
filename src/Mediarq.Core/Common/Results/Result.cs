@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using Mediarq.Core.Common.Requests.Notifications;
 
 namespace Mediarq.Core.Common.Results;
 
@@ -34,6 +35,38 @@ public class Result
     /// If the result represents success, this value is <see cref="ResultError.None"/>.
     /// </summary>
     public ResultError Error { get; init; }
+
+    private List<INotification>? _cascadedNotifications;
+
+    /// <summary>
+    /// Notifications attached via <see cref="WithNotifications"/>, to be published automatically by the
+    /// mediator after a successful dispatch. Empty unless <see cref="WithNotifications"/> was called.
+    /// </summary>
+    public IReadOnlyList<INotification> CascadedNotifications =>
+        (IReadOnlyList<INotification>?)_cascadedNotifications ?? Array.Empty<INotification>();
+
+    /// <summary>
+    /// Attaches one or more notifications to this result, for the mediator to publish automatically
+    /// once the request has been dispatched successfully — removing the need to inject
+    /// <see cref="Mediarq.Core.Mediators.IPublisher"/> and call <c>Publish(...)</c> explicitly from
+    /// within the handler. Has no effect on a failed result: cascaded notifications are only ever
+    /// published after a successful dispatch.
+    /// </summary>
+    /// <param name="notifications">The notifications to publish after a successful dispatch.</param>
+    /// <returns>This same result instance, for fluent chaining.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="notifications"/> is <see langword="null"/>.</exception>
+    public virtual Result WithNotifications(params INotification[] notifications)
+    {
+        ArgumentNullException.ThrowIfNull(notifications);
+        if (notifications.Length == 0)
+        {
+            return this;
+        }
+
+        _cascadedNotifications ??= [];
+        _cascadedNotifications.AddRange(notifications);
+        return this;
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Result"/> class.
@@ -167,4 +200,11 @@ public class Result<TValue> : Result
     /// A failed <see cref="Result{TValue}"/> representing a validation error.
     /// </returns>
     public static Result<TValue> ValidationFailure(ResultError error) => new(default, false, error);
+
+    /// <inheritdoc cref="Result.WithNotifications"/>
+    public override Result<TValue> WithNotifications(params INotification[] notifications)
+    {
+        base.WithNotifications(notifications);
+        return this;
+    }
 }

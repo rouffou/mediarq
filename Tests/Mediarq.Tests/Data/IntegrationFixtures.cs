@@ -115,6 +115,24 @@ public sealed class ThrowingCommandExceptionHandler : IRequestExceptionHandler<T
     }
 }
 
+// --- Command whose successful result cascades a notification to OrderPlaced's own handlers ---
+public record PlaceOrderCommand(int OrderId) : ICommand<Result<int>>;
+
+public sealed class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Result<int>>
+{
+    public Task<Result<int>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Success(request.OrderId).WithNotifications(new OrderPlaced(request.OrderId)));
+}
+
+// --- Command that attaches a cascaded notification but still fails: the notification must not publish ---
+public record FailingOrderCommand(int OrderId) : ICommand<Result<int>>;
+
+public sealed class FailingOrderCommandHandler : ICommandHandler<FailingOrderCommand, Result<int>>
+{
+    public Task<Result<int>> Handle(FailingOrderCommand request, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Failure<int>(ResultError.Failure("Order.Failed", "boom")).WithNotifications(new OrderPlaced(request.OrderId)));
+}
+
 // --- Command surrounded by pre/post processors ---
 public record ProcessedCommand(string Name) : ICommand<Result<string>>;
 

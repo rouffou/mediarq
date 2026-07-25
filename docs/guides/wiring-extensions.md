@@ -31,6 +31,33 @@ Opt-in core behaviors (any order, after the call above):
 .AddMediarqTimeout()             // enforces ITimeoutRequest.Timeout -> RequestTimeoutException
 ```
 
+## Cascaded notifications — `Result.WithNotifications(...)`
+
+No registration needed. A handler can attach follow-up notifications to its own successful result
+instead of injecting `IPublisher` and calling `Publish(...)` itself:
+
+```csharp
+public sealed class CreateOrderHandler : ICommandHandler<CreateOrder, Result<Guid>>
+{
+    public Task<Result<Guid>> Handle(CreateOrder request, CancellationToken cancellationToken = default)
+    {
+        var id = Guid.NewGuid();
+        // ... persist the order ...
+        return Task.FromResult(Result.Success(id).WithNotifications(new OrderPlaced(id)));
+    }
+}
+```
+The mediator publishes `OrderPlaced` automatically once the request has finished dispatching — after
+every behavior, exception handler and post-processor has run — through the same `IPublisher` (and
+therefore the same registered `INotificationPublisher`: Parallel/Sequential/AggregateException) as an
+explicit `Publish(...)` call. **Only on a successful result**: a failed `Result`/`Result<T>` never
+publishes its attached notifications, even if `WithNotifications(...)` was called before the failure was
+known. Works with both `Result` and `Result<T>`; has no effect on other response shapes (e.g. `Unit`).
+
+Not automatically enqueued to `Mediarq.Outbox` — combine with an explicit `IOutbox.Enqueue(...)` call
+inside the handler if a cascaded notification needs the outbox's transactional/reliable delivery
+guarantee instead of an in-process publish.
+
 ## Validation
 
 ### Mediarq.FluentValidation

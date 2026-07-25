@@ -213,6 +213,24 @@ whole batch. This is opt-in and per-notification-type: publishing a type that do
 reflection (walking the base-type hierarchy with `MakeGenericType`), so it's not part of the trimming/AOT
 fast path.
 
+### Cascaded notifications — `Result.WithNotifications(...)` (opt-in)
+
+A handler can attach follow-up notifications to its own result instead of injecting `IPublisher` and
+calling `Publish(...)` itself — what the handler causes to happen next shows up in its return value:
+
+```csharp
+public Task<Result<Guid>> Handle(CreateOrder request, CancellationToken cancellationToken = default)
+{
+    var id = Guid.NewGuid();
+    // ... persist the order ...
+    return Task.FromResult(Result.Success(id).WithNotifications(new OrderPlaced(id)));
+}
+```
+The mediator publishes attached notifications automatically once the request finishes dispatching —
+after every behavior/exception handler/post-processor has run, and **only when the result is a
+success** — through the same `IPublisher`/`INotificationPublisher` as an explicit `Publish(...)` call.
+See [Wiring extensions](docs/guides/wiring-extensions.md#cascaded-notifications--resultwithnotifications).
+
 ### Out-of-process notifications (MassTransit)
 
 The optional **`Mediarq.MassTransit`** package forwards notifications to a MassTransit bus, so other
