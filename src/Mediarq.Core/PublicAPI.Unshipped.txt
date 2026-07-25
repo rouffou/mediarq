@@ -1,3 +1,6 @@
 #nullable enable
 Mediarq.Core.Common.Pipeline.PipelineBehaviorRegistrationCache
 Mediarq.Core.Common.Pipeline.PipelineBehaviorRegistrationCache.PipelineBehaviorRegistrationCache() -> void
+Mediarq.Core.Common.Results.ErrorType.Forbidden = 6 -> Mediarq.Core.Common.Results.ErrorType
+static Mediarq.Core.Common.Results.ResultError.Forbidden(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!
+static Mediarq.Core.Common.Results.ResultError.Unauthorized(string! code, string! message) -> Mediarq.Core.Common.Results.ResultError!

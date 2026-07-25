@@ -331,6 +331,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Hangfire` | Enqueue/schedule a command as a Hangfire background job, dispatched through the real pipeline (`AddMediarqHangfire`) |
 | `Mediarq.Quartz` | Enqueue/schedule a command as a Quartz.NET job, dispatched through the real pipeline (`AddMediarqQuartz`) |
 | `Mediarq.HealthChecks` | `IHealthCheck` + startup validation that every command/query resolves to exactly one handler (`AddMediarqHandlerRegistrationCheck`, `AddMediarqHandlerValidationOnStartup`) |
+| `Mediarq.Authorization` | ASP.NET Core policy-based authorization as a pipeline behavior for `IAuthorizedRequest` (`AddMediarqAuthorization`) |
 
 Built into `Mediarq.Core`:
 

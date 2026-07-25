@@ -85,4 +85,22 @@ public record ResultError
     /// <param name="message">A description of the problem.</param>
     /// <returns>An <see cref="ResultError"/> instance representing the problem.</returns>
     public static ResultError Problem(string code, string message) => new(code, message, ErrorType.Problem);
+
+    /// <summary>
+    /// Creates a new <see cref="ResultError"/> representing an unauthenticated actor (no user, or an
+    /// invalid/missing credential). Maps to HTTP 401.
+    /// </summary>
+    /// <param name="code">A unique error code.</param>
+    /// <param name="message">A description of the failure.</param>
+    /// <returns>An <see cref="ResultError"/> instance representing the "unauthorized" condition.</returns>
+    public static ResultError Unauthorized(string code, string message) => new(code, message, ErrorType.Unauthorized);
+
+    /// <summary>
+    /// Creates a new <see cref="ResultError"/> representing an authenticated actor who lacks permission
+    /// to perform the operation. Maps to HTTP 403.
+    /// </summary>
+    /// <param name="code">A unique error code.</param>
+    /// <param name="message">A description of the failure.</param>
+    /// <returns>An <see cref="ResultError"/> instance representing the "forbidden" condition.</returns>
+    public static ResultError Forbidden(string code, string message) => new(code, message, ErrorType.Forbidden);
 }

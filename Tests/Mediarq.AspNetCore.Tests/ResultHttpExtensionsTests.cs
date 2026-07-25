@@ -24,6 +24,7 @@ public class ResultHttpExtensionsTests
     [InlineData(ErrorType.NotFound, 404)]
     [InlineData(ErrorType.Conflict, 409)]
     [InlineData(ErrorType.Unauthorized, 401)]
+    [InlineData(ErrorType.Forbidden, 403)]
     [InlineData(ErrorType.Failure, 500)]
     [InlineData(ErrorType.Problem, 500)]
     [InlineData(ErrorType.Validation, 400)]

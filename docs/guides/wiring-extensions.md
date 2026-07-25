@@ -179,6 +179,26 @@ builder.Services.AddMediarqHandlerValidationOnStartup(typeof(Program).Assembly);
 Throws `InvalidOperationException` once, during host startup, if any command/query has zero or more than
 one registered handler.
 
+## Mediarq.Authorization — policy-based authorization
+
+```csharp
+builder.Services.AddAuthorization();          // ASP.NET Core's own registration
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMediarqAuthorization();
+```
+Marker: `IAuthorizedRequest` (`PolicyName`). No authenticated user → `Result.Failure(ResultError.Unauthorized(...))`
+(HTTP 401 via `Mediarq.AspNetCore`); authenticated but the policy fails → `ResultError.Forbidden(...)`
+(HTTP 403). `PolicyName` can be `null` to only require authentication.
+
+```csharp
+public record DeleteOrder(Guid OrderId) : ICommand, IAuthorizedRequest
+{
+    public string? PolicyName => "OrdersAdmin";
+}
+```
+⚠️ The handler's response type must be `Result` or `Result<T>` — same constraint, same reflection-fallback
+trade-off, as the core `ValidationBehavior`'s `Result<T>` support.
+
 ## Mediarq.Polly — resilience
 
 ```csharp
@@ -236,6 +256,7 @@ builder.Services.AddMediarqCaching();
 builder.Services.AddMediarqIdempotency();
 builder.Services.AddMediarqResilience();
 builder.Services.AddMediarqDiagnostics();
+builder.Services.AddMediarqAuthorization();
 builder.Services.AddMediarqHandlerValidationOnStartup(typeof(Program).Assembly);
 ```
 
