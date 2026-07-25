@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784964697806,
+  "lastUpdate": 1784964707921,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -783,6 +783,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/rouffou/mediarq/commit/1d7073fdf9314f2d46de53a54492219567d69e3e"
         },
         "date": 1784964516324,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send - Allocated",
+            "value": 224,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send - Allocated",
+            "value": 616,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean - Allocated",
+            "value": 240,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain - Allocated",
+            "value": 504,
+            "unit": "B"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ae94ba91d259df52306a954ea33ec54cfed5099",
+          "message": "fix(ci): never let a missing/unreachable gh-pages branch fail the benchmark jobs (#195)\n\nThe gh-pages branch backing github-action-benchmark's history was found deleted from\norigin between two consecutive CI runs (its cause is unclear -- restored from a local\nremote-tracking ref that still had the full commit history). When gh-pages is missing,\ngithub-action-benchmark's git fetch hard-fails the step, turning this workflow's own\ndocumented \"report-only, never fails the build\" design into an actual build-blocking\nfailure. Add continue-on-error to both tracking steps so a missing/unreachable data\nbranch degrades to a stopped trend instead of a red check.\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T09:30:18+02:00",
+          "tree_id": "5551d064959f9f22845320d5bec409e1be11132b",
+          "url": "https://github.com/rouffou/mediarq/commit/3ae94ba91d259df52306a954ea33ec54cfed5099"
+        },
+        "date": 1784964707667,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
