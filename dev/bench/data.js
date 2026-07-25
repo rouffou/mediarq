@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784964505297,
+  "lastUpdate": 1784964516779,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -674,6 +674,52 @@ window.BENCHMARK_DATA = {
             "value": 232.03685303529105,
             "unit": "ns",
             "range": "± 2.074959814342952"
+          }
+        ]
+      }
+    ],
+    "Mediarq.Benchmarks - Send (Allocated)": [
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1d7073fdf9314f2d46de53a54492219567d69e3e",
+          "message": "perf(core): cache empty-pipeline fact per request type to skip ResolveAll on repeat dispatch (#194)\n\nResolveAll<IPipelineBehavior<TReq,TRes>>() was paid on every Send even when zero behaviors\nare registered for that closed type -- pure DI resolution cost with no value. Add\nPipelineBehaviorRegistrationCache, a per-container singleton memoizing that structural,\nDI-registration-time fact so a repeat dispatch skips the IEnumerable<> resolution\nentirely. Only \"zero registered\" is ever cached: whether a registered behavior is\ncurrently active (IConditionalPipelineBehavior.IsActive) is per-request runtime state\nand is still re-evaluated on every dispatch.\n\nResolved through the existing IHandlerResolver rather than added as a constructor\nparameter, so PipelineExecutor's already-shipped public constructor signature is\nunchanged (non-breaking).\n\nCloses #177\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T09:27:00+02:00",
+          "tree_id": "0319d05e6964f3692dcd5cac0112a84cd98e586e",
+          "url": "https://github.com/rouffou/mediarq/commit/1d7073fdf9314f2d46de53a54492219567d69e3e"
+        },
+        "date": 1784964516324,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send - Allocated",
+            "value": 224,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send - Allocated",
+            "value": 616,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean - Allocated",
+            "value": 240,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain - Allocated",
+            "value": 504,
+            "unit": "B"
           }
         ]
       }
