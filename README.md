@@ -338,6 +338,7 @@ Mediarq ships optional, opt-in packages so the core stays dependency-free:
 | `Mediarq.Dapr` | Dapr pub/sub: publish `IDaprPubSubEvent` notifications (`AddMediarqDaprPubSub`) and receive them back into the pipeline via a minimal-API webhook + `/dapr/subscribe` (`MapDaprPubSubSubscription`) |
 | `Mediarq.AzureServiceBus` | A lightweight, direct Azure Service Bus bridge: publish `IAzureServiceBusEvent` notifications (`AddMediarqAzureServiceBusPublisher`) and consume them back into the pipeline via a background service (`AddMediarqAzureServiceBusSubscriber`) |
 | `Mediarq.RabbitMQ` | A lightweight, direct RabbitMQ bridge: publish `IRabbitMqEvent` notifications (`AddMediarqRabbitMqPublisher`) and consume them back into the pipeline via a background service (`AddMediarqRabbitMqSubscriber`) |
+| `Mediarq.Aspire` | .NET Aspire `ServiceDefaults` integration: wires Mediarq's OpenTelemetry instrumentation and handler-registration health check into your own `ServiceDefaults` project (`AddMediarqServiceDefaults`) |
 
 Built into `Mediarq.Core`:
 

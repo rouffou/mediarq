@@ -62,6 +62,7 @@ jobs:
           dotnet pack src/Mediarq.Dapr/Mediarq.Dapr.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.AzureServiceBus/Mediarq.AzureServiceBus.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.RabbitMQ/Mediarq.RabbitMQ.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.Aspire/Mediarq.Aspire.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
 
       - name: NuGet login (trusted publishing)
         id: login
