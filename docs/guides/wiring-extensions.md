@@ -99,6 +99,11 @@ app.MapMediarq(typeof(GetOrder).Assembly);
 `[MediarqGet]`/`[MediarqDelete]` bind members individually from the route/query string (`[AsParameters]`,
 no body); `[MediarqPost]`/`[MediarqPut]`/`[MediarqPatch]` bind the whole request from the JSON body.
 
+Every mapped endpoint also declares its response shapes for ASP.NET Core's OpenAPI generator
+(`Microsoft.AspNetCore.OpenApi`/Swagger): `200`/`204` with the success type (or no body), plus
+`400`/`401`/`403`/`404`/`409`/`500` — the full set `ResultError.Type` can map to — so generated
+Swagger/OpenAPI documents show a typed response instead of a bare, untyped `IResult`.
+
 ## Mediarq.Caching — memoize a query
 
 ```csharp
