@@ -103,7 +103,10 @@ public class Mediator : IMediator
 
         try
         {
-            return wrapper.Handle(request, _handlerResolver, _requestContextFactory, cancellationToken);
+            // AsTask() is allocation-free here: the wrapper always wraps a real Task<TResponse> (the
+            // handler's own, or the pipeline's), never a synchronous ValueTask value — see
+            // RequestHandlerWrapper<TResponse>.Handle.
+            return wrapper.Handle(request, _handlerResolver, _requestContextFactory, cancellationToken).AsTask();
         }
         catch (HandlerNotFoundException)
         {
