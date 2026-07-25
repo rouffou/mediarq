@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Mediarq logo" width="128" height="128">
+</p>
+
 # Mediarq
 
 [![CI](https://github.com/rouffou/mediarq/actions/workflows/ci.yml/badge.svg)](https://github.com/rouffou/mediarq/actions/workflows/ci.yml)
