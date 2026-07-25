@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Mediarq.Quartz</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nicolas Rouffart</Authors>
+    <Description>Delayed and scheduled dispatch for Mediarq commands via Quartz.NET: Schedule/Enqueue extensions on IScheduler that run a command through the real Mediarq pipeline when the job fires.</Description>
+    <PackageTags>mediarq;cqrs;quartz;scheduling;jobs;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Quartz" Version="3.19.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mediarq.Core\Mediarq.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Mediarq.Quartz.Tests" />
+  </ItemGroup>
+
+</Project>

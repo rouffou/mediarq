@@ -146,6 +146,21 @@ Only `ICommand` (no result) is supported — call `Enqueue`/`Schedule` directly 
 not through a variable statically typed as `ICommand`, so Hangfire's serializer captures the concrete
 type.
 
+## Mediarq.Quartz — delayed & scheduled dispatch (Quartz.NET)
+
+```csharp
+builder.Services.AddMediarqQuartz();
+builder.Services.AddQuartz();
+builder.Services.AddQuartzHostedService();
+```
+```csharp
+await scheduler.EnqueueAsync(new SendWelcomeEmail(userId));                                    // ASAP
+await scheduler.ScheduleAsync(new SendWelcomeEmail(userId), TimeSpan.FromMinutes(10));          // after a delay
+await scheduler.ScheduleAsync(new SendWelcomeEmail(userId), DateTimeOffset.UtcNow.AddDays(1));  // at a point in time
+```
+Same `ICommand`-only constraint as `Mediarq.Hangfire`. The command is JSON-serialized into the job's
+`JobDataMap`; configure a persistent Quartz job store for jobs to survive a restart.
+
 ## Mediarq.Polly — resilience
 
 ```csharp

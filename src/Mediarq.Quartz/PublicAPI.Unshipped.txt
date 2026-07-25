@@ -1,0 +1,7 @@
+#nullable enable
+Mediarq.Quartz.QuartzSchedulingExtensions
+Mediarq.Quartz.QuartzServiceCollectionExtensions
+static Mediarq.Quartz.QuartzSchedulingExtensions.EnqueueAsync<TCommand>(this Quartz.IScheduler! scheduler, TCommand command, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.DateTimeOffset>!
+static Mediarq.Quartz.QuartzSchedulingExtensions.ScheduleAsync<TCommand>(this Quartz.IScheduler! scheduler, TCommand command, System.DateTimeOffset startAt, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.DateTimeOffset>!
+static Mediarq.Quartz.QuartzSchedulingExtensions.ScheduleAsync<TCommand>(this Quartz.IScheduler! scheduler, TCommand command, System.TimeSpan delay, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.DateTimeOffset>!
+static Mediarq.Quartz.QuartzServiceCollectionExtensions.AddMediarqQuartz(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
