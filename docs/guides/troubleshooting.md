@@ -25,6 +25,19 @@ generator doesn't see). Add the handler, or ignore if intentional.
 Your `IValidator<T>` is for a `T` that is never dispatched, so it can never run. Point it at a request
 or notification type.
 
+### Build warning `MQ005` — multiple stream handlers for the same stream request
+A stream request must have exactly one `IStreamRequestHandler<,>`. You have two classes implementing
+the handler interface for the same stream request. Delete or merge one.
+
+### Build info `MQ006` — a stream request has no handler in the assembly
+You declared an `IStreamRequest<T>` but never wrote its `IStreamRequestHandler<,>` (or it's in another
+assembly the generator doesn't see). Add the handler, or ignore if intentional.
+
+### Build info `MQ007` — a notification has no handler in the assembly
+You declared an `INotification` but never wrote an `INotificationHandler<>` for it (or it's in another
+assembly, or the notification intentionally has no subscribers yet). Add a handler, or ignore if
+intentional.
+
 ## Lifetime
 
 ### Build warning `MQ200` — Singleton depends on a shorter-lived type

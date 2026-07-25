@@ -164,7 +164,7 @@ public class MediarqRegistrationGeneratorTests
 
         var (generated, diagnostics) = Run(source);
 
-        diagnostics.Should().BeEmpty();
+        diagnostics.Should().ContainSingle(d => d.Id == "MQ007");
         generated.Should().Contain("registry.AddNotification<global::Demo.OrderPlaced>();");
         // No handler exists, so nothing should be registered in the DI container for it.
         generated.Should().NotContain("AddScoped");
@@ -184,7 +184,7 @@ public class MediarqRegistrationGeneratorTests
 
         var (generated, diagnostics) = Run(source);
 
-        diagnostics.Should().BeEmpty();
+        diagnostics.Should().ContainSingle(d => d.Id == "MQ006");
         generated.Should().Contain("registry.AddStream<global::Demo.Ticks, int>();");
         generated.Should().NotContain("AddScoped");
         generated.Should().NotContain("AddSingleton<");
@@ -234,6 +234,125 @@ public class MediarqRegistrationGeneratorTests
         var (_, diagnostics) = Run(source);
 
         diagnostics.Should().Contain(d => d.Id == "MQ002");
+    }
+
+    [Fact]
+    public void Reports_MQ005_For_Multiple_Handlers_Of_Same_Stream_Request()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Streaming;
+            using System.Collections.Generic;
+            using System.Threading;
+
+            namespace Demo;
+
+            public record Ticks(int N) : IStreamRequest<int>;
+
+            public sealed class TicksHandler1 : IStreamRequestHandler<Ticks, int>
+            {
+                public async IAsyncEnumerable<int> Handle(Ticks request, CancellationToken cancellationToken = default)
+                {
+                    yield return 0;
+                    await System.Threading.Tasks.Task.CompletedTask;
+                }
+            }
+
+            public sealed class TicksHandler2 : IStreamRequestHandler<Ticks, int>
+            {
+                public async IAsyncEnumerable<int> Handle(Ticks request, CancellationToken cancellationToken = default)
+                {
+                    yield return 0;
+                    await System.Threading.Tasks.Task.CompletedTask;
+                }
+            }
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().Contain(d => d.Id == "MQ005");
+    }
+
+    [Fact]
+    public void Reports_MQ006_For_Stream_Request_Without_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Streaming;
+
+            namespace Demo;
+
+            public record Ticks(int N) : IStreamRequest<int>;
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().Contain(d => d.Id == "MQ006");
+    }
+
+    [Fact]
+    public void Does_Not_Report_MQ006_When_Stream_Request_Has_A_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Streaming;
+            using System.Collections.Generic;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Demo;
+
+            public record Ticks(int N) : IStreamRequest<int>;
+
+            public sealed class TicksHandler : IStreamRequestHandler<Ticks, int>
+            {
+                public async IAsyncEnumerable<int> Handle(Ticks request, CancellationToken cancellationToken = default)
+                {
+                    for (var i = 0; i < request.N; i++) { yield return i; }
+                    await Task.CompletedTask;
+                }
+            }
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().NotContain(d => d.Id == "MQ006");
+    }
+
+    [Fact]
+    public void Reports_MQ007_For_Notification_Without_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Notifications;
+
+            namespace Demo;
+
+            public record OrderPlaced(int Id) : INotification;
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().Contain(d => d.Id == "MQ007");
+    }
+
+    [Fact]
+    public void Does_Not_Report_MQ007_When_Notification_Has_A_Handler()
+    {
+        const string source = """
+            using Mediarq.Core.Common.Requests.Notifications;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Demo;
+
+            public record OrderPlaced(int Id) : INotification;
+
+            public sealed class AuditHandler : INotificationHandler<OrderPlaced>
+            {
+                public Task Handle(OrderPlaced notification, CancellationToken cancellationToken = default) => Task.CompletedTask;
+            }
+            """;
+
+        var (_, diagnostics) = Run(source);
+
+        diagnostics.Should().NotContain(d => d.Id == "MQ007");
     }
 
     [Fact]
