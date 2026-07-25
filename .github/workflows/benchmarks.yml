@@ -79,8 +79,15 @@ jobs:
 
       # auto-push only on a push to dev/main: a PR run compares against history without writing to it,
       # so a PR's short-job, potentially-noisy numbers never become part of the trend.
+      #
+      # continue-on-error: this step hard-fails (not just "alerts") if the gh-pages data branch is ever
+      # missing or unreachable -- e.g. it was manually deleted -- which would otherwise turn a report-only
+      # signal into a build-blocking failure, contradicting this workflow's own design (see header
+      # comment). A hard failure here should be investigated (the trend history stops advancing), but it
+      # must never fail the job.
       - name: Track ${{ matrix.display-name }} dispatch history
         uses: benchmark-action/github-action-benchmark@v1
+        continue-on-error: true
         with:
           name: 'Mediarq.Benchmarks - ${{ matrix.display-name }}'
           tool: 'benchmarkdotnet'
@@ -119,8 +126,11 @@ jobs:
       - name: Convert to an allocation report
         run: node scripts/benchmarkdotnet-alloc-report.mjs BenchmarkDotNet.Artifacts/results/${{ matrix.report-file }} alloc-report.json
 
+      # See the continue-on-error note on the "Track ... dispatch history" step in the benchmark job above
+      # -- same reasoning applies here.
       - name: Track ${{ matrix.display-name }} allocation history
         uses: benchmark-action/github-action-benchmark@v1
+        continue-on-error: true
         with:
           name: 'Mediarq.Benchmarks - ${{ matrix.display-name }} (Allocated)'
           tool: 'customSmallerIsBetter'
