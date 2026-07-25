@@ -25,7 +25,7 @@ at `/scalar/v1` to exercise the endpoints:
 | `POST /orders` | Create — FluentValidation, unit of work commit, **transactional outbox** event, **rate-limited** (5/min, see the "create-order" policy) |
 | `GET /orders/{id}` | Read — memoized by the **caching** behavior (second identical call skips the DB) |
 | `POST /orders/{id}/confirm` | **Idempotent** (send the same `Idempotency-Key` header to replay) and **authorized** — requires `X-User` + `X-Role: manager` headers (see below), raises a **domain event** on success |
-| `POST /orders/{id}/note` | **DataAnnotations** validation (an empty note returns a 400 ProblemDetails) |
+| `POST /orders/{id}/note` | **DataAnnotations** validation (an empty note returns a 400 ProblemDetails), publishes a **cascaded notification** (`Result.WithNotifications(...)`) |
 | `GET /orders/{id}/quote` | **Polly** resilience — retries a flaky pricing service |
 | `GET /orders/stream` | **Streaming** — `IAsyncEnumerable` of orders |
 | `GET /health` | **Health check** — reports unhealthy if a command/query doesn't resolve to exactly one handler |
@@ -33,7 +33,10 @@ at `/scalar/v1` to exercise the endpoints:
 Watch the console: the outbox publishes `OrderPlacedEvent` to its in-process handlers **and** forwards it
 onto the in-memory MassTransit bus; confirming an order raises an in-process `OrderConfirmedDomainEvent`
 via `Mediarq.EntityFrameworkCore`'s `AggregateRoot`/`DomainEventsInterceptor` instead (published right
-after `SaveChanges` commits, no outbox/bus hop); and OpenTelemetry exports Mediarq activities/metrics.
+after `SaveChanges` commits, no outbox/bus hop); adding a note cascades `OrderNoteAddedEvent` straight
+from the handler's return value (`Result.WithNotifications(...)`, no `IPublisher` injected, no outbox
+involved — the lightest-weight of the three notification patterns this sample shows side by side); and
+OpenTelemetry exports Mediarq activities/metrics.
 
 Authorization uses a deliberately trivial header-based "authentication" scheme for this sample only (see
 `Security/DemoHeaderAuthentication.cs`) — never do this outside a demo:
