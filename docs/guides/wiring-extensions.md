@@ -372,6 +372,25 @@ without requeue (route to a dead-letter exchange at the broker if you need one) 
 redeliveries — for `Mediarq.MassTransit`'s heavier, batteries-included alternative (retry, outbox,
 saga integration, many transports), see above.
 
+## Mediarq.Grpc — direct point-to-point RPC to another service
+
+```csharp
+// publish (outbound)
+builder.Services.AddMediarqGrpcPublisher<OrderPlaced>();
+
+// subscribe (inbound)
+builder.Services.AddMediarqGrpcSubscriptions();
+// ...
+app.MapMediarqGrpcNotificationService();     // map exactly once
+app.MapMediarqGrpcSubscription<OrderPlaced>();
+```
+Marker: `IGrpcNotificationEvent` (`static abstract string ServiceAddress`). Unlike the broker packages
+above, gRPC is direct point-to-point RPC — the publisher must know the target service's address, there
+is no fan-out or persistence, and a failed `Publish` RPC throws `Grpc.Core.RpcException` like any other
+handler exception. Ships its own compiled Protobuf/gRPC contract, so no `protoc`/`Grpc.Tools` is needed
+downstream. Every subscribed notification type is multiplexed over one shared RPC method; an
+unrecognized `type_name` fails with `StatusCode.NotFound`.
+
 ## Recommended order (a safe template)
 
 ```csharp

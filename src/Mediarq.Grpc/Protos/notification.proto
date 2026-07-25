@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "Mediarq.Grpc.Contracts";
+
+package mediarq;
+
+// A single-RPC envelope multiplexing every IGrpcNotificationEvent type over one gRPC service: type_name
+// identifies which notification type payload holds a JSON-serialized instance of, so the receiving side
+// can look up the right deserializer/publish delegate without one RPC method per notification type.
+message NotificationEnvelope {
+  string type_name = 1;
+  bytes payload = 2;
+}
+
+message PublishAck {
+  bool accepted = 1;
+}
+
+service NotificationService {
+  rpc Publish (NotificationEnvelope) returns (PublishAck);
+}
