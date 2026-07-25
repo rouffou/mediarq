@@ -187,6 +187,26 @@ By default handlers run concurrently (`ParallelNotificationPublisher`) and the f
 publishing with no registered handler is a no-op. Register a different `INotificationPublisher`
 (e.g. `SequentialNotificationPublisher`, or your own) before `AddMediarq`/`AddMediarqCore` to change this.
 
+### Polymorphic notifications (opt-in)
+
+By default, publishing resolves handlers for the notification's exact concrete type only — the
+reflection-free fast path. Implement `IPolymorphicNotification` to also dispatch to
+`INotificationHandler<TBase>` for every base type in the notification's class hierarchy:
+
+```csharp
+public abstract record DomainEvent : INotification;
+public sealed record OrderPlaced(Guid OrderId) : DomainEvent, IPolymorphicNotification;
+
+// Receives OrderPlaced (and any other DomainEvent-derived type), not just its own concrete type:
+public class AuditLogHandler : INotificationHandler<DomainEvent> { /* ... */ }
+```
+Concrete-type handlers run first, then base-type handlers from most to least specific — unless a handler
+implements `IOrderedNotificationHandler`, in which case its explicit `Order` takes precedence across the
+whole batch. This is opt-in and per-notification-type: publishing a type that doesn't implement
+`IPolymorphicNotification` is unaffected — and, unlike the default path, it does resolve handlers via
+reflection (walking the base-type hierarchy with `MakeGenericType`), so it's not part of the trimming/AOT
+fast path.
+
 ### Out-of-process notifications (MassTransit)
 
 The optional **`Mediarq.MassTransit`** package forwards notifications to a MassTransit bus, so other
