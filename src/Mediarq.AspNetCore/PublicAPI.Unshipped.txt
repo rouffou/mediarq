@@ -1,1 +1,18 @@
 #nullable enable
+Mediarq.AspNetCore.MediarqDeleteAttribute
+Mediarq.AspNetCore.MediarqDeleteAttribute.MediarqDeleteAttribute(string! pattern) -> void
+Mediarq.AspNetCore.MediarqDeleteAttribute.Pattern.get -> string!
+Mediarq.AspNetCore.MediarqEndpointRouteBuilderExtensions
+Mediarq.AspNetCore.MediarqGetAttribute
+Mediarq.AspNetCore.MediarqGetAttribute.MediarqGetAttribute(string! pattern) -> void
+Mediarq.AspNetCore.MediarqGetAttribute.Pattern.get -> string!
+Mediarq.AspNetCore.MediarqPatchAttribute
+Mediarq.AspNetCore.MediarqPatchAttribute.MediarqPatchAttribute(string! pattern) -> void
+Mediarq.AspNetCore.MediarqPatchAttribute.Pattern.get -> string!
+Mediarq.AspNetCore.MediarqPostAttribute
+Mediarq.AspNetCore.MediarqPostAttribute.MediarqPostAttribute(string! pattern) -> void
+Mediarq.AspNetCore.MediarqPostAttribute.Pattern.get -> string!
+Mediarq.AspNetCore.MediarqPutAttribute
+Mediarq.AspNetCore.MediarqPutAttribute.MediarqPutAttribute(string! pattern) -> void
+Mediarq.AspNetCore.MediarqPutAttribute.Pattern.get -> string!
+static Mediarq.AspNetCore.MediarqEndpointRouteBuilderExtensions.MapMediarq(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints, params System.Reflection.Assembly![]! assemblies) -> Microsoft.AspNetCore.Routing.RouteGroupBuilder!
