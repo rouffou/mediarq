@@ -199,6 +199,23 @@ public record DeleteOrder(Guid OrderId) : ICommand, IAuthorizedRequest
 ⚠️ The handler's response type must be `Result` or `Result<T>` — same constraint, same reflection-fallback
 trade-off, as the core `ValidationBehavior`'s `Result<T>` support.
 
+## Mediarq.Testing — spy mediator, fakes
+
+```csharp
+services.AddMediarq(isHttp: false, typeof(Program).Assembly); // your normal registration
+services.AddMediarqSpy();                                     // decorates IMediator, after AddMediarq(...)
+```
+```csharp
+var spy = (SpyMediator)provider.GetRequiredService<IMediator>();
+await provider.GetRequiredService<ISender>().Send(new CreateOrder(customerId));
+
+spy.HasSent<CreateOrder>();          // true — recorded, and the real handler ran
+spy.Published<OrderCreated>();       // notifications published during that Send
+```
+Handlers, validators and behaviors all run for real — nothing is faked, only recorded. Also ships
+`FakeClock`/`FakeUserContext`, plain settable implementations of `IClock`/`IUserContext` to register in a
+test's `IServiceCollection`.
+
 ## Mediarq.Polly — resilience
 
 ```csharp
