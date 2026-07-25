@@ -60,6 +60,7 @@ jobs:
           dotnet pack src/Mediarq.RateLimiting/Mediarq.RateLimiting.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Deferred/Mediarq.Deferred.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack src/Mediarq.Dapr/Mediarq.Dapr.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          dotnet pack src/Mediarq.RabbitMQ/Mediarq.RabbitMQ.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
 
       - name: NuGet login (trusted publishing)
         id: login

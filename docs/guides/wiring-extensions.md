@@ -320,6 +320,25 @@ apart). Publishing forwards through `DaprClient.PublishEventAsync`, same "runs a
 handlers" shape as `Mediarq.MassTransit`. Subscribing extracts the `data` field from the CloudEvents 1.0
 envelope Dapr delivers and republishes it via `IPublisher` — the same pipeline as any in-process `Publish`.
 
+## Mediarq.RabbitMQ — a lightweight, direct broker bridge
+
+```csharp
+builder.Services.AddSingleton<IConnection>(_ =>
+{
+    var factory = new ConnectionFactory { Uri = new Uri("amqp://guest:guest@localhost:5672") };
+    return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+});
+builder.Services.AddMediarqRabbitMqPublisher<OrderPlaced>();   // publish (outbound)
+builder.Services.AddMediarqRabbitMqSubscriber<OrderPlaced>();  // subscribe (inbound background consumer)
+```
+Marker: `IRabbitMqEvent` (`static abstract string Exchange`/`Queue`/`RoutingKey` — static for the same
+reason as `Mediarq.Dapr`'s `IDaprPubSubEvent`: the subscriber declares its queue/binding at startup,
+before any instance exists). This package never owns the connection's lifecycle — register an
+`IConnection` yourself. The subscriber acks only after a successful `IPublisher.Publish`; a failure nacks
+without requeue (route to a dead-letter exchange at the broker if you need one) and does **not** dedupe
+redeliveries — for `Mediarq.MassTransit`'s heavier, batteries-included alternative (retry, outbox,
+saga integration, many transports), see above.
+
 ## Recommended order (a safe template)
 
 ```csharp
