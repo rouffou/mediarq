@@ -198,4 +198,77 @@ public class MediatorTests
             r => r.ResolveAll<IPipelineBehavior<TestCommand, Result<string>>>(),
             Times.Exactly(2));
     }
+
+    public record TestNotification(string Text) : INotification;
+
+    [Fact]
+    public async Task Send_Should_Not_Resolve_IPublisher_When_Result_Has_No_CascadedNotifications()
+    {
+        var request = new TestCommand("Hello");
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("OK"));
+
+        await _testClass.Send(request, CancellationToken.None);
+
+        // No cascaded notifications: the publisher is never even resolved, let alone invoked.
+        _mockHandlerResolver.Verify(r => r.Resolve<IPublisher>(), Times.Never);
+    }
+
+    [Fact]
+    public async Task Send_Should_Publish_CascadedNotifications_After_A_Successful_Result()
+    {
+        var request = new TestCommand("Hello");
+        var first = new TestNotification("first");
+        var second = new TestNotification("second");
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("OK").WithNotifications(first, second));
+
+        var mockPublisher = new Mock<IPublisher>();
+        mockPublisher.Setup(p => p.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _mockHandlerResolver.Setup(r => r.Resolve<IPublisher>()).Returns(mockPublisher.Object);
+
+        var result = await _testClass.Send(request, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        // Cast to INotification: PipelineDispatch calls Publish<INotification>(...) (the static type of
+        // Result.CascadedNotifications' elements), not Publish<TestNotification>(...).
+        mockPublisher.Verify(p => p.Publish((INotification)first, It.IsAny<CancellationToken>()), Times.Once);
+        mockPublisher.Verify(p => p.Publish((INotification)second, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Send_Should_Not_Publish_CascadedNotifications_When_The_Result_Is_A_Failure()
+    {
+        var request = new TestCommand("Hello");
+        var notification = new TestNotification("never-published");
+        var error = ResultError.Failure("Boom", "boom");
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<string>(error).WithNotifications(notification));
+
+        var mockPublisher = new Mock<IPublisher>();
+        _mockHandlerResolver.Setup(r => r.Resolve<IPublisher>()).Returns(mockPublisher.Object);
+
+        var result = await _testClass.Send(request, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        mockPublisher.Verify(p => p.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Send_Should_Not_Throw_When_CascadedNotifications_Present_But_No_Publisher_Is_Registered()
+    {
+        var request = new TestCommand("Hello");
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("OK").WithNotifications(new TestNotification("orphan")));
+
+        // No Resolve<IPublisher>() setup: Moq returns null, as a hand-built IHandlerResolver would if
+        // the core services were never registered.
+        var act = () => _testClass.Send(request, CancellationToken.None);
+
+        await act.Should().NotThrowAsync();
+    }
 }

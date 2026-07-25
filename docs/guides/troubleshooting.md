@@ -97,6 +97,18 @@ This is a syntactic check, not a proof over every possible request type: it only
 is literally the `false` literal (an expression-bodied property, an expression-bodied getter, or a single
 `return false;`) — real conditional logic, however it evaluates at runtime, is never flagged.
 
+## Notifications
+
+### `Result.WithNotifications(...)` was called but the notification never publishes
+Cascaded notifications only publish **after a successful dispatch** — check `result.IsSuccess` on what
+your handler actually returned. A behavior/exception handler downstream that replaces the response with
+a different `Result` (e.g. converting a thrown exception into a failure) also short-circuits the
+cascade, since only the final response returned to the caller is inspected. Also confirm the response
+type is `Result`/`Result<T>` — the mediator doesn't look for cascaded notifications on any other
+response shape (including `Unit`, a no-result `ICommand`'s response type).
+
+See [Wiring extensions](wiring-extensions.md#cascaded-notifications--resultwithnotifications).
+
 ## Validation
 
 ### My validation never runs (no error, the handler just runs)

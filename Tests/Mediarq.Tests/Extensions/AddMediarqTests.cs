@@ -89,6 +89,37 @@ public class AddMediarqTests
     }
 
     [Fact]
+    public async Task Cascaded_Notifications_Are_Published_After_A_Successful_Result()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var trace = scope.ServiceProvider.GetRequiredService<ExecutionTrace>();
+
+        var result = await mediator.Send(new PlaceOrderCommand(42));
+
+        result.IsSuccess.Should().BeTrue();
+        // Reaches the very same OrderPlaced handlers a direct mediator.Publish(...) call would.
+        trace.Entries.Should().Contain("audit:42");
+        trace.Entries.Should().Contain("email:42");
+    }
+
+    [Fact]
+    public async Task Cascaded_Notifications_Are_Not_Published_When_The_Result_Is_A_Failure()
+    {
+        using var provider = BuildProvider();
+        using var scope = provider.CreateScope();
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var trace = scope.ServiceProvider.GetRequiredService<ExecutionTrace>();
+
+        var result = await mediator.Send(new FailingOrderCommand(99));
+
+        result.IsFailure.Should().BeTrue();
+        trace.Entries.Should().NotContain("audit:99");
+        trace.Entries.Should().NotContain("email:99");
+    }
+
+    [Fact]
     public async Task ExceptionHandler_Converts_Thrown_Exception_To_Failed_Result()
     {
         using var provider = BuildProvider();

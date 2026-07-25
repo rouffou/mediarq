@@ -1,10 +1,13 @@
 ﻿using FluentAssertions;
+using Mediarq.Core.Common.Requests.Notifications;
 using Mediarq.Core.Common.Results;
 
 namespace Mediarq.Tests.Core.Common.Results;
 
 public class ResultTests
 {
+    private sealed record SampleNotification(string Text) : INotification;
+
     private static readonly ResultError SampleFailure = ResultError.Failure("SampleError", "This is a sample error message.");
 
     [Fact]
@@ -103,5 +106,67 @@ public class ResultTests
         Action act = () => { var value = result.Value; };
         // Assert
         act.Should().Throw<InvalidOperationException>().WithMessage("The value of a failure result can't be accessed");
+    }
+
+    [Fact]
+    public void CascadedNotifications_IsEmpty_ByDefault()
+    {
+        var result = Result.Success();
+
+        result.CascadedNotifications.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void WithNotifications_OnResult_AttachesNotifications_AndReturnsSameInstance()
+    {
+        var result = Result.Success();
+        var notification = new SampleNotification("first");
+
+        var returned = result.WithNotifications(notification);
+
+        returned.Should().BeSameAs(result);
+        result.CascadedNotifications.Should().ContainSingle().Which.Should().Be(notification);
+    }
+
+    [Fact]
+    public void WithNotifications_OnResultOfT_ReturnsResultOfT_ForFluentChaining()
+    {
+        // Compiles only if WithNotifications on Result<T> returns Result<T>, not the base Result.
+        Result<int> result = Result.Success(42).WithNotifications(new SampleNotification("cascade"));
+
+        result.Value.Should().Be(42);
+        result.CascadedNotifications.Should().ContainSingle().Which.Should().BeOfType<SampleNotification>();
+    }
+
+    [Fact]
+    public void WithNotifications_CalledMultipleTimes_AccumulatesNotifications()
+    {
+        var result = Result.Success();
+
+        result.WithNotifications(new SampleNotification("a"));
+        result.WithNotifications(new SampleNotification("b"), new SampleNotification("c"));
+
+        result.CascadedNotifications.Should().HaveCount(3);
+        result.CascadedNotifications.Select(n => ((SampleNotification)n).Text).Should().Equal("a", "b", "c");
+    }
+
+    [Fact]
+    public void WithNotifications_WithNoArguments_DoesNothing()
+    {
+        var result = Result.Success();
+
+        result.WithNotifications();
+
+        result.CascadedNotifications.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void WithNotifications_NullArgument_ShouldThrowArgumentNullException()
+    {
+        var result = Result.Success();
+
+        Action act = () => result.WithNotifications(null!);
+
+        act.Should().Throw<ArgumentNullException>();
     }
 }
