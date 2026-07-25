@@ -108,6 +108,7 @@ type is `Result`/`Result<T>` — the mediator doesn't look for cascaded notifica
 response shape (including `Unit`, a no-result `ICommand`'s response type).
 
 See [Wiring extensions](wiring-extensions.md#cascaded-notifications--resultwithnotifications).
+
 ## Routing
 
 ### Build warning `MQ202` — duplicate Mediarq route
