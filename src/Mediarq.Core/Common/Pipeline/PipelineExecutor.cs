@@ -109,7 +109,7 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
             return handlerDelegate(cancellationToken);
         }
 
-        return PipelineDispatch.Run(active, activeCount, context, handlerDelegate, cancellationToken);
+        return PipelineDispatch.Run(active, activeCount, context, () => handlerDelegate(cancellationToken), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -124,30 +124,9 @@ public class PipelineExecutor(IHandlerResolver handlerResolver) : IPipelineExecu
         ArgumentNullException.ThrowIfNull(handler);
         ArgumentNullException.ThrowIfNull(contextFactory);
 
-        if (_behaviorRegistrationCache?.IsKnownEmpty<TRequest, TResponse>() == true)
-        {
-            return handler.Handle(request, cancellationToken);
-        }
-
-        var behaviors = _handlerResolver.ResolveAll<IPipelineBehavior<TRequest, TResponse>>();
-
-        if (behaviors.Count == 0)
-        {
-            _behaviorRegistrationCache?.MarkKnownEmpty<TRequest, TResponse>();
-            return handler.Handle(request, cancellationToken);
-        }
-
-        var active = PipelineDispatch.SelectActive<TRequest, TResponse>(behaviors, out var activeCount);
-
-        // No active behavior: skip the request context allocation and the delegate entirely, invoking
-        // the handler directly — the hot path costs no more than a bare handler call.
-        if (active is null)
-        {
-            return handler.Handle(request, cancellationToken);
-        }
-
-        // A behavior will observe the context, so create it now (lazily, only when actually needed).
-        RequestContext<TRequest, TResponse> context = contextFactory.Create<TRequest, TResponse>(request, cancellationToken);
-        return PipelineDispatch.Run(active, activeCount, context, ct => handler.Handle(request, ct), cancellationToken);
+        // AsTask() is allocation-free here: the shared helper always wraps a real Task<TResponse>
+        // (the handler's own, or PipelineDispatch.Run's), never a synchronous ValueTask value.
+        return PipelineDispatch.ExecuteWithBehaviorCache(
+            _handlerResolver, _behaviorRegistrationCache, request, handler, contextFactory, cancellationToken).AsTask();
     }
 }

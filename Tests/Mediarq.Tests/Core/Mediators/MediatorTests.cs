@@ -155,4 +155,47 @@ public class MediatorTests
             .ThrowAsync<InvalidOperationException>()
             .WithMessage("Error while handling request*");
     }
+
+    [Fact]
+    public async Task Send_Should_ResolveAll_Only_Once_When_No_Behaviors_Are_Registered()
+    {
+        // Arrange — a real cache, resolvable from the same handlerResolver the wrapper receives, so the
+        // dispatch-path wrapper (not just PipelineExecutor) can memoize "zero behaviors registered".
+        _mockHandlerResolver
+            .Setup(r => r.Resolve<PipelineBehaviorRegistrationCache>())
+            .Returns(new PipelineBehaviorRegistrationCache());
+
+        var request = new TestCommand("Hello");
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("OK"));
+
+        // Act — dispatch twice.
+        await _testClass.Send(request, CancellationToken.None);
+        await _testClass.Send(request, CancellationToken.None);
+
+        // Assert — the second dispatch skipped ResolveAll entirely, using the memoized "empty" fact.
+        _mockHandlerResolver.Verify(
+            r => r.ResolveAll<IPipelineBehavior<TestCommand, Result<string>>>(),
+            Times.Once);
+        _mockHandler.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task Send_Should_ResolveAll_Every_Time_When_No_Cache_Is_Registered()
+    {
+        // Arrange — no PipelineBehaviorRegistrationCache registered (Resolve<> returns null, the default
+        // constructor setup in this fixture): falls back to resolving on every dispatch.
+        var request = new TestCommand("Hello");
+        _mockHandler
+            .Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success("OK"));
+
+        await _testClass.Send(request, CancellationToken.None);
+        await _testClass.Send(request, CancellationToken.None);
+
+        _mockHandlerResolver.Verify(
+            r => r.ResolveAll<IPipelineBehavior<TestCommand, Result<string>>>(),
+            Times.Exactly(2));
+    }
 }

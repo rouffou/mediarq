@@ -18,7 +18,13 @@ namespace Mediarq.Core.Mediators;
     Justification = "Intentionally an abstract class, not an interface: vtable dispatch is cheaper than interface dispatch on the mediator hot path.")]
 internal abstract class RequestHandlerWrapper<TResponse>
 {
-    public abstract Task<TResponse> Handle(
+    // Internal-only: returns ValueTask<TResponse> rather than Task<TResponse> so the common
+    // "known zero behaviors" fast path (see PipelineDispatch.ExecuteWithBehaviorCache) never wraps an
+    // already-existing Task<TResponse> in another one. Mediator.Send (the public, Task<TResponse>-returning
+    // boundary) converts once via ValueTask<TResponse>.AsTask(), which is itself allocation-free when the
+    // ValueTask already wraps a real Task<TResponse> — always true here, since nothing on this path ever
+    // constructs a ValueTask<TResponse> from a bare value.
+    public abstract ValueTask<TResponse> Handle(
         object request,
         IHandlerResolver handlerResolver,
         IRequestContextFactory requestContextFactory,
@@ -35,7 +41,7 @@ internal abstract class RequestHandlerWrapper<TResponse>
 internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : RequestHandlerWrapper<TResponse>
     where TRequest : ICommandOrQuery<TResponse>
 {
-    public override Task<TResponse> Handle(
+    public override ValueTask<TResponse> Handle(
         object request,
         IHandlerResolver handlerResolver,
         IRequestContextFactory requestContextFactory,
@@ -46,16 +52,11 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : RequestHa
         var handler = handlerResolver.Resolve<IRequestHandler<TRequest, TResponse>>()
             ?? throw new HandlerNotFoundException(typeof(TRequest));
 
-        // Dispatch inline (no executor hop): resolve the behaviors, and when none are active for this
-        // request type, invoke the handler directly — no request-context allocation, no delegate chain.
-        var behaviors = handlerResolver.ResolveAll<IPipelineBehavior<TRequest, TResponse>>();
-        var active = PipelineDispatch.SelectActive<TRequest, TResponse>(behaviors, out var activeCount);
-        if (active is null)
-        {
-            return handler.Handle(typedRequest, cancellationToken);
-        }
-
-        RequestContext<TRequest, TResponse> context = requestContextFactory.Create<TRequest, TResponse>(typedRequest, cancellationToken);
-        return PipelineDispatch.Run(active, activeCount, context, ct => handler.Handle(typedRequest, ct), cancellationToken);
+        // Same cache-aware dispatch as PipelineExecutor's handler overload (shared via PipelineDispatch),
+        // so a request type observed to have zero registered behaviors skips ResolveAll<IPipelineBehavior<,>>
+        // entirely on every subsequent call, not just the delegate/context allocation.
+        var behaviorRegistrationCache = handlerResolver.Resolve<PipelineBehaviorRegistrationCache>();
+        return PipelineDispatch.ExecuteWithBehaviorCache(
+            handlerResolver, behaviorRegistrationCache, typedRequest, handler, requestContextFactory, cancellationToken);
     }
 }
