@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784918175548,
+  "lastUpdate": 1784964473314,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -252,6 +252,42 @@ window.BENCHMARK_DATA = {
             "value": 180.66736102104187,
             "unit": "ns",
             "range": "± 0.23978845303173374"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1d7073fdf9314f2d46de53a54492219567d69e3e",
+          "message": "perf(core): cache empty-pipeline fact per request type to skip ResolveAll on repeat dispatch (#194)\n\nResolveAll<IPipelineBehavior<TReq,TRes>>() was paid on every Send even when zero behaviors\nare registered for that closed type -- pure DI resolution cost with no value. Add\nPipelineBehaviorRegistrationCache, a per-container singleton memoizing that structural,\nDI-registration-time fact so a repeat dispatch skips the IEnumerable<> resolution\nentirely. Only \"zero registered\" is ever cached: whether a registered behavior is\ncurrently active (IConditionalPipelineBehavior.IsActive) is per-request runtime state\nand is still re-evaluated on every dispatch.\n\nResolved through the existing IHandlerResolver rather than added as a constructor\nparameter, so PipelineExecutor's already-shipped public constructor signature is\nunchanged (non-breaking).\n\nCloses #177\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-25T09:27:00+02:00",
+          "tree_id": "0319d05e6964f3692dcd5cac0112a84cd98e586e",
+          "url": "https://github.com/rouffou/mediarq/commit/1d7073fdf9314f2d46de53a54492219567d69e3e"
+        },
+        "date": 1784964473008,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 146.40025154749551,
+            "unit": "ns",
+            "range": "± 2.4523480440214933"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 189.18264770507812,
+            "unit": "ns",
+            "range": "± 2.8125153411626713"
           }
         ]
       }
