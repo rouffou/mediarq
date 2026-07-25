@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Mediarq.Aspire</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nicolas Rouffart</Authors>
+    <Description>.NET Aspire ServiceDefaults integration for Mediarq: one call from your project's own ServiceDefaults Extensions.cs wires Mediarq's OpenTelemetry instrumentation and the handler-registration health check into the Aspire dashboard.</Description>
+    <PackageTags>mediarq;cqrs;aspire;opentelemetry;healthchecks;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mediarq.OpenTelemetry\Mediarq.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\Mediarq.HealthChecks\Mediarq.HealthChecks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

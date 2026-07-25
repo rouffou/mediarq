@@ -1,0 +1,3 @@
+#nullable enable
+Mediarq.Aspire.MediarqServiceDefaultsExtensions
+static Mediarq.Aspire.MediarqServiceDefaultsExtensions.AddMediarqServiceDefaults(this Microsoft.Extensions.Hosting.IHostApplicationBuilder! builder, params System.Reflection.Assembly![]! assemblies) -> Microsoft.Extensions.Hosting.IHostApplicationBuilder!
