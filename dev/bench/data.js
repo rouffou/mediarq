@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785047703763,
+  "lastUpdate": 1785047705937,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -1551,6 +1551,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/rouffou/mediarq/commit/ce2a5a519647a9dcdbff86bf2878ea78e8819293"
         },
         "date": 1785009042302,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send - Allocated",
+            "value": 224,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send - Allocated",
+            "value": 560,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean - Allocated",
+            "value": 256,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain - Allocated",
+            "value": 440,
+            "unit": "B"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "37cb619bb7460fc2603d44feb78bbf2f3444b50e",
+          "message": "fix(packaging): declare lib/ framework assets for Mediarq and Mediarq.Analyzers (#226)\n\nBoth packages intentionally ship no assembly of their own (Mediarq is a\nmeta-package bundling its dependencies, Mediarq.Analyzers ships its DLL\nonly under analyzers/dotnet/cs) — with no lib/ folder at all, NuGet.org\nshows 'There are no supported framework assets in this package' for\nboth, as seen live on v1.5.0.\n\nAdd empty lib/<tfm>/_._ marker files (the standard NuGet convention for\nthis exact case) so NuGet.org lists net8.0/net9.0/net10.0 for Mediarq\nand netstandard2.0 for Mediarq.Analyzers, without shipping a real\nassembly. Suppress the resulting NU5128 for Mediarq.Analyzers, whose\ndependencies are intentionally omitted from the nuspec.\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-07-26T08:33:36+02:00",
+          "tree_id": "fa5daa5454b15a84da3f01500fc3e12a5217083f",
+          "url": "https://github.com/rouffou/mediarq/commit/37cb619bb7460fc2603d44feb78bbf2f3444b50e"
+        },
+        "date": 1785047703959,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
