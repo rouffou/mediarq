@@ -10,7 +10,9 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <DevelopmentDependency>true</DevelopmentDependency>
     <!-- Release-tracking analyzer files are unnecessary for this single shipped diagnostic. -->
-    <NoWarn>$(NoWarn);RS2008</NoWarn>
+    <!-- NU5128: the lib/netstandard2.0/_._ marker declares framework support for NuGet.org without a
+         matching dependency group — expected, since SuppressDependenciesWhenPacking drops one entirely. -->
+    <NoWarn>$(NoWarn);RS2008;NU5128</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,6 +34,10 @@
   <ItemGroup>
     <!-- Pack the analyzer assembly into the analyzers folder so it loads in consumer builds/IDEs. -->
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <!-- Empty marker file: NuGet.org only lists supported frameworks from lib/ assets, so an
+         analyzer-only package (no lib assembly by design) shows "no supported framework assets"
+         without this. -->
+    <None Include="_._" Pack="true" PackagePath="lib/netstandard2.0/_._" />
   </ItemGroup>
 
 </Project>
