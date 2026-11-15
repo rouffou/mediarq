@@ -12,9 +12,12 @@ namespace Mediarq.UnitOfWork;
 /// </summary>
 /// <typeparam name="TRequest">The request type.</typeparam>
 /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
-public sealed class UnitOfWorkBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public sealed class UnitOfWorkBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
+    private static readonly bool RequestIsTransactional = typeof(ITransactionalRequest).IsAssignableFrom(typeof(TRequest));
+
     private readonly IUnitOfWork _unitOfWork;
 
     /// <summary>
@@ -27,6 +30,12 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse> : IPipelineBehavior<
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
+
+    /// <summary>
+    /// Active only for request types that implement <see cref="ITransactionalRequest"/>, so every other
+    /// request skips this behavior and keeps the pipeline's fast path.
+    /// </summary>
+    public bool IsActive => RequestIsTransactional;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)
