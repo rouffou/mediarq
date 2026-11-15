@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Idempotency.EntityFrameworkCore</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>EF Core-backed IDistributedCache for Mediarq.Idempotency: a persistent, queryable idempotency store over a DbContext, as an alternative to Redis or in-memory. Includes a background cleanup service for expired entries.</Description>
     <PackageTags>mediarq;cqrs;idempotency;entityframeworkcore;efcore;dotnet</PackageTags>

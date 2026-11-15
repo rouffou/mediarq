@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.HealthChecks</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Startup-time and ongoing health checks for Mediarq: verifies every ICommand/IQuery closed type has exactly one registered handler, so a misconfiguration fails fast instead of surfacing as a HandlerNotFoundException on the first dispatch in production.</Description>
     <PackageTags>mediarq;cqrs;healthchecks;dotnet</PackageTags>

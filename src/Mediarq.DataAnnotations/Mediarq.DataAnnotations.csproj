@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.DataAnnotations</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>DataAnnotations adapter for Mediarq: validate requests with System.ComponentModel.DataAnnotations attributes in the Mediarq pipeline.</Description>
     <PackageTags>mediarq;cqrs;validation;dataannotations;dotnet</PackageTags>

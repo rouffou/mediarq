@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.MediatRCompat</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Optional MediatR compatibility shim for incremental migration to Mediarq: keep your
       existing MediatR.IRequest/IRequestHandler/INotification/INotificationHandler/IStreamRequest

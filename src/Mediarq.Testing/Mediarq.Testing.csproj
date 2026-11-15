@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Testing</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Test harness for Mediarq: a SpyMediator decorator that records dispatched requests/notifications while still running them through the real pipeline, assertion helpers, and ready-to-use FakeClock/FakeUserContext.</Description>
     <PackageTags>mediarq;cqrs;testing;dotnet</PackageTags>

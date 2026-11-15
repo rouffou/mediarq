@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.RateLimiting</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Rate limiting for Mediarq: a pipeline behavior built on System.Threading.RateLimiting, partitionable by request type or by a custom key (e.g. the current user).</Description>
     <PackageTags>mediarq;cqrs;ratelimiting;throttling;dotnet</PackageTags>

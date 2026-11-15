@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Grpc</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>gRPC transport for cross-service Mediarq notifications: forward a notification to another service's Mediarq.Grpc endpoint when it is published (IGrpcNotificationEvent), and receive it back into the real Mediarq pipeline via a single shared gRPC service. Ships its own compiled Protobuf/gRPC contract — consumers reference this package only, no protoc/Grpc.Tools required.</Description>
     <PackageTags>mediarq;cqrs;grpc;rpc;dotnet</PackageTags>

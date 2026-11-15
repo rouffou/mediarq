@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.RabbitMQ</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>A lightweight, direct RabbitMQ bridge for Mediarq notifications: publish a notification onto an exchange when it is published through Mediarq (IRabbitMqEvent), and receive it back into the real Mediarq pipeline via a background consumer — no MassTransit dependency required for the simple pub/sub case.</Description>
     <PackageTags>mediarq;cqrs;rabbitmq;amqp;pubsub;dotnet</PackageTags>

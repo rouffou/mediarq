@@ -3,7 +3,6 @@
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageId>Mediarq.Templates</PackageId>
-    <Version>1.0.0</Version>
     <Title>Mediarq templates</Title>
     <Authors>Nicolas Rouffart</Authors>
     <Description>dotnet new templates for Mediarq. Includes 'mediarq-feature' (scaffolds a command, its handler and a validator) and 'mediarq-webapi' (a full CQRS ASP.NET Core Web API solution wired with Mediarq).</Description>
@@ -24,6 +23,14 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!-- Same versioning as the packages under src/: derived from the git tag (vX.Y.Z) by MinVer. -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Ship the template content; never compile it as part of this project. -->

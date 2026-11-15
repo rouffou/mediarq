@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.AzureServiceBus</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>A lightweight, direct Azure Service Bus bridge for Mediarq notifications: publish a notification onto a topic when it is published through Mediarq (IAzureServiceBusEvent), and receive it back into the real Mediarq pipeline via a background processor — no MassTransit dependency required for the simple pub/sub case.</Description>
     <PackageTags>mediarq;cqrs;azure;servicebus;pubsub;dotnet</PackageTags>

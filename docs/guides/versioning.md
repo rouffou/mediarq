@@ -57,3 +57,14 @@ The analyzer runs as part of every `dotnet build`, so the warning is visible loc
 it does not fail the build — the goal is a deliberate, visible prompt when public API changes, not a hard
 gate that blocks work-in-progress branches. Reviewers still eyeball public API diffs on any PR that
 touches a `src/*/PublicAPI.*.txt` file.
+
+## Where the version comes from
+
+Package versions are not written in the csproj files: [MinVer](https://github.com/adamralph/minver) derives one
+version for every package from the git tag `vMAJOR.MINOR.PATCH`. A build exactly on a tag produces that
+version (`v1.6.0` gives `1.6.0`); a commit after a tag produces a pre-release (`1.6.0-alpha.0.N`). Release
+tags live on `main`, so `MinVerMinimumMajorMinor` in `src/Directory.Build.props` is the floor for `dev`
+builds: raise it when a new minor line starts.
+
+MinVer reads the git history, so CI checkouts use `fetch-depth: 0`; a shallow clone would build as
+`0.0.0-alpha.0.N`. To force a version locally, pass `-p:MinVerVersionOverride=X.Y.Z`.

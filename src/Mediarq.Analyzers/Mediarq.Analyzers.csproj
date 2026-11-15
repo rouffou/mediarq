@@ -17,7 +17,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Analyzers</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Roslyn analyzer and code fix that detect MediatR types (IRequest, IRequestHandler, INotification, IPipelineBehavior, …) and rewrite them to their Mediarq equivalents, to automate migration from MediatR.</Description>
     <PackageTags>mediator;cqrs;mediatr;migration;analyzer;roslyn;codefix;dotnet</PackageTags>

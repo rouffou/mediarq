@@ -10,6 +10,23 @@
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4" PrivateAssets="all" />
   </ItemGroup>
 
+  <!--
+    One version for every package, derived from the git tag (vX.Y.Z) by MinVer: no <Version> in the
+    individual csproj files. A commit after a tag builds as a pre-release (X.Y.(Z+1)-alpha.0.N).
+    Needs the full git history and tags (fetch-depth: 0 in CI). Override with -p:MinVerVersionOverride=...
+  -->
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+  </ItemGroup>
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <!--
+      Release tags live on main, so dev history does not reach them and would otherwise build as
+      1.1.x-alpha. This floor makes dev builds read 1.6.0-alpha.0.N; a tag at or above it is unaffected.
+    -->
+    <MinVerMinimumMajorMinor>1.6</MinVerMinimumMajorMinor>
+  </PropertyGroup>
+
   <!-- Every package under src/ ships the shared Mediarq icon (assets/icon.png at the repo root). -->
   <PropertyGroup>
     <PackageIcon>icon.png</PackageIcon>
