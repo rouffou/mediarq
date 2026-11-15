@@ -20,6 +20,15 @@ public class ResilienceBehaviorTests
 
     public record PlainCommand : ICommand<Result<string>>;
 
+    [Fact]
+    public void IsActive_True_For_Resilient_False_Otherwise()
+    {
+        var provider = BuildProvider();
+
+        new ResilienceBehavior<FlakyCommand, Result<string>>(provider).IsActive.Should().BeTrue();
+        new ResilienceBehavior<PlainCommand, Result<string>>(provider).IsActive.Should().BeFalse();
+    }
+
     private static ResiliencePipelineProvider<string> BuildProvider()
     {
         var services = new ServiceCollection();

@@ -99,6 +99,11 @@ is literally the `false` literal (an expression-bodied property, an expression-b
 
 ## Notifications
 
+### "A second operation was started on this context" when publishing a notification
+Notification handlers run **in parallel** by default (`ParallelNotificationPublisher`), so two handlers
+sharing a scoped `DbContext` collide. Register `SequentialNotificationPublisher` before `AddMediarq` /
+`AddMediarqCore` — see [Migrating from MediatR](migrating-from-mediatr.md#notifications).
+
 ### `Result.WithNotifications(...)` was called but the notification never publishes
 Cascaded notifications only publish **after a successful dispatch** — check `result.IsSuccess` on what
 your handler actually returned. A behavior/exception handler downstream that replaces the response with
