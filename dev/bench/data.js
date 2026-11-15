@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794768059096,
+  "lastUpdate": 1794768165587,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -1807,6 +1807,50 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/rouffou/mediarq/commit/fdf88ad959f5833c36e62de2424708fd45f34ae5"
         },
         "date": 1785048029420,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send - Allocated",
+            "value": 224,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send - Allocated",
+            "value": 560,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean - Allocated",
+            "value": 256,
+            "unit": "B"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain - Allocated",
+            "value": 440,
+            "unit": "B"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "rouffou@gmail.com",
+            "name": "Nicolas Rouffart",
+            "username": "rouffou"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e2711d05b12964b75bf539d39cbdf16bf00eeaef",
+          "message": "fix(reliability): harden outbox, idempotency and parallel publisher (#228)\n\n* fix(reliability): harden outbox, idempotency and parallel notification publisher\n\n- core: ParallelNotificationPublisher starts every handler even when one throws\n  before returning its Task; the exception is captured into that handler's task.\n- outbox: add OutboxOptions.MaxAttempts (default 10) so a poison message stops\n  being retried and cannot fill every batch; claim each message optimistically\n  through Attempts as a concurrency token (no schema change) so concurrent\n  processors never publish the same message twice; save per message; give the\n  attempt back on cancellation.\n- idempotency: scope the cache key by request type, never store a failed Result,\n  and serialize concurrent calls sharing a key within a process so the handler\n  runs once.\n\nPublic API change is additive (OutboxOptions.MaxAttempts). Cross-instance\nidempotency stays best-effort because IDistributedCache has no atomic\nset-if-absent.\n\n* chore: add dependabot and correct inaccurate public claims\n\n- add .github/dependabot.yml (nuget + github-actions, weekly, targeting dev)\n- drop \"dependency-free\" (Mediarq.Core references Scrutor and\n  Microsoft.AspNetCore.Http.Abstractions) and \"drop-in\" (signatures differ,\n  notifications publish in parallel by default) from README, docs and the\n  Mediarq.Core package description\n- list all packages in docs/index.md and fix the stale versioning statement\n\n---------\n\nCo-authored-by: Nicolas Rouffart <rouffart.nicolas@gmail.com>",
+          "timestamp": "2026-11-15T19:39:43+01:00",
+          "tree_id": "925a3171a0b4bfb512ec16d2f2de56e60a77ba12",
+          "url": "https://github.com/rouffou/mediarq/commit/e2711d05b12964b75bf539d39cbdf16bf00eeaef"
+        },
+        "date": 1794768164959,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
