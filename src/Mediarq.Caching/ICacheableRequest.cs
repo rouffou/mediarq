@@ -14,4 +14,10 @@ public interface ICacheableRequest
     /// no relative expiration is set and the entry follows the cache's own policy.
     /// </summary>
     TimeSpan? CacheDuration => null;
+
+    /// <summary>
+    /// Gets whether a failed <see cref="Mediarq.Core.Common.Results.Result"/> is cached too. Defaults to
+    /// <see langword="false"/>: a failure is usually transient and must not be replayed from the cache.
+    /// </summary>
+    bool CacheFailures => false;
 }

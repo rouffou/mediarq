@@ -2,7 +2,9 @@ using Mediarq.Caching;
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Results;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Collections.Concurrent;
 
 namespace Mediarq.Idempotency;
 
@@ -12,6 +14,22 @@ namespace Mediarq.Idempotency;
 /// subsequent runs with the same key return the stored result without re-running the handler. Inert for
 /// request types that are not idempotent.
 /// </summary>
+/// <remarks>
+/// <para>
+/// The cache key is scoped by request type, so two different request types that happen to share an
+/// idempotency key never replay each other's result.
+/// </para>
+/// <para>
+/// Failed <see cref="Result"/> values are never stored: a failure is not a completed operation and the
+/// caller must be able to retry with the same key.
+/// </para>
+/// <para>
+/// Concurrent calls with the same key inside one process are serialized, so the handler runs once and the
+/// others replay its result. Across several instances the check remains best-effort, because
+/// <see cref="IDistributedCache"/> has no atomic set-if-absent; use a distributed lock for strict
+/// once-only semantics there.
+/// </para>
+/// </remarks>
 /// <typeparam name="TRequest">The request type.</typeparam>
 /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
 public sealed class IdempotencyBehavior<TRequest, TResponse>
@@ -20,6 +38,9 @@ public sealed class IdempotencyBehavior<TRequest, TResponse>
 {
     private static readonly bool RequestIsIdempotent = typeof(IIdempotentRequest).IsAssignableFrom(typeof(TRequest));
     private static readonly TimeSpan DefaultRetention = TimeSpan.FromHours(24);
+
+    // Per-key gates for in-process serialization. Entries are removed when the last waiter leaves.
+    private static readonly ConcurrentDictionary<string, KeyGate> Gates = new();
 
     private readonly IDistributedCache _cache;
     private readonly IMediarqCacheSerializer _serializer;
@@ -48,31 +69,105 @@ public sealed class IdempotencyBehavior<TRequest, TResponse>
         ArgumentNullException.ThrowIfNull(handle);
 
         var idempotent = (IIdempotentRequest)context.Request!;
-        var key = "mediarq:idem:" + idempotent.IdempotencyKey;
+        var key = "mediarq:idem:" + typeof(TRequest).FullName + ":" + idempotent.IdempotencyKey;
 
-        var existing = await _cache.GetAsync(key, cancellationToken).ConfigureAwait(false);
-        if (existing is { Length: > 0 })
+        if (TryGetStored(await _cache.GetAsync(key, cancellationToken).ConfigureAwait(false), out var cached))
         {
-            var stored = _serializer.Deserialize<TResponse>(existing);
+            return cached;
+        }
+
+        var gate = AcquireGate(key);
+        try
+        {
+            await gate.Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // Another caller with the same key may have completed while this one was waiting.
+                if (TryGetStored(await _cache.GetAsync(key, cancellationToken).ConfigureAwait(false), out var completed))
+                {
+                    return completed;
+                }
+
+                var response = await handle().ConfigureAwait(false);
+
+                // Only store a successful, non-null result: a null cannot be round-tripped to mean
+                // "already handled", and a failed Result must stay retryable with the same key.
+                if (response is not null && response is not Result { IsFailure: true })
+                {
+                    var options = new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = idempotent.IdempotencyDuration ?? DefaultRetention,
+                    };
+
+                    await _cache.SetAsync(key, _serializer.Serialize(response), options, cancellationToken).ConfigureAwait(false);
+                }
+
+                return response;
+            }
+            finally
+            {
+                gate.Semaphore.Release();
+            }
+        }
+        finally
+        {
+            ReleaseGate(key, gate);
+        }
+    }
+
+    private bool TryGetStored(byte[]? bytes, out TResponse response)
+    {
+        if (bytes is { Length: > 0 })
+        {
+            var stored = _serializer.Deserialize<TResponse>(bytes);
             if (stored is not null)
             {
-                return stored;
+                response = stored;
+                return true;
             }
         }
 
-        var response = await handle().ConfigureAwait(false);
+        response = default!;
+        return false;
+    }
 
-        // Only store a non-null result; a null cannot be round-tripped to mean "already handled".
-        if (response is not null)
+    private static KeyGate AcquireGate(string key)
+    {
+        while (true)
         {
-            var options = new DistributedCacheEntryOptions
+            var gate = Gates.GetOrAdd(key, static _ => new KeyGate());
+            lock (gate)
             {
-                AbsoluteExpirationRelativeToNow = idempotent.IdempotencyDuration ?? DefaultRetention,
-            };
+                if (!gate.Retired)
+                {
+                    gate.Users++;
+                    return gate;
+                }
+            }
 
-            await _cache.SetAsync(key, _serializer.Serialize(response), options, cancellationToken).ConfigureAwait(false);
+            // The gate was retired between lookup and lock; drop it and retry with a fresh one.
+            Gates.TryRemove(new KeyValuePair<string, KeyGate>(key, gate));
         }
+    }
 
-        return response;
+    private static void ReleaseGate(string key, KeyGate gate)
+    {
+        lock (gate)
+        {
+            if (--gate.Users == 0)
+            {
+                gate.Retired = true;
+                Gates.TryRemove(new KeyValuePair<string, KeyGate>(key, gate));
+            }
+        }
+    }
+
+    private sealed class KeyGate
+    {
+        public SemaphoreSlim Semaphore { get; } = new(1, 1);
+
+        public int Users;
+
+        public bool Retired;
     }
 }
