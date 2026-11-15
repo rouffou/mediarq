@@ -21,6 +21,9 @@ public static class OutboxModelBuilderExtensions
         entity.HasKey(m => m.Id);
         entity.Property(m => m.Type).IsRequired();
         entity.Property(m => m.Payload).IsRequired();
+        // Used as an optimistic claim: only one processor instance can move a message from N to N + 1
+        // attempts, so concurrent instances never publish the same message twice. No schema change.
+        entity.Property(m => m.Attempts).IsConcurrencyToken();
         // Speeds up the "pending messages" query used by the processor.
         entity.HasIndex(m => m.ProcessedOnUtc);
 

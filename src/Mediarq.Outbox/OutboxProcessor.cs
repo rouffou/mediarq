@@ -63,7 +63,7 @@ public sealed class OutboxProcessor<TContext> : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<TContext>();
         var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
-        await OutboxDispatcher.ProcessPendingAsync(context, publisher, _options.BatchSize, cancellationToken).ConfigureAwait(false);
+        await OutboxDispatcher.ProcessPendingAsync(context, publisher, _options.BatchSize, cancellationToken, _options.MaxAttempts).ConfigureAwait(false);
     }
 
     private static async Task<bool> WaitForNextTickAsync(PeriodicTimer timer, CancellationToken cancellationToken)

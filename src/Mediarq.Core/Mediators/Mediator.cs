@@ -26,7 +26,7 @@ namespace Mediarq.Core.Mediators;
 /// at all — trimming/AOT friendly. Otherwise (the reflection-based <c>AddMediarq</c> assembly scan),
 /// each wrapper is built reflectively once per type and cached.
 ///
-/// This class is designed to replace MediatR with a lightweight, dependency-free mediator
+/// This class is designed to replace MediatR with a lightweight, minimal-dependency mediator
 /// that integrates easily into domain-driven and CQRS-based architectures.
 /// </remarks>
 public class Mediator : IMediator
