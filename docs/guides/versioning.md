@@ -10,8 +10,8 @@ Mediarq is a set of NuGet libraries. Every package follows [Semantic Versioning]
   overload.
 - **PATCH** — a backward-compatible bug fix: no public API change.
 
-All packages are at `Version 1.0.0`: the public API (the `Mediarq.*` namespaces exposed by each package)
-is **frozen**. See [`docs/BRANCHING.md`](../../docs/BRANCHING.md#api-publique--rappel) for the merge-time
+Since `v1.0.0`, the public API (the `Mediarq.*` namespaces exposed by each package) is **frozen**; the
+current release is listed on [NuGet.org](https://www.nuget.org/profiles/rouffou) and in the GitHub releases. See [`docs/BRANCHING.md`](../../docs/BRANCHING.md#api-publique--rappel) for the merge-time
 rule — no public renaming/signature change lands on `dev` without an assumed major bump.
 
 ## Enforcement: PublicApiAnalyzers
