@@ -109,6 +109,21 @@ response shape (including `Unit`, a no-result `ICommand`'s response type).
 
 See [Wiring extensions](wiring-extensions.md#cascaded-notifications--resultwithnotifications).
 
+## Handlers
+
+### Build warning `MQ203` — request has more than one handler
+Two concrete classes implement the handler interface (`ICommandHandler` / `IQueryHandler` /
+`IRequestHandler`) for the same request type. A request has exactly one handler, so dispatch cannot choose
+between them (`Mediarq.HealthChecks` would only report it at startup). Remove one, or give the second its own
+request type.
+
+Only handlers declared in the project being compiled are compared, and abstract or open-generic handlers
+are ignored. It is a warning so that it never breaks an existing build; to make it a compile error:
+
+```ini
+dotnet_diagnostic.MQ203.severity = error
+```
+
 ## Routing
 
 ### Build warning `MQ202` — duplicate Mediarq route
