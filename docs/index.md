@@ -1,6 +1,6 @@
 # Mediarq
 
-A lightweight, dependency-free **CQRS mediator for .NET** — a free alternative to MediatR with
+A lightweight, minimal-dependency **CQRS mediator for .NET** — a free alternative to MediatR with
 commands, queries, notifications, a composable pipeline of behaviors, built-in validation and
 `Result` types. Designed for domain-driven and CQRS architectures.
 
@@ -14,7 +14,22 @@ commands, queries, notifications, a composable pipeline of behaviors, built-in v
 
 | Package | Purpose |
 |---|---|
-| `Mediarq` | Core mediator, pipeline, results, source generator |
+| `Mediarq` | Meta-package: the core (`Mediarq.Core`) plus the common optional extensions |
+| `Mediarq.Core` | Core mediator, pipeline, results, source generator |
+| `Mediarq.Analyzers` | Roslyn analyzer + code fix that rewrite MediatR types to their Mediarq equivalents |
+| `Mediarq.Authorization` | `IAuthorizedRequest` + policy-based authorization behavior, short-circuiting into a typed `Result` failure |
+| `Mediarq.RateLimiting` | Rate-limiting behavior on `System.Threading.RateLimiting`, partitionable by request type or key |
+| `Mediarq.HealthChecks` | Startup/ongoing health check: every command/query has exactly one registered handler |
+| `Mediarq.Testing` | `SpyMediator`, assertion helpers, `FakeClock` / `FakeUserContext` |
+| `Mediarq.Deferred` | In-process deferred dispatch (`SendLaterAsync` / `PublishLaterAsync`) on a background channel |
+| `Mediarq.Hangfire` | Delayed and scheduled command dispatch via Hangfire |
+| `Mediarq.Quartz` | Delayed and scheduled command dispatch via Quartz.NET |
+| `Mediarq.Saga` | Saga / process-manager primitives with a persisted, correlated state |
+| `Mediarq.RabbitMQ` | Direct RabbitMQ bridge for notifications |
+| `Mediarq.AzureServiceBus` | Direct Azure Service Bus bridge for notifications |
+| `Mediarq.Dapr` | Dapr pub/sub bridge for notifications |
+| `Mediarq.Grpc` | gRPC transport for cross-service notifications |
+| `Mediarq.Aspire` | .NET Aspire ServiceDefaults integration |
 | `Mediarq.AspNetCore` | Map `Result` → `IResult` / ProblemDetails |
 | `Mediarq.FluentValidation` | Run FluentValidation validators in the pipeline |
 | `Mediarq.DataAnnotations` | Validate requests with `System.ComponentModel.DataAnnotations` |

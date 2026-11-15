@@ -81,6 +81,74 @@ public class IdempotencyBehaviorTests
         calls.Should().Be(2);
     }
 
+    public record RefundCommand(string Key) : ICommand<Result<string>>, IIdempotentRequest
+    {
+        public string IdempotencyKey => Key;
+    }
+
+    [Fact]
+    public async Task Does_Not_Replay_Across_Different_Request_Types_Sharing_A_Key()
+    {
+        var cache = NewCache();
+        var pay = Behavior(cache);
+        var refund = new IdempotencyBehavior<RefundCommand, Result<string>>(cache, new JsonMediarqCacheSerializer());
+
+        var paid = await pay.Handle(
+            new RequestContext<PayCommand, Result<string>>(new PayCommand("shared", 1m), "user"),
+            () => Task.FromResult(Result.Success("payment")));
+        var refunded = await refund.Handle(
+            new RequestContext<RefundCommand, Result<string>>(new RefundCommand("shared"), "user"),
+            () => Task.FromResult(Result.Success("refund")));
+
+        paid.Value.Should().Be("payment");
+        refunded.Value.Should().Be("refund");
+    }
+
+    [Fact]
+    public async Task Does_Not_Store_A_Failed_Result_So_The_Same_Key_Can_Be_Retried()
+    {
+        var behavior = Behavior(NewCache());
+        var context = new RequestContext<PayCommand, Result<string>>(new PayCommand("retry", 1m), "user");
+
+        var calls = 0;
+        Task<Result<string>> Handle()
+        {
+            calls++;
+            return Task.FromResult(calls == 1
+                ? Result.Failure<string>(new ResultError("Pay.Declined", "declined", ErrorType.Validation))
+                : Result.Success("ok"));
+        }
+
+        var first = await behavior.Handle(context, Handle);
+        var second = await behavior.Handle(context, Handle);
+        var third = await behavior.Handle(context, Handle);
+
+        first.IsFailure.Should().BeTrue();
+        second.IsSuccess.Should().BeTrue();
+        third.Value.Should().Be("ok");
+        calls.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Concurrent_Calls_With_The_Same_Key_Run_The_Handler_Once()
+    {
+        var behavior = Behavior(NewCache());
+        var calls = 0;
+
+        async Task<Result<string>> Handle()
+        {
+            Interlocked.Increment(ref calls);
+            await Task.Delay(50);
+            return Result.Success("done");
+        }
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ =>
+            behavior.Handle(new RequestContext<PayCommand, Result<string>>(new PayCommand("race", 1m), "user"), Handle)));
+
+        calls.Should().Be(1);
+        results.Should().OnlyContain(r => r.Value == "done");
+    }
+
     [Fact]
     public void IsActive_True_For_Idempotent_False_Otherwise()
     {

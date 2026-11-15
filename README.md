@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-8%20%7C%209%20%7C%2010-512BD4.svg)](https://dotnet.microsoft.com/)
 
-A lightweight, dependency-free **CQRS mediator for .NET** — a free alternative to MediatR with
+A lightweight, minimal-dependency **CQRS mediator for .NET** — a free alternative to MediatR with
 commands, queries, no-result commands, notifications, a composable pipeline of behaviors, and
 built-in validation and `Result` types. Designed for domain-driven and CQRS architectures.
 
@@ -29,9 +29,12 @@ built-in validation and `Result` types. Designed for domain-driven and CQRS arch
 
 ## Why Mediarq?
 
-MediatR has moved to a commercial license for many users. Mediarq is a drop-in-shaped, **100% free
+MediatR has moved to a commercial license for many users. Mediarq is a MediatR-shaped, **100% free
 and MIT-licensed** mediator: no license tier, no revenue threshold, no future licensing risk — just a
-package you `dotnet add` and keep. It covers the same CQRS building blocks (commands, queries,
+package you `dotnet add` and keep. It is *not* a binary drop-in: request types are split into commands
+and queries, the `IPipelineBehavior` signature differs, and notifications are published in parallel by
+default (see [Migrating from MediatR](docs/guides/migrating-from-mediatr.md); `Mediarq.MediatRCompat` and
+`Mediarq.Analyzers` automate most of it). It covers the same CQRS building blocks (commands, queries,
 notifications, a behavior pipeline) plus things MediatR doesn't ship out of the box: built-in `Result`
 types, reflection-free/Native AOT dispatch, and a source-generator-driven registration path.
 
@@ -353,7 +356,7 @@ Result<int> doubled = await GetResultAsync().MapAsync(x => x * 2);
 
 ## Extension packages
 
-Mediarq ships optional, opt-in packages so the core stays dependency-free:
+Mediarq ships optional, opt-in packages so the core stays lean:
 
 | Package | Purpose |
 |---|---|

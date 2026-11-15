@@ -15,7 +15,7 @@
     <PackageId>Mediarq.Core</PackageId>
     <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
-    <Description>Core of Mediarq: a lightweight, dependency-free CQRS mediator for .NET (commands, queries, notifications, pipeline behaviors, validation, Result, source generator). The Mediarq meta-package bundles this with the optional extensions.</Description>
+    <Description>Core of Mediarq: a lightweight, minimal-dependency CQRS mediator for .NET (commands, queries, notifications, pipeline behaviors, validation, Result, source generator). The Mediarq meta-package bundles this with the optional extensions.</Description>
     <PackageTags>mediator;cqrs;ddd;pipeline;notifications;dotnet</PackageTags>
     <PackageProjectUrl>https://github.com/rouffou/mediarq</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rouffou/mediarq</RepositoryUrl>
