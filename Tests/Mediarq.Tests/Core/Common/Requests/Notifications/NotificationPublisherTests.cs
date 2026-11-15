@@ -22,6 +22,23 @@ public class NotificationPublisherTests
     }
 
     [Fact]
+    public async Task Parallel_Starts_Every_Handler_Even_When_One_Throws_Synchronously()
+    {
+        var count = 0;
+        var handlers = new List<Func<CancellationToken, Task>>
+        {
+            _ => { Interlocked.Increment(ref count); return Task.CompletedTask; },
+            _ => throw new InvalidOperationException("sync boom"),
+            _ => { Interlocked.Increment(ref count); return Task.CompletedTask; },
+        };
+
+        var act = () => new ParallelNotificationPublisher().Publish(handlers, CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("sync boom");
+        count.Should().Be(2);
+    }
+
+    [Fact]
     public async Task Sequential_Invokes_All_Handlers_In_Order()
     {
         var order = new List<int>();
