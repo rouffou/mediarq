@@ -1,6 +1,7 @@
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Results;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Mediarq.Caching;
@@ -59,8 +60,9 @@ public sealed class DistributedCachingBehavior<TRequest, TResponse>
 
         var response = await handle().ConfigureAwait(false);
 
-        // Only cache a non-null response; a null cannot be round-tripped meaningfully.
-        if (response is not null)
+        // Only cache a non-null response (a null cannot be round-tripped meaningfully), and a failed
+        // Result only when the request opts in through CacheFailures.
+        if (response is not null && (response is not Result { IsFailure: true } || cacheable.CacheFailures))
         {
             var options = new DistributedCacheEntryOptions();
             if (cacheable.CacheDuration is { } duration)
