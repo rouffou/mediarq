@@ -28,6 +28,9 @@ Call after `AddMediarq` / `AddMediarqCore`. Distributed caching serializes the r
 `Result` / `Result<T>` round-trip out of the box; keep your DTOs serializable. On Native AOT, register a
 source-generated `IMediarqCacheSerializer`.
 
+A failed `Result` is **not cached** by default, so a transient error is not replayed from the cache. A
+request can opt in with `public bool CacheFailures => true;`.
+
 ## Learn more
 
 [Wiring extensions](https://github.com/rouffou/mediarq/blob/main/docs/guides/wiring-extensions.md) ·

@@ -34,8 +34,60 @@ public class DistributedCachingBehaviorTests
 
     public sealed record OrderDto(int Id, string Customer, decimal Total);
 
+    public record FailureCachingQuery(string Key) : IQuery<Result<string>>, ICacheableRequest
+    {
+        public string CacheKey => Key;
+
+        public bool CacheFailures => true;
+    }
+
     private static IDistributedCache NewCache()
         => new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions()));
+
+    [Fact]
+    public async Task Does_Not_Cache_A_Failed_Result_By_Default()
+    {
+        var behavior = Behavior(NewCache());
+        var context = new RequestContext<CachedQuery, Result<string>>(new CachedQuery("fail"), "user");
+
+        var calls = 0;
+        Task<Result<string>> Handle()
+        {
+            calls++;
+            return Task.FromResult(calls == 1
+                ? Result.Failure<string>(new ResultError("Q.Transient", "transient", ErrorType.Validation))
+                : Result.Success("ok"));
+        }
+
+        var first = await behavior.Handle(context, Handle);
+        var second = await behavior.Handle(context, Handle);
+        var third = await behavior.Handle(context, Handle);
+
+        first.IsFailure.Should().BeTrue();
+        second.Value.Should().Be("ok");
+        third.Value.Should().Be("ok");
+        calls.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Caches_A_Failed_Result_When_The_Request_Opts_In()
+    {
+        var behavior = new DistributedCachingBehavior<FailureCachingQuery, Result<string>>(NewCache(), new JsonMediarqCacheSerializer());
+        var context = new RequestContext<FailureCachingQuery, Result<string>>(new FailureCachingQuery("fail"), "user");
+
+        var calls = 0;
+        Task<Result<string>> Handle()
+        {
+            calls++;
+            return Task.FromResult(Result.Failure<string>(new ResultError("Q.Permanent", "permanent", ErrorType.Validation)));
+        }
+
+        await behavior.Handle(context, Handle);
+        var second = await behavior.Handle(context, Handle);
+
+        second.IsFailure.Should().BeTrue();
+        calls.Should().Be(1);
+    }
 
     private static DistributedCachingBehavior<CachedQuery, Result<string>> Behavior(IDistributedCache cache)
         => new(cache, new JsonMediarqCacheSerializer());

@@ -1,1 +1,2 @@
 #nullable enable
+Mediarq.UnitOfWork.UnitOfWorkBehavior<TRequest, TResponse>.IsActive.get -> bool

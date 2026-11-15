@@ -1,1 +1,3 @@
 #nullable enable
+Mediarq.Outbox.OutboxOptions.MaxAttempts.get -> int
+Mediarq.Outbox.OutboxOptions.MaxAttempts.set -> void
