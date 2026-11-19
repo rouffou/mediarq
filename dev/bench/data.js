@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795101861226,
+  "lastUpdate": 1795101919056,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -1466,6 +1466,54 @@ window.BENCHMARK_DATA = {
             "value": 250.45330063501993,
             "unit": "ns",
             "range": "± 4.040532698431017"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "591b7dd19ba82c01468a34af24fb6c885ba6c3c7",
+          "message": "ci(deps): bump actions/setup-dotnet from 4 to 6 (#256)\n\nBumps [actions/setup-dotnet](https://github.com/actions/setup-dotnet) from 4 to 6.\n- [Release notes](https://github.com/actions/setup-dotnet/releases)\n- [Commits](https://github.com/actions/setup-dotnet/compare/v4...v6)\n\n---\nupdated-dependencies:\n- dependency-name: actions/setup-dotnet\n  dependency-version: '6'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Nicolas Rouffart <rouffou@gmail.com>",
+          "timestamp": "2026-11-19T16:23:09+01:00",
+          "tree_id": "09899f7106e86d8d642229aaeca3cc0d6263780d",
+          "url": "https://github.com/rouffou/mediarq/commit/591b7dd19ba82c01468a34af24fb6c885ba6c3c7"
+        },
+        "date": 1795101918624,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "SendBenchmarks.MediatR_Send",
+            "value": 93.11890699466069,
+            "unit": "ns",
+            "range": "± 0.5464958229345518"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send",
+            "value": 277.25104300181073,
+            "unit": "ns",
+            "range": "± 6.404102009989667"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Lean",
+            "value": 164.57884653409323,
+            "unit": "ns",
+            "range": "± 2.8869349289772894"
+          },
+          {
+            "name": "SendBenchmarks.Mediarq_Send_Plain",
+            "value": 241.11335261662802,
+            "unit": "ns",
+            "range": "± 4.407357399182432"
           }
         ]
       }
