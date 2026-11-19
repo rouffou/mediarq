@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794768197336,
+  "lastUpdate": 1795101861226,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -612,6 +612,42 @@ window.BENCHMARK_DATA = {
             "value": 183.10241516431174,
             "unit": "ns",
             "range": "± 0.4485589099360607"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "591b7dd19ba82c01468a34af24fb6c885ba6c3c7",
+          "message": "ci(deps): bump actions/setup-dotnet from 4 to 6 (#256)\n\nBumps [actions/setup-dotnet](https://github.com/actions/setup-dotnet) from 4 to 6.\n- [Release notes](https://github.com/actions/setup-dotnet/releases)\n- [Commits](https://github.com/actions/setup-dotnet/compare/v4...v6)\n\n---\nupdated-dependencies:\n- dependency-name: actions/setup-dotnet\n  dependency-version: '6'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Nicolas Rouffart <rouffou@gmail.com>",
+          "timestamp": "2026-11-19T16:23:09+01:00",
+          "tree_id": "09899f7106e86d8d642229aaeca3cc0d6263780d",
+          "url": "https://github.com/rouffou/mediarq/commit/591b7dd19ba82c01468a34af24fb6c885ba6c3c7"
+        },
+        "date": 1795101860879,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 129.57422018051147,
+            "unit": "ns",
+            "range": "± 0.461003463130897"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 188.7117861111959,
+            "unit": "ns",
+            "range": "± 0.7790793499792524"
           }
         ]
       }
