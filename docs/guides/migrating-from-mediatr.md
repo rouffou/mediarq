@@ -134,6 +134,19 @@ See [Writing a behavior](writing-a-behavior.md) for ordering and conditional beh
 
 - The publishing strategy is configurable via `INotificationPublisher`
   (`ParallelNotificationPublisher` by default, `SequentialNotificationPublisher`, or your own).
+- **Handlers run in parallel by default; MediatR runs them one after the other.** This matters when
+  several handlers of the same notification share a scoped dependency that is not thread-safe, most
+  commonly an EF Core `DbContext` ("A second operation was started on this context..."), or when one
+  handler relies on another having already run. If you migrate such code, select the sequential publisher
+  **before** registering Mediarq (the registration uses `TryAdd`, so the first one wins):
+
+  ```csharp
+  builder.Services.AddSingleton<INotificationPublisher, SequentialNotificationPublisher>();
+  builder.Services.AddMediarq(typeof(Program).Assembly);
+  ```
+
+  With the parallel publisher every handler is started even if one throws, and the first exception is
+  surfaced; with the sequential one, the first exception stops the remaining handlers.
 - An `IValidator<TNotification>` runs automatically before publishing; an invalid notification throws a
   `NotificationValidationException`.
 

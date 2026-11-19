@@ -26,6 +26,11 @@ jobs:
       - name: Test
         run: dotnet test --no-build -c Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
 
+      # Dry run of the release pack, so a packaging break (a project that stops being packable, a missing
+      # asset...) shows up on the PR instead of on the release tag. Nothing is published.
+      - name: Pack (dry run)
+        run: dotnet pack Mediarq.sln --no-build -c Release -p:Version=0.0.0-ci -o ./artifacts-ci
+
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:

@@ -12,9 +12,12 @@ namespace Mediarq.Polly;
 /// </summary>
 /// <typeparam name="TRequest">The request type.</typeparam>
 /// <typeparam name="TResponse">The response type produced by the request.</typeparam>
-public sealed class ResilienceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+public sealed class ResilienceBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>, IConditionalPipelineBehavior
     where TRequest : ICommandOrQuery<TResponse>
 {
+    private static readonly bool RequestIsResilient = typeof(IResilientRequest).IsAssignableFrom(typeof(TRequest));
+
     private readonly ResiliencePipelineProvider<string> _pipelineProvider;
 
     /// <summary>
@@ -27,6 +30,9 @@ public sealed class ResilienceBehavior<TRequest, TResponse> : IPipelineBehavior<
         ArgumentNullException.ThrowIfNull(pipelineProvider);
         _pipelineProvider = pipelineProvider;
     }
+
+    /// <summary>Active only for request types that implement <see cref="IResilientRequest"/>.</summary>
+    public bool IsActive => RequestIsResilient;
 
     /// <inheritdoc />
     public async Task<TResponse> Handle(IMutableRequestContext<TRequest, TResponse> context, Func<Task<TResponse>> handle, CancellationToken cancellationToken = default)

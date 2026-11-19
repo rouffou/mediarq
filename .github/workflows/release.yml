@@ -33,37 +33,11 @@ jobs:
 
       - name: Pack
         run: |
-          dotnet pack src/Mediarq.Core/Mediarq.Core.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq/Mediarq.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.AspNetCore/Mediarq.AspNetCore.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.FluentValidation/Mediarq.FluentValidation.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.DataAnnotations/Mediarq.DataAnnotations.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.MassTransit/Mediarq.MassTransit.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
+          # One pack for every packable project of the solution (IsPackable=false excludes tests, samples,
+          # benchmarks and the source generator, which ships inside Mediarq.Core). A new package is picked
+          # up automatically instead of being forgotten in a hard-coded list.
+          dotnet pack Mediarq.sln --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
           dotnet pack templates/Mediarq.Templates.csproj -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Caching/Mediarq.Caching.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Idempotency/Mediarq.Idempotency.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Diagnostics/Mediarq.Diagnostics.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.OpenTelemetry/Mediarq.OpenTelemetry.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.UnitOfWork/Mediarq.UnitOfWork.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.EntityFrameworkCore/Mediarq.EntityFrameworkCore.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Outbox/Mediarq.Outbox.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Polly/Mediarq.Polly.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.MediatRCompat/Mediarq.MediatRCompat.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Idempotency.EntityFrameworkCore/Mediarq.Idempotency.EntityFrameworkCore.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Analyzers/Mediarq.Analyzers.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Saga/Mediarq.Saga.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Hangfire/Mediarq.Hangfire.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Quartz/Mediarq.Quartz.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.HealthChecks/Mediarq.HealthChecks.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Authorization/Mediarq.Authorization.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Testing/Mediarq.Testing.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.RateLimiting/Mediarq.RateLimiting.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Deferred/Mediarq.Deferred.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Dapr/Mediarq.Dapr.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.AzureServiceBus/Mediarq.AzureServiceBus.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.RabbitMQ/Mediarq.RabbitMQ.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Aspire/Mediarq.Aspire.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
-          dotnet pack src/Mediarq.Grpc/Mediarq.Grpc.csproj --no-build -c Release -p:Version=${{ steps.version.outputs.version }} -o ./artifacts
 
       - name: NuGet login (trusted publishing)
         id: login
