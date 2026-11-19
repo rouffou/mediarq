@@ -1,1 +1,2 @@
 #nullable enable
+Mediarq.Caching.ICacheableRequest.CacheFailures.get -> bool

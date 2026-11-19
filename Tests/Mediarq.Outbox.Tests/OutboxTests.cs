@@ -37,6 +37,26 @@ public sealed class ThrowingPublisher : IPublisher
         => Task.FromException(new InvalidOperationException("publish boom"));
 }
 
+/// <summary>Succeeds on the first publish and fails on every later one.</summary>
+public sealed class FailOnSecondPublisher : IPublisher
+{
+    private int _calls;
+
+    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+        where TNotification : INotification
+        => Interlocked.Increment(ref _calls) == 1
+            ? Task.CompletedTask
+            : Task.FromException(new InvalidOperationException("second fails"));
+}
+
+/// <summary>An <see cref="IPublisher"/> that is cancelled mid-publish (host shutdown).</summary>
+public sealed class CancellingPublisher : IPublisher
+{
+    public Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+        where TNotification : INotification
+        => Task.FromCanceled(new CancellationToken(canceled: true));
+}
+
 public class OutboxTests
 {
     private static OutboxTestDbContext NewContext()
@@ -141,6 +161,113 @@ public class OutboxTests
     }
 
     [Fact]
+    public async Task ProcessPending_Stops_Retrying_A_Message_Once_MaxAttempts_Is_Reached()
+    {
+        await using var context = NewContext();
+        var outbox = new EfCoreOutbox<OutboxTestDbContext>(context);
+        outbox.Enqueue(new OrderPlaced(5));
+        await context.SaveChangesAsync();
+
+        for (var pass = 0; pass < 5; pass++)
+        {
+            await OutboxDispatcher.ProcessPendingAsync(context, new ThrowingPublisher(), 50, CancellationToken.None, maxAttempts: 3);
+        }
+
+        var message = await context.Set<OutboxMessage>().SingleAsync();
+        message.ProcessedOnUtc.Should().BeNull();
+        message.Attempts.Should().Be(3);
+        message.Error.Should().Contain("publish boom");
+    }
+
+    [Fact]
+    public async Task ProcessPending_A_Dead_Lettered_Message_Does_Not_Starve_Healthy_Ones()
+    {
+        await using var context = NewContext();
+        var set = context.Set<OutboxMessage>();
+        set.Add(new OutboxMessage
+        {
+            Type = "Does.Not.Exist, Nope",
+            Payload = "{}",
+            Attempts = 3,
+            OccurredOnUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+        });
+        set.Add(new OutboxMessage
+        {
+            Type = typeof(OrderPlaced).AssemblyQualifiedName!,
+            Payload = System.Text.Json.JsonSerializer.Serialize(new OrderPlaced(8)),
+            OccurredOnUtc = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc),
+        });
+        await context.SaveChangesAsync();
+
+        var publisher = new RecordingPublisher();
+        var processed = await OutboxDispatcher.ProcessPendingAsync(context, publisher, batchSize: 1, CancellationToken.None, maxAttempts: 3);
+
+        processed.Should().Be(1);
+        publisher.Published.Cast<OrderPlaced>().Single().OrderId.Should().Be(8);
+    }
+
+    [Fact]
+    public async Task ProcessPending_Skips_A_Message_Already_Claimed_By_Another_Processor()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        OutboxTestDbContext Create() => new(new DbContextOptionsBuilder<OutboxTestDbContext>()
+            .UseInMemoryDatabase(databaseName)
+            .Options);
+
+        await using (var seed = Create())
+        {
+            new EfCoreOutbox<OutboxTestDbContext>(seed).Enqueue(new OrderPlaced(11));
+            await seed.SaveChangesAsync();
+        }
+
+        await using var loser = Create();
+        await using var winner = Create();
+
+        // Both processors read the pending message before either one claims it.
+        var loserCopy = await loser.Set<OutboxMessage>().SingleAsync();
+        var winnerCopy = await winner.Set<OutboxMessage>().SingleAsync();
+        winnerCopy.Attempts++;
+        await winner.SaveChangesAsync();
+
+        // The loser's claim (0 -> 1) is now stale: the concurrency token on Attempts rejects it.
+        loserCopy.Attempts++;
+        var act = () => loser.SaveChangesAsync();
+
+        await act.Should().ThrowAsync<DbUpdateConcurrencyException>();
+    }
+
+    [Fact]
+    public async Task ProcessPending_Saves_Each_Message_Independently()
+    {
+        await using var context = NewContext();
+        var outbox = new EfCoreOutbox<OutboxTestDbContext>(context);
+        outbox.Enqueue(new OrderPlaced(1));
+        outbox.Enqueue(new OrderPlaced(2));
+        await context.SaveChangesAsync();
+
+        var processed = await OutboxDispatcher.ProcessPendingAsync(context, new FailOnSecondPublisher(), 50, CancellationToken.None);
+
+        processed.Should().Be(1);
+        (await context.Set<OutboxMessage>().CountAsync(m => m.ProcessedOnUtc != null)).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ProcessPending_Does_Not_Burn_An_Attempt_On_Cancellation()
+    {
+        await using var context = NewContext();
+        var outbox = new EfCoreOutbox<OutboxTestDbContext>(context);
+        outbox.Enqueue(new OrderPlaced(4));
+        await context.SaveChangesAsync();
+
+        var act = () => OutboxDispatcher.ProcessPendingAsync(context, new CancellingPublisher(), 50, CancellationToken.None);
+
+        await act.Should().ThrowAsync<OperationCanceledException>();
+        var message = await context.Set<OutboxMessage>().SingleAsync();
+        message.ProcessedOnUtc.Should().BeNull();
+        message.Attempts.Should().Be(0);
+    }
+
+    [Fact]
     public async Task ProcessPending_Honors_The_Batch_Size()
     {
         await using var context = NewContext();
@@ -218,6 +345,7 @@ public class OutboxTests
 
         options.PollingInterval.Should().Be(TimeSpan.FromSeconds(10));
         options.BatchSize.Should().Be(50);
+        options.MaxAttempts.Should().Be(10);
     }
 
     [Fact]
