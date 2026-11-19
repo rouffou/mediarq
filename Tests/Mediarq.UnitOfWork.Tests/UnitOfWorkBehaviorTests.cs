@@ -28,6 +28,16 @@ public class UnitOfWorkBehaviorTests
     }
 
     [Fact]
+    public void IsActive_True_For_Transactional_False_Otherwise()
+    {
+        var uow = new Mock<IUnitOfWork>().Object;
+
+        // The pipeline skips inactive behaviors, so a non-transactional request keeps the fast path.
+        new UnitOfWorkBehavior<TransactionalCommand, Result<string>>(uow).IsActive.Should().BeTrue();
+        new UnitOfWorkBehavior<PlainCommand, Result<string>>(uow).IsActive.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Does_Not_Commit_On_Failed_Result()
     {
         var uow = new Mock<IUnitOfWork>();

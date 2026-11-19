@@ -1,6 +1,7 @@
 using Mediarq.Core.Common.Contexts;
 using Mediarq.Core.Common.Pipeline;
 using Mediarq.Core.Common.Requests.Abstraction;
+using Mediarq.Core.Common.Results;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Mediarq.Caching;
@@ -47,6 +48,12 @@ public sealed class CachingBehavior<TRequest, TResponse>
         }
 
         var response = await handle().ConfigureAwait(false);
+
+        // A failed Result is transient by default: do not replay it from the cache.
+        if (response is Result { IsFailure: true } && !cacheable.CacheFailures)
+        {
+            return response;
+        }
 
         var options = new MemoryCacheEntryOptions();
         if (cacheable.CacheDuration is { } duration)

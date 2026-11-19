@@ -1,1 +1,2 @@
 #nullable enable
+Mediarq.Polly.ResilienceBehavior<TRequest, TResponse>.IsActive.get -> bool
