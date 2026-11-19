@@ -99,6 +99,11 @@ is literally the `false` literal (an expression-bodied property, an expression-b
 
 ## Notifications
 
+### "A second operation was started on this context" when publishing a notification
+Notification handlers run **in parallel** by default (`ParallelNotificationPublisher`), so two handlers
+sharing a scoped `DbContext` collide. Register `SequentialNotificationPublisher` before `AddMediarq` /
+`AddMediarqCore` — see [Migrating from MediatR](migrating-from-mediatr.md#notifications).
+
 ### `Result.WithNotifications(...)` was called but the notification never publishes
 Cascaded notifications only publish **after a successful dispatch** — check `result.IsSuccess` on what
 your handler actually returned. A behavior/exception handler downstream that replaces the response with
@@ -108,6 +113,21 @@ type is `Result`/`Result<T>` — the mediator doesn't look for cascaded notifica
 response shape (including `Unit`, a no-result `ICommand`'s response type).
 
 See [Wiring extensions](wiring-extensions.md#cascaded-notifications--resultwithnotifications).
+
+## Handlers
+
+### Build warning `MQ203` — request has more than one handler
+Two concrete classes implement the handler interface (`ICommandHandler` / `IQueryHandler` /
+`IRequestHandler`) for the same request type. A request has exactly one handler, so dispatch cannot choose
+between them (`Mediarq.HealthChecks` would only report it at startup). Remove one, or give the second its own
+request type.
+
+Only handlers declared in the project being compiled are compared, and abstract or open-generic handlers
+are ignored. It is a warning so that it never breaks an existing build; to make it a compile error:
+
+```ini
+dotnet_diagnostic.MQ203.severity = error
+```
 
 ## Routing
 
