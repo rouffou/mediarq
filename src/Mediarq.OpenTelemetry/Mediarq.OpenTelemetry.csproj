@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.OpenTelemetry</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>OpenTelemetry instrumentation for Mediarq: one-line AddMediarqInstrumentation() that subscribes the tracer and meter providers to the Mediarq activity source and metrics.</Description>
     <PackageTags>mediarq;cqrs;opentelemetry;otel;tracing;metrics;observability;dotnet</PackageTags>

@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Deferred</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>In-process deferred dispatch for Mediarq: SendLaterAsync/PublishLaterAsync queue a command or notification on a System.Threading.Channels-backed background worker, decoupling the caller from handler execution time — no external dependency, drains on host shutdown.</Description>
     <PackageTags>mediarq;cqrs;deferred;background;channels;dotnet</PackageTags>

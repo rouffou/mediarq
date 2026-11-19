@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.FluentValidation</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>FluentValidation adapter for Mediarq: run FluentValidation validators inside the Mediarq validation pipeline.</Description>
     <PackageTags>mediarq;cqrs;validation;fluentvalidation;dotnet</PackageTags>

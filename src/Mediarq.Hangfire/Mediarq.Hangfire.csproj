@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Hangfire</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Delayed and scheduled dispatch for Mediarq commands via Hangfire: Enqueue/Schedule extensions on IBackgroundJobClient that run a command through the real Mediarq pipeline when the job executes.</Description>
     <PackageTags>mediarq;cqrs;hangfire;background-jobs;scheduling;dotnet</PackageTags>

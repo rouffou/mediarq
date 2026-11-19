@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.UnitOfWork</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Unit of Work pipeline behavior for Mediarq: commit a unit of work around transactional commands.</Description>
     <PackageTags>mediarq;cqrs;unitofwork;transaction;pipeline;dotnet</PackageTags>

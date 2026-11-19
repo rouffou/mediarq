@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Authorization</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Authorization for Mediarq: an IAuthorizedRequest marker + pipeline behavior that runs ASP.NET Core policy-based authorization (IAuthorizationService) before the handler, short-circuiting into a typed Result failure (Unauthorized/Forbidden).</Description>
     <PackageTags>mediarq;cqrs;authorization;security;dotnet</PackageTags>

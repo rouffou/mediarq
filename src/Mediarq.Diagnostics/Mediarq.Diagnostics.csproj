@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Diagnostics</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Observability for Mediarq: an OpenTelemetry-compatible Activity (tracing) and System.Diagnostics.Metrics behavior per request.</Description>
     <PackageTags>mediarq;cqrs;observability;opentelemetry;tracing;metrics;dotnet</PackageTags>

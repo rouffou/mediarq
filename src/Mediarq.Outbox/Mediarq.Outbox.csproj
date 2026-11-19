@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Outbox</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Transactional outbox for Mediarq over EF Core: enqueue notifications into an outbox table in the same transaction as your data, then publish them reliably (at-least-once) from a background processor.</Description>
     <PackageTags>mediarq;cqrs;outbox;entityframeworkcore;efcore;notifications;dotnet</PackageTags>

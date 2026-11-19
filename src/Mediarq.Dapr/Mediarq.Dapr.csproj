@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Dapr</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Dapr pub/sub integration for Mediarq: publish a notification onto a Dapr pub/sub component when it is published through Mediarq (IDaprPubSubEvent), and receive Dapr-delivered messages back into the real Mediarq pipeline via a minimal-API webhook, including the /dapr/subscribe discovery endpoint.</Description>
     <PackageTags>mediarq;cqrs;dapr;pubsub;kubernetes;dotnet</PackageTags>

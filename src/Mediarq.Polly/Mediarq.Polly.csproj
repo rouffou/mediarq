@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Polly</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>Resilience for Mediarq: apply a named Polly v8 ResiliencePipeline (retry, timeout, circuit breaker) to requests.</Description>
     <PackageTags>mediarq;cqrs;resilience;polly;retry;circuitbreaker;dotnet</PackageTags>

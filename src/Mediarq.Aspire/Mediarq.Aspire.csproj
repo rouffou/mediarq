@@ -10,7 +10,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.Aspire</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>.NET Aspire ServiceDefaults integration for Mediarq: one call from your project's own ServiceDefaults Extensions.cs wires Mediarq's OpenTelemetry instrumentation and the handler-registration health check into the Aspire dashboard.</Description>
     <PackageTags>mediarq;cqrs;aspire;opentelemetry;healthchecks;dotnet</PackageTags>

@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <PackageId>Mediarq.EntityFrameworkCore</PackageId>
-    <Version>1.0.0</Version>
     <Authors>Nicolas Rouffart</Authors>
     <Description>EF Core integration for Mediarq: an IUnitOfWork over a DbContext, so transactional commands are committed via SaveChanges.</Description>
     <PackageTags>mediarq;cqrs;unitofwork;entityframeworkcore;efcore;dotnet</PackageTags>
