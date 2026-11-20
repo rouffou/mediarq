@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795101930911,
+  "lastUpdate": 1795150869452,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -648,6 +648,42 @@ window.BENCHMARK_DATA = {
             "value": 188.7117861111959,
             "unit": "ns",
             "range": "± 0.7790793499792524"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce117bd33ce1438c1988f3cfc27e88432736f60b",
+          "message": "ci(deps): bump actions/checkout from 4 to 7 (#260)\n\nBumps [actions/checkout](https://github.com/actions/checkout) from 4 to 7.\n- [Release notes](https://github.com/actions/checkout/releases)\n- [Changelog](https://github.com/actions/checkout/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/actions/checkout/compare/v4...v7)\n\n---\nupdated-dependencies:\n- dependency-name: actions/checkout\n  dependency-version: '7'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>\nCo-authored-by: Nicolas Rouffart <rouffou@gmail.com>",
+          "timestamp": "2026-11-20T06:00:14+01:00",
+          "tree_id": "04b805d53877d2864ffc9bbd33c45b1ef4f6cc99",
+          "url": "https://github.com/rouffou/mediarq/commit/ce117bd33ce1438c1988f3cfc27e88432736f60b"
+        },
+        "date": 1795150868774,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 119.96515274047852,
+            "unit": "ns",
+            "range": "± 0.39573012133203384"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 177.7645984093348,
+            "unit": "ns",
+            "range": "± 0.6466394176791556"
           }
         ]
       }
