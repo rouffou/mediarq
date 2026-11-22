@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795340470499,
+  "lastUpdate": 1795340481964,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -2611,6 +2611,40 @@ window.BENCHMARK_DATA = {
           "url": "https://github.com/rouffou/mediarq/commit/ce117bd33ce1438c1988f3cfc27e88432736f60b"
         },
         "date": 1795150918644,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish - Allocated",
+            "value": 464,
+            "unit": "B"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish - Allocated",
+            "value": 424,
+            "unit": "B"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d6ef7b83e39c7d16edc24ec8b93b656650e552f6",
+          "message": "ci(deps): bump actions/download-artifact from 4 to 8 (#263)\n\nBumps [actions/download-artifact](https://github.com/actions/download-artifact) from 4 to 8.\n- [Release notes](https://github.com/actions/download-artifact/releases)\n- [Commits](https://github.com/actions/download-artifact/compare/v4...v8)\n\n---\nupdated-dependencies:\n- dependency-name: actions/download-artifact\n  dependency-version: '8'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-22T10:39:48+01:00",
+          "tree_id": "52c3943e2a82b2997f1c41a5bd0e12eb73a4c73c",
+          "url": "https://github.com/rouffou/mediarq/commit/d6ef7b83e39c7d16edc24ec8b93b656650e552f6"
+        },
+        "date": 1795340481446,
         "tool": "customSmallerIsBetter",
         "benches": [
           {
