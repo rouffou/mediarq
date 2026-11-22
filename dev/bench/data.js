@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795150919368,
+  "lastUpdate": 1795340455058,
   "repoUrl": "https://github.com/rouffou/mediarq",
   "entries": {
     "Mediarq.Benchmarks - Publish": [
@@ -684,6 +684,42 @@ window.BENCHMARK_DATA = {
             "value": 177.7645984093348,
             "unit": "ns",
             "range": "± 0.6466394176791556"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d6ef7b83e39c7d16edc24ec8b93b656650e552f6",
+          "message": "ci(deps): bump actions/download-artifact from 4 to 8 (#263)\n\nBumps [actions/download-artifact](https://github.com/actions/download-artifact) from 4 to 8.\n- [Release notes](https://github.com/actions/download-artifact/releases)\n- [Commits](https://github.com/actions/download-artifact/compare/v4...v8)\n\n---\nupdated-dependencies:\n- dependency-name: actions/download-artifact\n  dependency-version: '8'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-22T10:39:48+01:00",
+          "tree_id": "52c3943e2a82b2997f1c41a5bd0e12eb73a4c73c",
+          "url": "https://github.com/rouffou/mediarq/commit/d6ef7b83e39c7d16edc24ec8b93b656650e552f6"
+        },
+        "date": 1795340454398,
+        "tool": "benchmarkdotnet",
+        "benches": [
+          {
+            "name": "PublishBenchmarks.MediatR_Publish",
+            "value": 120.52701902389526,
+            "unit": "ns",
+            "range": "± 1.4659494045627446"
+          },
+          {
+            "name": "PublishBenchmarks.Mediarq_Publish",
+            "value": 167.5863598982493,
+            "unit": "ns",
+            "range": "± 1.0377594179782283"
           }
         ]
       }
