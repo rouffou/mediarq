@@ -32,7 +32,7 @@ jobs:
         run: dotnet pack Mediarq.sln --no-build -c Release -p:Version=0.0.0-ci -o ./artifacts-ci
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: ./coverage/**/coverage.cobertura.xml
