@@ -24,7 +24,7 @@
   <ItemGroup>
     <!-- System.Diagnostics.DiagnosticSource (ActivitySource/Meter) is part of the shared framework on
          net8.0+, so no explicit package reference is needed. -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>
